@@ -1,9 +1,16 @@
 import select
-import Queue
 import logging
 import socket
 import os
-import cPickle as pickle
+try:
+    import queue
+except ImportError:
+    import Queue as queue  # Python2 version
+
+try:
+    import pickle
+except ImportError:
+    import cPickle as pickle  # Python2 version
 
 import config
 
@@ -14,7 +21,7 @@ PORT = config.ICS_PORT
 server_address = '/var/opt/ics/uds/uds_socket'
 
 clients = {}
-recv_queue = Queue.Queue()
+recv_queue = queue.Queue()
 poll = select.poll()
 
 
@@ -26,7 +33,7 @@ class Client:
     def __init__(self, sock):
         self.sock = sock
         self.rest = bytes()
-        self.sendQueue = Queue.Queue()
+        self.sendQueue = queue.Queue()
 
 
 def create_client(sock):

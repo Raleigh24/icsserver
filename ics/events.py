@@ -1,13 +1,15 @@
-import Queue
 import logging
-import abc
+try:
+    import queue
+except ImportError:
+    import Queue as queue  # Python2 version
 
 from states import ResourceStates, ONLINE_STATES, OFFLINE_STATES
 from alerts import AlertSeverity, send_alert
 
 logger = logging.getLogger(__name__)
 
-event_queue = Queue.Queue()
+event_queue = queue.Queue()
 
 
 def trigger_event(event):
