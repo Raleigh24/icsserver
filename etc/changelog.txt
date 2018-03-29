@@ -1,0 +1,17 @@
+
+Version x.x.x
+- Added exception handling for creating log file
+- Added exception handling for creating pid file
+- Fixed bug where exception is raised when getting state of group that has
+    no resources. Group state will now return unknown.
+
+Version 1.1.0
+- Changed method of starting and stopping server by adding icsstart
+    and icsstop and removed icsserver command
+- Changed bash scripts in bin to set correct ICS_HOME
+
+
+Version 1.0.0
+- Initial version
+
+

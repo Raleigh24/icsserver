@@ -1,0 +1,4 @@
+#! /bin/bash
+
+exec /home/scc/waterr/gnst/ics/bin/$(basename $0).py "$@" &
+

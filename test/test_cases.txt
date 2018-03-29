@@ -1,0 +1,9 @@
+
+
+
+
+
+1. create group
+2. add resoruces.
+3. delete resoruces
+4. delete group
