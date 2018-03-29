@@ -13,6 +13,7 @@ except ImportError:
     import cPickle as pickle  # Python2 version
 
 import config
+from custom_exceptions import NetworkConnectionError
 
 logger = logging.getLogger(__name__)
 
@@ -23,10 +24,6 @@ server_address = '/var/opt/ics/uds/uds_socket'
 clients = {}
 recv_queue = queue.Queue()
 poll = select.poll()
-
-
-class ConnectionError(Exception):
-    pass
 
 
 class Client:
@@ -66,7 +63,7 @@ def connect(host, port):
         #sock.connect((host, port))
         return sock
     except socket.error:
-        raise ConnectionError
+        raise NetworkConnectionError
 
 
 def parse_recvd_data(data):
@@ -132,7 +129,7 @@ def create_tcp_interface():
         listen_sock = create_listen_socket(HOST, PORT)
     except socket.error as e:
         logger.error('Failed to create listening socket: {}'.format(e))
-        raise ConnectionError
+        raise NetworkConnectionError
     return listen_sock
 
 

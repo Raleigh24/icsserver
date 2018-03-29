@@ -23,3 +23,7 @@ class TimeoutExpired(Exception):
 
 class ResourceAttributeError(Exception):
     pass
+
+
+class NetworkConnectionError(Exception):
+    pass
