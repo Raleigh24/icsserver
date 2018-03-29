@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
 
 export ICS_HOME=${ICS_HOME:-/opt/ICS}
-/opt/Python-2.7.2/bin/python2.7 ${ICS_HOME}/ics/icsgrp.py $@
+source ${ICS_HOME}/etc/setup.sh
+${python_bin} ${ICS_HOME}/ics/icsgrp.py $@
