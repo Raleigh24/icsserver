@@ -188,7 +188,7 @@ class Application:
 
     def update_data(self, event):
         selected_item = self.res_navigation_tree.selection()
-        print selected_item
+        print(selected_item)
         self.update_prop_viewer()
         self.update_res_viewer()
 
@@ -200,7 +200,7 @@ class Application:
 
 
 
-        print selectedItem
+        print(selectedItem)
 
 
     def update_res_viewer(self, event):
@@ -265,7 +265,7 @@ class Application:
         pass
 
     def command(self):
-        print 'command'
+        print('command')
 
 if __name__ == '__main__':
     root = Tk()

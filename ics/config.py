@@ -5,7 +5,7 @@ import logging.config
 
 ICS_HOME = os.getenv('ICS_HOME')
 if ICS_HOME is None:
-    print 'ERROR environment variable ICS_HOME is not set. Exiting...'
+    print('ERROR environment variable ICS_HOME is not set. Exiting...')
     exit(1)
 
 # Read ICS configuration file
@@ -31,14 +31,14 @@ def create_logger():
         try:
             os.makedirs(ICS_LOG)
         except OSError as e:
-            print 'ERROR: Unable to create log directory: {}'.format(e)
-            print 'Exiting...'
+            print('ERROR: Unable to create log directory: {}'.format(e))
+            print('Exiting...')
             exit(1)
     # TODO: Check if file path exists
     logging.logFilename = ICS_LOG + '/icsserver.log'
     try:
         logging.config.fileConfig(ICS_HOME + '/ics/logging.conf')
     except IOError as e:
-        print 'ERROR: Unable to create log file: {}'.format(e)
+        print('ERROR: Unable to create log file: {}'.format(e))
         exit(1)
 

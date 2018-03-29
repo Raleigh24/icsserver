@@ -36,12 +36,12 @@ def print_table(table, header=None, col_sort=0):
         for col_num in range(col_count):
             header_str = header_str + header[col_num].ljust(max_col_width[col_num] + 4)
 
-        print header_str.strip(' ')
-        print '-' * len(header_str)
+        print(header_str.strip(' '))
+        print('-' * len(header_str))
 
     # Print table
     for row in sorted_table:
         table_row = ''
         for col_num in range(col_count):
             table_row = table_row + row[col_num].ljust(max_col_width[col_num] + 4)
-        print table_row.strip(' ')
+        print(table_row.strip(' '))

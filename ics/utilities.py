@@ -31,17 +31,17 @@ def create_pid_file(pid):
         with open(config.PID_FILE, 'w') as f:
             f.write(str(pid))
     except IOError as e:
-        print 'ERROR: Unable to create PID file: {}'.format(e)
+        print('ERROR: Unable to create PID file: {}'.format(e))
 
 
 def cli_signal_handler(signal_code, frame):
     """Signal handler for command line interface commands"""
     if signal_code is signal.SIGINT:
-        print "Exiting..."
+        print('Exiting...')
         exit(1)
     else:
-        print "ERROR: Received signal {}".format(signal_code)
-        print "Exiting..."
+        print('ERROR: Received signal {}'.format(signal_code))
+        print('Exiting...')
         exit(1)
 
 

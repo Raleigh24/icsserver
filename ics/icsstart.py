@@ -23,10 +23,10 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.version is True:
-        print 'Version: ' + config.ICS_VERSION
+        print('Version: ' + config.ICS_VERSION)
     else:
         if utilities.check_running():
-            print 'ERROR: Server is already running'
+            print('ERROR: Server is already running')
             exit(1)
         else:
             start_server()

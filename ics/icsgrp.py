@@ -53,7 +53,7 @@ if len(sys.argv) <= 1:
 try:
     conn = network.connect('', 4040)
 except network.ConnectionError:
-    print 'Unable to connect to ICS server'
+    print('Unable to connect to ICS server')
     exit(1)
 
 rpc_proxy = RPCProxy(conn)
@@ -63,7 +63,7 @@ def perform(func, *func_args):
     try:
         func(*func_args)
     except DoesNotExist as e:
-        print 'ERROR: ' + str(e)
+        print('ERROR: ' + str(e))
         exit(1)
 
 
@@ -80,7 +80,7 @@ elif args.add is not None:
     try:
         perform(rpc_proxy.grp_add, group_name)
     except AlreadyExists as e:
-        print 'ERROR: ' + str(e)
+        print('ERROR: ' + str(e))
 
 elif args.delete is not None:
     group_name = args.delete[0]
@@ -110,12 +110,12 @@ elif args.resources is not None:
     group_name = args.resources[0]
     result = rpc_proxy.grp_resources(group_name)
     for resource_name in result:
-        print resource_name
+        print(resource_name)
 
 elif args.list is True:
     groups = rpc_proxy.list_groups()
     for group_name in groups:
-        print group_name
+        print(group_name)
 
 elif args.modify is not None:
     pass

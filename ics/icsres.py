@@ -50,7 +50,7 @@ if len(sys.argv) <= 1:
 try:
     conn = network.connect('', 4040)
 except network.ConnectionError:
-    print 'Unable to connect to ICS server'
+    print('Unable to connect to ICS server')
     exit(1)
 
 rpc_proxy = RPCProxy(conn)
@@ -60,7 +60,7 @@ def perform(func, *func_args):
     try:
         return func(*func_args)
     except DoesNotExist as e:
-        print 'ERROR: ' + str(e)
+        print('ERROR: ' + str(e))
         exit(1)
 
 
@@ -78,7 +78,7 @@ elif args.add is not None:
     try:
         perform(rpc_proxy.add, resource_name, group_name)
     except AlreadyExists as e:
-        print 'ERROR: ' + str(e)
+        print('ERROR: ' + str(e))
 
 elif args.delete is not None:
     resource_name = args.delete[0]
@@ -117,7 +117,7 @@ elif args.dep is not None:
 elif args.list is True:
     resources = rpc_proxy.list_resources()
     for resource in resources:
-        print resource
+        print(resource)
 
 elif args.value is not None:
     resource_name = args.value[0]
@@ -125,12 +125,12 @@ elif args.value is not None:
     try:
         result = rpc_proxy.value(resource_name, value)
     except DoesNotExist as e:
-        print 'ERROR: ' + str(e)
+        print('ERROR: ' + str(e))
     except KeyError:
-        print "ERROR: Attribute does not exists"
+        print('ERROR: Attribute does not exists')
         exit(1)
 
-    print result
+    print(result)
 
 elif args.modify is not None:
     resource_name = args.modify[0]
@@ -138,7 +138,7 @@ elif args.modify is not None:
     attr = ' '.join(args.modify[2:])
     result = rpc_proxy.modify(resource_name, value, attr)
     if result == False:
-        print "ERROR: Attribute does not exists"
+        print('ERROR: Attribute does not exists')
         exit(1)
 
 elif args.wait is not None:
