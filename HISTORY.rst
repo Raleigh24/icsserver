@@ -10,6 +10,11 @@ Current
 
 - Use UDS socket rather than TCP to improve localization and security
 - Moved resource exceptions to separate file
+- Made python bin location more dynamic to support different environments
+- Changed print statements to be compatible with python3
+- Added module compatibility for python3
+- Added command to icsserver to change working directory of server to prevent issues if working directory is removed
+
 
 **Miscellaneous**
 
