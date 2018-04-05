@@ -1,2 +1,2 @@
 - Create alert object
-- 
+- Group flush command may need to also flush event queue
