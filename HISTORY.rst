@@ -11,14 +11,15 @@ Current
 - Use UDS socket rather than TCP to improve localization and security
 - Moved resource exceptions to separate file
 - Made python bin location more dynamic to support different environments
-- Changed print statements to be compatible with python3
-- Added module compatibility for python3
+- Changed print statements to be compatible with python3 (python3 not yet supported)
+- Added module compatibility for python3 (python3 not yet supported)
 - Added command to icsserver to change working directory of server to prevent issues if working directory is removed
 
 
 **Miscellaneous**
 
 - Reworked project directory structure
+- Refactored testing tools
 
 1.1.1 (2018-03-14)
 ++++++++++++++++++

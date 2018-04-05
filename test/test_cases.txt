@@ -1,9 +1,6 @@
-
-
-
-
-
-1. create group
-2. add resoruces.
-3. delete resoruces
-4. delete group
+##### Test Cases #####
+1. create new group
+2. create new resources
+3. delete existing resources
+4. delete existing group
+5. Perform stress test
