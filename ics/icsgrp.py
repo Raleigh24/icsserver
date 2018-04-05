@@ -52,8 +52,8 @@ if len(sys.argv) <= 1:
 
 try:
     conn = network.connect('', 4040)
-except network.ConnectionError:
-    print('Unable to connect to ICS server')
+except network.NetworkConnectionError:
+    print('ERROR: Unable to connect to ICS server')
     exit(1)
 
 rpc_proxy = RPCProxy(conn)
