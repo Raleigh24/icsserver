@@ -105,7 +105,10 @@ class ResourceOfflineEvent(ResourceStateEvent):
                     if parent.state is ResourceStates.ONLINE:
                         parent.change_state(ResourceStates.STOPPING)
                     elif parent.state is ResourceStates.OFFLINE:
-                        parent.change_state(ResourceStates.OFFLINE, force=True)  # Needed to continue propagation
+                        # Needed to continue propagation even though resources is already offline
+                        # Offline event is triggered again to propagate to parent resource
+                        parent.change_state(ResourceStates.OFFLINE, force=True)
+                    # TODO: to be more robust, add cases for when state is other than online or offline
                 else:
                     logger.debug('Resource({}) Unable to stop, waiting for children to become offline'
                                  .format(parent.name))
@@ -130,7 +133,10 @@ class ResourceOnlineEvent(ResourceStateEvent):
                     if child.state in ResourceStates.OFFLINE:
                         child.change_state(ResourceStates.STARTING)
                     elif child.state is ResourceStates.ONLINE:
-                        child.change_state(ResourceStates.ONLINE, force=True)  # Needed to continue propagation
+                        # Needed to continue propagation even though resources is already online
+                        # Online event is triggered again to propagate to child resource
+                        child.change_state(ResourceStates.ONLINE, force=True)
+                    # TODO: to be more robust, add cases for when state is other than online or offline
                 else:
                     logger.debug('Resource({}) Unable to start, waiting for parents to become online'
                                   .format(child.name))

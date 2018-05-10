@@ -9,7 +9,7 @@ Current
 **Improvements**
 
 - Only enabled resources are considered when calculating group states
-
+- Resource propagation can continue though disabled resources
 
 **Miscellaneous**
 

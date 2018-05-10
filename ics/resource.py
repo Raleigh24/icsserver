@@ -54,9 +54,29 @@ class Resource:
             if new_state is cur_state:
                 return False
 
-        self.state = new_state
-        event_class = self.event_map[new_state]
-        logger.info('Resource({}) Changing state from {} to {}'.format(self.name, cur_state, new_state))
+        if self.attr['Enabled'] == 'false':
+            self.state = ResourceStates.OFFLINE  # Set resource offline regardless of current state
+            logger.info('Resource({}) Unable to change state, resource is disabled'.format(self.name))
+
+            # When a resource is disabled, no state change will occur. However, subsequent event will be triggered to
+            # act as a pass though in order to facilitate propagation.
+            # Note: A new_state of online or offline can occur when a child or parent forces a state change to continue
+            # propagation when resources is already in that state.
+            if new_state in [ResourceStates.STARTING, ResourceStates.ONLINE]:
+                event_class = events.ResourceOnlineEvent
+                cur_state = ResourceStates.ONLINE  # Fake the current state for propagation
+            elif new_state in [ResourceStates.STOPPING, ResourceStates.OFFLINE]:
+                event_class = events.ResourceOfflineEvent
+                cur_state = ResourceStates.OFFLINE  # Fake the current state for propagation
+            else:
+                logger.error('Resource({}) Attempted an invalid state change to {} when resource is disabled,'\
+                             ' no change will occur'.format(self.name, new_state))
+                return False
+        else:
+            self.state = new_state
+            event_class = self.event_map[new_state]
+            logger.info('Resource({}) Changing state from {} to {}'.format(self.name, cur_state, new_state))
+
         events.trigger_event(event_class(self, cur_state))
 
     def load_attr(self):
@@ -83,13 +103,13 @@ class Resource:
 
     def parents_ready(self):
         for parent in self.parents:
-            if parent.state is not ResourceStates.ONLINE:
+            if parent.state is not ResourceStates.ONLINE and parent.attr['Enabled'] == 'true':
                 return False
         return True
 
     def children_ready(self):
         for child in self.children:
-            if child.state is not ResourceStates.OFFLINE:
+            if child.state is not ResourceStates.OFFLINE and child.attr['Enabled'] == 'true':
                 return False
         return True
 
