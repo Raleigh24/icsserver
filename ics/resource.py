@@ -422,7 +422,8 @@ class Group:
         resource_states = []
         # Get all unique resource states
         for member in self.members:
-            resource_states.append(member.state)
+            if member.attr['Enabled'] == 'true':  # Only consider enabled resources when calculating group state
+                resource_states.append(member.state)
         states = list(set(resource_states))
 
         if len(states) > 1:

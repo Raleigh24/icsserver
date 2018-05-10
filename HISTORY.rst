@@ -3,6 +3,19 @@
 Release History
 ---------------
 
+Current
+++++++++++++++++++
+
+**Improvements**
+
+- Only enabled resources are considered when calculating group states
+
+
+**Miscellaneous**
+
+- Removed default names from config file
+
+
 1.2.0 (2018-03-04)
 ++++++++++++++++++
 
