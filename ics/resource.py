@@ -24,7 +24,7 @@ class Resource:
         self.name = name
         self.attr = {}
         self.state = ResourceStates.OFFLINE
-        self.load_attr()
+        self.init_attr()
         self.attr['Group'] = group_name
         self.last_poll = int(time.time()) - random.randint(0, 60)  # Prevent poll clustering
         self.poll_running = False
@@ -79,7 +79,7 @@ class Resource:
 
         events.trigger_event(event_class(self, cur_state))
 
-    def load_attr(self):
+    def init_attr(self):
         for attribute in resourceAttributes['resource'].keys():
             self.attr[attribute] = resourceAttributes['resource'][attribute]['default']
 
