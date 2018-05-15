@@ -3,6 +3,13 @@
 Release History
 ---------------
 
+Current
+++++++++++++++++++
+
+**Bugfixes**
+
+- Fixed incorrect exception handling for network issues at startup
+
 1.2.1 (2018-04-10)
 ++++++++++++++++++
 

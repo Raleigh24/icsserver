@@ -60,7 +60,7 @@ threads.append(thread_event_handler)
 logger.info('Starting client handler...')
 try:
     sock = network.create_tcp_interface()
-except network.NetworkConnectionError:
+except NetworkConnectionError:
     logger.critical('Unable to create client interface, exiting...')
     exit(1)
 thread_client_handler = threading.Thread(name='client handler', target=network.handle_clients, args=(sock,))
