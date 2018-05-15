@@ -13,13 +13,14 @@ except ImportError:
     import cPickle as pickle  # Python2 version
 
 import config
-from custom_exceptions import NetworkConnectionError
+from custom_exceptions import NetworkConnectionError, NetworkError
 
 logger = logging.getLogger(__name__)
 
 HOST = ''
 PORT = config.ICS_PORT
-server_address = '/var/opt/ics/uds/uds_socket'
+server_address_dir = '/var/opt/ics/uds'
+server_address = server_address_dir + '/uds_socket'
 
 clients = {}
 recv_queue = queue.Queue()
@@ -39,15 +40,26 @@ def create_client(sock):
 
 def create_listen_socket(host, port):
     """ Setup the sockets the server will receive connection requests on """
+
+    if not os.path.isdir(server_address_dir):
+        logger.debug('UDS socket directory does not exist, will be created')
+        try:
+            os.makedirs(server_address_dir)
+        except Exception as e:
+            logger.critical('Unable to create UDS socket directory, ' + str(e))
+            raise NetworkError
+
     try:
         os.unlink(server_address)
-    except OSError:
+    except OSError as e:
         if os.path.exists(server_address):
-            raise
+            logging.critical('Unable to create listening socket, ' + str(e))
+            raise NetworkError
 
     sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
     sock.bind(server_address)
     sock.listen(1)
+    os.chmod(server_address, 0o777)  # Change permissions to make writeable to everyone
     #sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     #sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     #sock.bind((host, port))

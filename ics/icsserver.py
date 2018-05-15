@@ -11,7 +11,7 @@ import network
 from resource import poll_updater, load_config, save_config
 from events import event_handler
 from rpcinterface import rpc_runner
-from custom_exceptions import NetworkConnectionError
+from custom_exceptions import NetworkError
 
 
 # Setup logging information
@@ -60,7 +60,7 @@ threads.append(thread_event_handler)
 logger.info('Starting client handler...')
 try:
     sock = network.create_tcp_interface()
-except NetworkConnectionError:
+except NetworkError:
     logger.critical('Unable to create client interface, exiting...')
     exit(1)
 thread_client_handler = threading.Thread(name='client handler', target=network.handle_clients, args=(sock,))

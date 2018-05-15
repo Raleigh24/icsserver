@@ -25,5 +25,10 @@ class ResourceAttributeError(Exception):
     pass
 
 
+class NetworkError(Exception):
+    """Exception is raised when there is a general network issue"""
+    pass
+
+
 class NetworkConnectionError(Exception):
     pass

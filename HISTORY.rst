@@ -6,9 +6,15 @@ Release History
 Current
 ++++++++++++++++++
 
+**Improvements**
+- Server will create UDS socket directory if does not exist
+- Improved error handling when creating UDS socket
+- Correct permissions applied to UDS socket
+
 **Bugfixes**
 
 - Fixed incorrect exception handling for network issues at startup
+
 
 1.2.1 (2018-04-10)
 ++++++++++++++++++
