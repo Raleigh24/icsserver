@@ -609,6 +609,25 @@ def list_groups():
     return groups.keys()
 
 
+# TODO: move config file functions to different file
+def read_configfile(filename):
+    try:
+        with open(filename, 'r') as infile:
+            return json.load(infile)
+    except IOError:
+        logger.error('Unable to load config file {}'.format(filename))
+        return
+
+
+def write_configfile(filename, json_data):
+    try:
+        with open(filename, 'w') as outfile:
+            json.dump(json_data, outfile, indent=4, sort_keys=True)
+    except IOError:
+        logger.error('Unable to save config file {}'.format(filename))
+        return
+
+
 def save_config(filename):
     """Save resource configuration to file"""
     data_dict = {}
