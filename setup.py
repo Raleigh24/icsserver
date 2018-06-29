@@ -12,7 +12,7 @@ elif (3, 0) < python_version:
 
 setup(
     name='ICS',
-    version='1.2.0',
+    version='1.2.2',
     packages=[''],
     package_dir={'': 'ics'},
     url='',
