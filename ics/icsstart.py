@@ -3,7 +3,7 @@ import subprocess
 import sys
 
 import config
-import utilities
+import utils
 
 
 def start_server():
@@ -11,11 +11,11 @@ def start_server():
     python_bin = sys.executable
     cmd = [python_bin, config.ICS_HOME + '/ics/icsserver.py']
     pid = subprocess.Popen(cmd).pid
-    utilities.create_pid_file(pid)
+    utils.create_pid_file(pid)
 
 
 if __name__ == '__main__':
-    utilities.setup_signal_handler()
+    utils.setup_signal_handler()
     description_text = 'Start ICS server'
     epilog_text = ''
     parser = argparse.ArgumentParser(description=description_text)
@@ -25,7 +25,7 @@ if __name__ == '__main__':
     if args.version is True:
         print('Version: ' + config.ICS_VERSION)
     else:
-        if utilities.check_running():
+        if utils.check_running():
             print('ERROR: Server is already running')
             exit(1)
         else:

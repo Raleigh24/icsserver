@@ -6,6 +6,7 @@ import time
 import os
 
 import config
+
 config.create_logger()  # Need to create logger before importing other modules
 import network
 from resource import poll_updater, load_config, save_config

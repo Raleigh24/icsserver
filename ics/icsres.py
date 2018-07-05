@@ -5,10 +5,9 @@ import network
 from resource import DoesNotExist, AlreadyExists
 from rpcinterface import RPCProxy
 from tabular import print_table
-import utilities
+import utils
 
-
-utilities.setup_signal_handler()
+utils.setup_signal_handler()
 description_text = ''
 epilog_text = ''
 parser = argparse.ArgumentParser(description=description_text)
