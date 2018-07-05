@@ -1,4 +1,4 @@
-resourceAttributes = {
+resource_attributes = {
     "resource": {
         "Group": {
             "default": "none",

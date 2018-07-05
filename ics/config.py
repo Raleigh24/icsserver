@@ -10,7 +10,7 @@ from resource import res_add
 from resource import grp_add
 from resource import res_link
 from resource import get_resource
-from attributes import resourceAttributes
+from attributes import resource_attributes
 
 logger = logging.getLogger(__name__)
 
@@ -65,7 +65,7 @@ def load_config():
 def save_config():
     """Save ICS configuration to file"""
     data_dict = {}
-    default_attr = resourceAttributes['resource']
+    default_attr = resource_attributes['resource']
 
     for group in groups.values():
         group_name = group.name

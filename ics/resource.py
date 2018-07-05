@@ -6,7 +6,7 @@ import time
 import events
 from environment import ICS_RES_LOG
 from alerts import AlertSeverity, send_alert
-from attributes import resourceAttributes, group_attributes
+from attributes import resource_attributes, group_attributes
 from custom_exceptions import DoesNotExist, AlreadyExists
 from states import ResourceStates, GroupStates, ONLINE_STATES, TRANSITION_STATES
 
@@ -77,8 +77,8 @@ class Resource:
         events.trigger_event(event_class(self, cur_state))
 
     def init_attr(self):
-        for attribute in resourceAttributes['resource'].keys():
-            self.attr[attribute] = resourceAttributes['resource'][attribute]['default']
+        for attribute in resource_attributes['resource'].keys():
+            self.attr[attribute] = resource_attributes['resource'][attribute]['default']
 
     def set_attr(self, attr, value):
         self.attr[attr] = value
