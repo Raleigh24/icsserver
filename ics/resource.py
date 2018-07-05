@@ -217,7 +217,7 @@ class Resource:
         logger.info('Resource({}) running command to start resource'.format(self.name))
         cmd = self.attr['StartProgram'].split()
         if not cmd:
-            logging.error('Resource({}) unable to start, attribute StartProgram not set'.format(self.name))
+            logger.error('Resource({}) unable to start, attribute StartProgram not set'.format(self.name))
             self.flush()
             return
         online_timeout = int(self.attr['OnlineTimeout'])
@@ -228,7 +228,7 @@ class Resource:
         logger.info('Resource({}) running command to stop resource'.format(self.name))
         cmd = self.attr['StopProgram'].split()
         if not cmd:
-            logging.error('Resource({}) unable to start, attribute StopProgram not set'.format(self.name))
+            logger.error('Resource({}) unable to start, attribute StopProgram not set'.format(self.name))
             self.flush()
             return
         offline_timeout = int(self.attr['OfflineTimeout'])
@@ -239,7 +239,7 @@ class Resource:
         logger.debug('Resource({}) running command to poll resource'.format(self.name))
         cmd = self.attr['MonitorProgram'].split()
         if not cmd:
-            logging.error('Resource({}) unable to monitor, attribute MonitorProgram not set'.format(self.name))
+            logger.error('Resource({}) unable to monitor, attribute MonitorProgram not set'.format(self.name))
             self.flush()
             return
         monitor_timeout = int(self.attr['MonitorTimeout'])
