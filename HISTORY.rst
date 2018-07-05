@@ -10,7 +10,7 @@ Current
 **Miscellaneous**
 
 - Refactored rpc interface functions
-
+- Refactored environment variable configuration
 
 1.2.2 (2018-06-28)
 ++++++++++++++++++

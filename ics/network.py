@@ -13,14 +13,14 @@ except ImportError:
     import cPickle as pickle  # Python2 version
 
 import config
+from environment import ICS_UDS
+from environment import ICS_UDS_FILE
 from custom_exceptions import NetworkConnectionError, NetworkError
 
 logger = logging.getLogger(__name__)
 
 HOST = ''
-PORT = config.ICS_PORT
-server_address_dir = '/var/opt/ics/uds'
-server_address = server_address_dir + '/uds_socket'
+PORT = ''
 
 clients = {}
 recv_queue = queue.Queue()
@@ -41,25 +41,25 @@ def create_client(sock):
 def create_listen_socket(host, port):
     """ Setup the sockets the server will receive connection requests on """
 
-    if not os.path.isdir(server_address_dir):
+    if not os.path.isdir(ICS_UDS):
         logger.debug('UDS socket directory does not exist, will be created')
         try:
-            os.makedirs(server_address_dir)
+            os.makedirs(ICS_UDS)
         except Exception as e:
             logger.critical('Unable to create UDS socket directory, ' + str(e))
             raise NetworkError
 
     try:
-        os.unlink(server_address)
+        os.unlink(ICS_UDS_FILE)
     except OSError as e:
-        if os.path.exists(server_address):
+        if os.path.exists(ICS_UDS_FILE):
             logging.critical('Unable to create listening socket, ' + str(e))
             raise NetworkError
 
     sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-    sock.bind(server_address)
+    sock.bind(ICS_UDS_FILE)
     sock.listen(1)
-    os.chmod(server_address, 0o777)  # Change permissions to make writeable to everyone
+    os.chmod(ICS_UDS_FILE, 0o777)  # Change permissions to make writeable to everyone
     #sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     #sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     #sock.bind((host, port))
@@ -70,7 +70,7 @@ def create_listen_socket(host, port):
 def connect(host, port):
     try:
         sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        sock.connect(server_address)
+        sock.connect(ICS_UDS_FILE)
         #sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         #sock.connect((host, port))
         return sock

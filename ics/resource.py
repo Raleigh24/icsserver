@@ -7,6 +7,10 @@ import time
 
 import config
 import events
+
+from environment import ICS_CONF
+from environment import ICS_RES_LOG
+
 from alerts import AlertSeverity, send_alert
 from attributes import resourceAttributes, group_attributes
 from custom_exceptions import DoesNotExist, AlreadyExists
@@ -15,7 +19,6 @@ from states import ResourceStates, GroupStates, ONLINE_STATES, TRANSITION_STATES
 logger = logging.getLogger(__name__)
 
 resources = {}
-resource_log = config.ICS_LOG + '/resource.log'
 
 
 class Resource:
@@ -150,8 +153,8 @@ class Resource:
         try:
             logger.debug('Resource({}) running command: {}'.format(self.name, ' '.join(cmd)))
             self.cmd_p = subprocess.Popen(cmd,
-                                          stdout=open(resource_log, 'a'),
-                                          stderr=open(resource_log, 'a'),
+                                          stdout=open(ICS_RES_LOG, 'a'),
+                                          stderr=open(ICS_RES_LOG, 'a'),
                                           close_fds=True)
             self.cmd_end_time = int(time.time()) + timeout
             self.cmd_type = cmd_type
@@ -648,11 +651,11 @@ def save_config(filename):
             for parent in resource.parents:
                 data_dict[group_name][resource_name]['dependencies'].append(parent.name)
 
-    if not os.path.isdir(config.ICS_CONF):
+    if not os.path.isdir(ICS_CONF):
         try:
-            os.makedirs(config.ICS_CONF)
+            os.makedirs(ICS_CONF)
         except OSError as e:
-            logger.error('Unable to create config directory: {}'.format(config.ICS_CONF))
+            logger.error('Unable to create config directory: {}'.format(ICS_CONF))
             logger.error('Reason: {}'.format(e))
 
     try:

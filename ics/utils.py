@@ -1,7 +1,7 @@
 import os
 import signal
 
-import config
+from environment import ICS_PID_FILE
 
 
 def is_process_running(pid):
@@ -11,14 +11,14 @@ def is_process_running(pid):
 
 def get_ics_pid():
     """Read ICS pid from pid file"""
-    with open(config.PID_FILE, 'r') as f:
+    with open(ICS_PID_FILE, 'r') as f:
         pid = f.read()
     return pid
 
 
 def check_running():
     """Determine if ICS server is running by attempting to read the PID file"""
-    if os.path.exists(config.PID_FILE):
+    if os.path.exists(ICS_PID_FILE):
         pid = get_ics_pid()
         return is_process_running(pid)
     else:
@@ -28,7 +28,7 @@ def check_running():
 def create_pid_file(pid):
     """Write new PID to PID file"""
     try:
-        with open(config.PID_FILE, 'w') as f:
+        with open(ICS_PID_FILE, 'w') as f:
             f.write(str(pid))
     except IOError as e:
         print('ERROR: Unable to create PID file: {}'.format(e))

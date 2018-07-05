@@ -5,8 +5,10 @@ import threading
 import time
 import os
 
-import config
+from environment import ICS_VERSION
+from environment import ICS_CONF_FILE
 
+import config
 config.create_logger()  # Need to create logger before importing other modules
 import network
 from resource import poll_updater, load_config, save_config
@@ -23,12 +25,12 @@ logger = logging.getLogger(__name__)
 def signal_handler(signal_code, frame):
     if signal_code is signal.SIGINT:
         logging.critical('Caught signal SIGINT (Ctrl + C), exiting...')
-        save_config(config.RES_CONF)
+        save_config(ICS_CONF_FILE)
         # TODO: gracefully shutdown
     elif signal_code is signal.SIGTERM:
         logging.debug('SIGTERM line at {}'.format(frame.f_lineno))
         logging.critical('Caught signal SIGTERM, exiting...')
-        save_config(config.RES_CONF)
+        save_config(ICS_CONF_FILE)
         # TODO: gracefully shutdown
     exit(1)
 
@@ -37,16 +39,16 @@ signal.signal(signal.SIGINT, signal_handler)
 signal.signal(signal.SIGTERM, signal_handler)
 
 logger.info('Starting ICS server...')
-logger.info('ICS Version: ' + config.ICS_VERSION)
+logger.info('ICS Version: ' + ICS_VERSION)
 logger.info('Python version: ' + sys.version.replace('\n', ''))
 logger.info('Logging level: ' + logging.getLevelName(logger.getEffectiveLevel()))
 
 # Initialize resources
 logger.info('Loading from config file')
-if not os.path.isfile(config.RES_CONF):
+if not os.path.isfile(ICS_CONF_FILE):
     logger.info('No config file found, skipping load')
 else:
-    load_config(config.RES_CONF)
+    load_config(ICS_CONF_FILE)
 
 threads = []
 
@@ -91,4 +93,4 @@ while True:
             logger.critical('Thread {} no longer running'.format(thread.name))
 
     time.sleep(5)
-    save_config(config.RES_CONF)
+    save_config(ICS_CONF_FILE)
