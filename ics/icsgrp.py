@@ -113,7 +113,7 @@ elif args.resources is not None:
         print(resource_name)
 
 elif args.list is True:
-    groups = rpc_proxy.list_groups()
+    groups = rpc_proxy.grp_list()
     for group_name in groups:
         print(group_name)
 

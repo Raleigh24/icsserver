@@ -3,7 +3,6 @@ import network
 import resource
 
 
-
 class RPCHandler:
     def __init__(self):
         self._functions = {}
@@ -41,21 +40,21 @@ class RPCProxy:
         return do_rpc
 
 
-rpc_functions = [
-    resource.online,
-    resource.offline,
-    resource.add,
-    resource.delete,
-    resource.state,
-    resource.clear,
-    resource.probe,
-    resource.dep,
-    resource.list_resources,
-    resource.link,
-    resource.unlink,
-    resource.value,
-    resource.modify,
-    resource.attr,
+rpc_function_list = [
+    resource.res_online,
+    resource.res_offline,
+    resource.res_add,
+    resource.res_delete,
+    resource.res_state,
+    resource.res_clear,
+    resource.res_probe,
+    resource.res_dep,
+    resource.res_list,
+    resource.res_link,
+    resource.res_unlink,
+    resource.res_value,
+    resource.res_modify,
+    resource.res_attr,
     resource.grp_online,
     resource.grp_offline,
     resource.grp_add,
@@ -66,13 +65,13 @@ rpc_functions = [
     resource.grp_flush,
     resource.grp_clear,
     resource.grp_resources,
-    resource.list_groups
+    resource.grp_list
 ]
 
 
 def rpc_runner():
     rpc_handler = RPCHandler()
-    for func in rpc_functions:
+    for func in rpc_function_list:
         rpc_handler.register_function(func)
 
     while True:

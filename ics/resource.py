@@ -266,163 +266,6 @@ def poll_updater():
         time.sleep(1)
 
 
-def get_resource(resource_name):
-    """Get resource object from resources list"""
-    if resource_name in resources.keys():
-        resource = resources[resource_name]
-        return resource
-    else:
-        raise DoesNotExist(msg='Resource {} does not exist'.format(resource_name))
-
-
-# Functions for RPC interface
-def online(resource_name):
-    """RPC interface for bringing resource online"""
-    resource = get_resource(resource_name)
-    if resource.state is not ResourceStates.ONLINE:
-        resource.change_state(ResourceStates.STARTING)
-
-
-def offline(resource_name):
-    """RPC interface for bringing resource offline"""
-    resource = get_resource(resource_name)
-    if resource.state is not ResourceStates.OFFLINE:
-        resource.change_state(ResourceStates.STOPPING)
-
-
-def add(resource_name, group_name):
-    """RPC interface for adding new resource"""
-    #logger.info('Resource({}) new resource added'.format(resource_name))
-    if resource_name in resources.keys():
-        raise AlreadyExists(msg='Resource {} already exists'.format(resource_name))
-    elif group_name not in groups.keys():
-        raise DoesNotExist(msg='Group {} does not exist'.format(group_name))
-    else:
-        resource = Resource(resource_name, group_name)
-        resources[resource_name] = resource
-        group = groups[group_name]
-        group.add_resource(resource)
-        logger.info('Resource({}) new resource added'.format(resource_name))
-
-
-def delete(resource_name):
-    """RPC interface for deleting existing resource"""
-    resource = get_resource(resource_name)
-
-    for parent in resource.parents:
-        parent.children.remove(resource)
-
-    for child in resource.children:
-        child.parents.remove(resource)
-
-    group = get_group(resource.attr['Group'])
-    group.delete_resource(resource)
-    del resources[resource_name]
-    logger.info('Resource({}) resource deleted'.format(resource_name))
-
-
-def state(resource_args):
-    """RPC interface for getting resource current state """
-    resource_states = []
-    if len(resource_args) == 1:
-        resource = get_resource(resource_args[0])
-        resource_states.append([resource.state.upper()])
-    elif resource_args:
-        for resource_name in resource_args:
-            resource = get_resource(resource_name)
-            resource_states.append([resource.name, resource.state.upper()])
-    else:
-        for resource in resources.values():
-            resource_states.append([resource.name, resource.state.upper()])
-
-    return resource_states
-
-
-def link(parent_name, resource_name):
-    """RPC interface to link two resources"""
-    resource = get_resource(resource_name)
-    parent_resource = get_resource(parent_name)
-    if resource.attr['Group'] != parent_resource.attr['Group']:
-        raise Exception
-
-    resource.add_parent(parent_resource)
-    parent_resource.add_child(resource)
-    logger.info('Resource({}) created dependency on {}'.format(resource_name, parent_name))
-
-
-def unlink(parent_name, resource_name):
-    """RPC interface to unlink two resources"""
-    resource = get_resource(resource_name)
-    parent_resource = get_resource(parent_name)
-    resource.remove_parent(parent_name)
-    parent_resource.remove_child(resource)
-
-
-def clear(resource_name):
-    """RPC interface for clearing resource in a faulted state"""
-    resource = get_resource(resource_name)
-    resource.clear()
-
-
-def probe(resource_name):
-    """RPC interface for manually triggering a poll"""
-    resource = get_resource(resource_name)
-    events.trigger_event(events.PollRunEvent(resource))
-
-
-def dep(resource_args):
-    """RPC interface for getting resource dependencies"""
-    dep_list = []
-    if len(resource_args) == 0:
-        for resource in resources.values():
-            resource_group_name = resource.attr['Group']
-            for parent in resource.parents:
-                row = [resource_group_name, parent.name, resource.name]
-                dep_list.append(row)
-    else:
-        for resource_name in resource_args:
-            resource = get_resource(resource_name)
-            resource_group_name = resource.attr['Group']
-            for parent in resource.parents:
-                row = [resource_group_name, parent.name, resource.name]
-                dep_list.append(row)
-            for child in resource.children:
-                row = [resource_group_name, resource.name, child.name]
-                dep_list.append(row)
-
-    return dep_list
-
-
-def list_resources():
-    """RPC interface for listing all resources"""
-    return resources
-
-
-def value(resource_name, attr_name):
-    """RPC interface for getting attribute value for resource"""
-    resource = get_resource(resource_name)
-    return resource.attr[attr_name]
-
-
-def modify(resource_name, attr_name, value):
-    """RPC interface for modifying attribute for resource"""
-    resource = resources[resource_name]
-    try:
-        resource.attr[attr_name] = value
-        return True
-    except KeyError:
-        return False
-
-
-def attr(resource_name):
-    """RPC interface for getting resource attributes"""
-    resource = get_resource(resource_name)
-    attr_dict = []
-    for attr_name in resource.attr.keys():
-        attr_dict.append([attr_name, resource.attr[attr_name]])
-    return attr_dict
-
-
 groups = {}
 
 
@@ -511,6 +354,161 @@ class Group:
             resource.clear()
 
 
+def get_resource(resource_name):
+    """Get resource object from resources list"""
+    if resource_name in resources.keys():
+        resource = resources[resource_name]
+        return resource
+    else:
+        raise DoesNotExist(msg='Resource {} does not exist'.format(resource_name))
+
+
+def res_online(resource_name):
+    """RPC interface for bringing resource online"""
+    resource = get_resource(resource_name)
+    if resource.state is not ResourceStates.ONLINE:
+        resource.change_state(ResourceStates.STARTING)
+
+
+def res_offline(resource_name):
+    """RPC interface for bringing resource offline"""
+    resource = get_resource(resource_name)
+    if resource.state is not ResourceStates.OFFLINE:
+        resource.change_state(ResourceStates.STOPPING)
+
+
+def res_add(resource_name, group_name):
+    """RPC interface for adding new resource"""
+    if resource_name in resources.keys():
+        raise AlreadyExists(msg='Resource {} already exists'.format(resource_name))
+    elif group_name not in groups.keys():
+        raise DoesNotExist(msg='Group {} does not exist'.format(group_name))
+    else:
+        resource = Resource(resource_name, group_name)
+        resources[resource_name] = resource
+        group = groups[group_name]
+        group.add_resource(resource)
+        logger.info('Resource({}) new resource added'.format(resource_name))
+
+
+def res_delete(resource_name):
+    """RPC interface for deleting existing resource"""
+    resource = get_resource(resource_name)
+
+    for parent in resource.parents:
+        parent.children.remove(resource)
+
+    for child in resource.children:
+        child.parents.remove(resource)
+
+    group = get_group(resource.attr['Group'])
+    group.delete_resource(resource)
+    del resources[resource_name]
+    logger.info('Resource({}) resource deleted'.format(resource_name))
+
+
+def res_state(resource_args):
+    """RPC interface for getting resource current state """
+    resource_states = []
+    if len(resource_args) == 1:
+        resource = get_resource(resource_args[0])
+        resource_states.append([resource.state.upper()])
+    elif resource_args:
+        for resource_name in resource_args:
+            resource = get_resource(resource_name)
+            resource_states.append([resource.name, resource.state.upper()])
+    else:
+        for resource in resources.values():
+            resource_states.append([resource.name, resource.state.upper()])
+
+    return resource_states
+
+
+def res_link(parent_name, resource_name):
+    """RPC interface to link two resources"""
+    resource = get_resource(resource_name)
+    parent_resource = get_resource(parent_name)
+    if resource.attr['Group'] != parent_resource.attr['Group']:
+        raise Exception
+
+    resource.add_parent(parent_resource)
+    parent_resource.add_child(resource)
+    logger.info('Resource({}) created dependency on {}'.format(resource_name, parent_name))
+
+
+def res_unlink(parent_name, resource_name):
+    """RPC interface to unlink two resources"""
+    resource = get_resource(resource_name)
+    parent_resource = get_resource(parent_name)
+    resource.remove_parent(parent_name)
+    parent_resource.remove_child(resource)
+
+
+def res_clear(resource_name):
+    """RPC interface for clearing resource in a faulted state"""
+    resource = get_resource(resource_name)
+    resource.clear()
+
+
+def res_probe(resource_name):
+    """RPC interface for manually triggering a poll"""
+    resource = get_resource(resource_name)
+    events.trigger_event(events.PollRunEvent(resource))
+
+
+def res_dep(resource_args):
+    """RPC interface for getting resource dependencies"""
+    dep_list = []
+    if len(resource_args) == 0:
+        for resource in resources.values():
+            resource_group_name = resource.attr['Group']
+            for parent in resource.parents:
+                row = [resource_group_name, parent.name, resource.name]
+                dep_list.append(row)
+    else:
+        for resource_name in resource_args:
+            resource = get_resource(resource_name)
+            resource_group_name = resource.attr['Group']
+            for parent in resource.parents:
+                row = [resource_group_name, parent.name, resource.name]
+                dep_list.append(row)
+            for child in resource.children:
+                row = [resource_group_name, resource.name, child.name]
+                dep_list.append(row)
+
+    return dep_list
+
+
+def res_list():
+    """RPC interface for listing all resources"""
+    return resources
+
+
+def res_value(resource_name, attr_name):
+    """RPC interface for getting attribute value for resource"""
+    resource = get_resource(resource_name)
+    return resource.attr[attr_name]
+
+
+def res_modify(resource_name, attr_name, value):
+    """RPC interface for modifying attribute for resource"""
+    resource = resources[resource_name]
+    try:
+        resource.attr[attr_name] = value
+        return True
+    except KeyError:
+        return False
+
+
+def res_attr(resource_name):
+    """RPC interface for getting resource attributes"""
+    resource = get_resource(resource_name)
+    attr_dict = []
+    for attr_name in resource.attr.keys():
+        attr_dict.append([attr_name, resource.attr[attr_name]])
+    return attr_dict
+
+
 def get_group(group_name):
     """Get group object from groups list"""
     if group_name in groups.keys():
@@ -574,11 +572,13 @@ def grp_delete(group_name):
 
 
 def grp_enable(group_name):
+    """RPC interface to enable a group"""
     group = get_group(group_name)
     group.enable()
 
 
 def grp_disable(group_name):
+    """RPC interface to disable a group"""
     group = get_group(group_name)
     group.disable()
 
@@ -604,8 +604,8 @@ def grp_resources(group_name):
     return resource_names
 
 
-def list_groups():
-    """RPC interface for listing all existing groups"""
+def grp_list():
+    """RPC interface for listing all existing group names"""
     return groups.keys()
 
 
@@ -677,7 +677,7 @@ def load_config(filename):
     for group_name in data_dict.keys():
         grp_add(group_name)
         for resource_name in data_dict[group_name]:
-            add(resource_name, group_name)
+            res_add(resource_name, group_name)
             resource = get_resource(resource_name)
             for attr_name in data_dict[group_name][resource_name]['attributes'].keys():
                 resource.attr[attr_name] = str(data_dict[group_name][resource_name]['attributes'][attr_name])
@@ -687,7 +687,7 @@ def load_config(filename):
     for group_name in data_dict.keys():
         for resource_name in data_dict[group_name]:
             for parent_name in data_dict[group_name][resource_name]['dependencies']:
-                link(parent_name, resource_name)
+                res_link(parent_name, resource_name)
 
     logger.debug('Resource configuration loaded from file {}'.format(filename))
 

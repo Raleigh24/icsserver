@@ -3,10 +3,20 @@
 Release History
 ---------------
 
+
+Current
+++++++++++++++++++
+
+**Miscellaneous**
+
+- Refactored rpc interface functions
+
+
 1.2.2 (2018-06-28)
 ++++++++++++++++++
 
 **Improvements**
+
 - Server will create UDS socket directory if does not exist
 - Improved error handling when creating UDS socket
 - Correct permissions applied to UDS socket
@@ -47,6 +57,7 @@ Release History
 - Reworked project directory structure
 - Refactored testing tools
 
+
 1.1.1 (2018-03-14)
 ++++++++++++++++++
 
@@ -83,6 +94,7 @@ Release History
 **Improvements**
 
 - Changed bash scripts in bin to set correct ICS_HOME
+
 
 1.0.0 (2018-02-13)
 ++++++++++++++++++
