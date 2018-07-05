@@ -1,16 +1,10 @@
-import json
 import logging
-import os
 import random
 import subprocess
 import time
 
-import config
 import events
-
-from environment import ICS_CONF
 from environment import ICS_RES_LOG
-
 from alerts import AlertSeverity, send_alert
 from attributes import resourceAttributes, group_attributes
 from custom_exceptions import DoesNotExist, AlreadyExists
@@ -610,87 +604,3 @@ def grp_resources(group_name):
 def grp_list():
     """RPC interface for listing all existing group names"""
     return groups.keys()
-
-
-# TODO: move config file functions to different file
-def read_configfile(filename):
-    try:
-        with open(filename, 'r') as infile:
-            return json.load(infile)
-    except IOError:
-        logger.error('Unable to load config file {}'.format(filename))
-        return
-
-
-def write_configfile(filename, json_data):
-    try:
-        with open(filename, 'w') as outfile:
-            json.dump(json_data, outfile, indent=4, sort_keys=True)
-    except IOError:
-        logger.error('Unable to save config file {}'.format(filename))
-        return
-
-
-def save_config(filename):
-    """Save resource configuration to file"""
-    data_dict = {}
-    default_attr = resourceAttributes['resource']
-
-    for group in groups.values():
-        group_name = group.name
-        data_dict[group_name] = {}
-        for resource in group.members:
-            resource_name = resource.name
-            data_dict[group_name][resource_name] = {}
-            data_dict[group_name][resource_name]['attributes'] = {}
-            for attr_name in resource.attr.keys():
-                attr_value = resource.attr[attr_name]
-                if attr_value != default_attr[attr_name]['default']:
-                    data_dict[group_name][resource_name]['attributes'][attr_name] = attr_value
-            data_dict[group.name][resource_name]['dependencies'] = []
-            for parent in resource.parents:
-                data_dict[group_name][resource_name]['dependencies'].append(parent.name)
-
-    if not os.path.isdir(ICS_CONF):
-        try:
-            os.makedirs(ICS_CONF)
-        except OSError as e:
-            logger.error('Unable to create config directory: {}'.format(ICS_CONF))
-            logger.error('Reason: {}'.format(e))
-
-    try:
-        with open(filename, 'w') as outfile:
-            json.dump(data_dict, outfile, indent=4, sort_keys=True)
-    except IOError:
-        logger.error('Unable to save config file {}'.format(filename))
-        return
-
-    logger.debug('Resource configuration saved to file {}'.format(filename))
-
-
-def load_config(filename):
-    """Read resource configuration from file"""
-    try:
-        with open(filename, 'r') as infile:
-            data_dict = json.load(infile)
-    except IOError:
-        logger.error('Unable to load config file {}'.format(filename))
-        return
-
-    for group_name in data_dict.keys():
-        grp_add(group_name)
-        for resource_name in data_dict[group_name]:
-            res_add(resource_name, group_name)
-            resource = get_resource(resource_name)
-            for attr_name in data_dict[group_name][resource_name]['attributes'].keys():
-                resource.attr[attr_name] = str(data_dict[group_name][resource_name]['attributes'][attr_name])
-
-    # Links need to done in separate loop to guarantee parent
-    # resources are created when establishing a link
-    for group_name in data_dict.keys():
-        for resource_name in data_dict[group_name]:
-            for parent_name in data_dict[group_name][resource_name]['dependencies']:
-                res_link(parent_name, resource_name)
-
-    logger.debug('Resource configuration loaded from file {}'.format(filename))
-

@@ -11,6 +11,7 @@ Current
 
 - Refactored rpc interface functions
 - Refactored environment variable configuration
+- Refactored config file functions
 
 1.2.2 (2018-06-28)
 ++++++++++++++++++

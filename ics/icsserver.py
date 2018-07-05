@@ -1,4 +1,5 @@
 import logging
+import logging.config
 import signal
 import sys
 import threading
@@ -6,16 +7,31 @@ import time
 import os
 
 from environment import ICS_VERSION
-from environment import ICS_CONF_FILE
+from environment import ICS_HOME
+from environment import ICS_LOG
+
+# Need to create logger before importing other modules
+if not os.path.isdir(ICS_LOG):
+    try:
+        os.makedirs(ICS_LOG)
+    except OSError as e:
+        print('ERROR: Unable to create log directory: {}'.format(e))
+        print('Exiting...')
+        exit(1)
+# TODO: Check if file path exists
+logging.logFilename = ICS_LOG + '/icsserver.log'
+try:
+    logging.config.fileConfig(ICS_HOME + '/ics/logging.conf')
+except IOError as e:
+    print('ERROR: Unable to create log file: {}'.format(e))
+    exit(1)
 
 import config
-config.create_logger()  # Need to create logger before importing other modules
 import network
-from resource import poll_updater, load_config, save_config
+from resource import poll_updater
 from events import event_handler
 from rpcinterface import rpc_runner
 from custom_exceptions import NetworkError
-
 
 # Setup logging information
 logger = logging.getLogger(__name__)
@@ -25,12 +41,12 @@ logger = logging.getLogger(__name__)
 def signal_handler(signal_code, frame):
     if signal_code is signal.SIGINT:
         logging.critical('Caught signal SIGINT (Ctrl + C), exiting...')
-        save_config(ICS_CONF_FILE)
+        config.save_config()
         # TODO: gracefully shutdown
     elif signal_code is signal.SIGTERM:
         logging.debug('SIGTERM line at {}'.format(frame.f_lineno))
         logging.critical('Caught signal SIGTERM, exiting...')
-        save_config(ICS_CONF_FILE)
+        config.save_config()
         # TODO: gracefully shutdown
     exit(1)
 
@@ -43,12 +59,8 @@ logger.info('ICS Version: ' + ICS_VERSION)
 logger.info('Python version: ' + sys.version.replace('\n', ''))
 logger.info('Logging level: ' + logging.getLevelName(logger.getEffectiveLevel()))
 
-# Initialize resources
-logger.info('Loading from config file')
-if not os.path.isfile(ICS_CONF_FILE):
-    logger.info('No config file found, skipping load')
-else:
-    load_config(ICS_CONF_FILE)
+# Initialize server from configuration file
+config.load_config()
 
 threads = []
 
@@ -93,4 +105,4 @@ while True:
             logger.critical('Thread {} no longer running'.format(thread.name))
 
     time.sleep(5)
-    save_config(ICS_CONF_FILE)
+    config.save_config()
