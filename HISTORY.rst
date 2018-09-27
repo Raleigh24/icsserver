@@ -7,8 +7,23 @@ Release History
 Current
 ++++++++++++++++++
 
+**New Features**
+
+- Added ClusterName system attribute
+- Added NodeName system attribute
+- Added GroupLimit system attribute
+- Added BackupInterval system attribute
+- Added AlertRecipients system attribute
+- Added AlertLevel system attribute
+- Added config backup feature
+
+**Improvements**
+
+- Moved AutoStart from resource to group attribute
+
 **Miscellaneous**
 
+- Major code refactor of central system to better manage system level functions and centralize system data
 - Refactored rpc interface functions
 - Refactored environment variable configuration
 - Refactored config file functions
