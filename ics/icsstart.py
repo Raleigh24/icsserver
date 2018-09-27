@@ -2,11 +2,9 @@ import argparse
 import subprocess
 import sys
 
-import config
 import utils
 from environment import ICS_HOME
 from environment import ICS_VERSION
-
 
 
 def start_server():
@@ -33,15 +31,3 @@ if __name__ == '__main__':
             exit(1)
         else:
             start_server()
-
-
-
-
-
-
-
-
-
-
-
-

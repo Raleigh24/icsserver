@@ -2,8 +2,6 @@ import logging
 import logging.config
 import signal
 import sys
-import threading
-import time
 import os
 
 from environment import ICS_VERSION
@@ -26,12 +24,7 @@ except IOError as e:
     print('ERROR: Unable to create log file: {}'.format(e))
     exit(1)
 
-import config
-import network
-from resource import poll_updater
-from events import event_handler
-from rpcinterface import rpc_runner
-from custom_exceptions import NetworkError
+from system import System  # Not sure why this needs to be here
 
 # Setup logging information
 logger = logging.getLogger(__name__)
@@ -41,12 +34,12 @@ logger = logging.getLogger(__name__)
 def signal_handler(signal_code, frame):
     if signal_code is signal.SIGINT:
         logging.critical('Caught signal SIGINT (Ctrl + C), exiting...')
-        config.save_config()
+        #config.write_config()
         # TODO: gracefully shutdown
     elif signal_code is signal.SIGTERM:
         logging.debug('SIGTERM line at {}'.format(frame.f_lineno))
         logging.critical('Caught signal SIGTERM, exiting...')
-        config.save_config()
+        #config.write_config()
         # TODO: gracefully shutdown
     exit(1)
 
@@ -59,50 +52,9 @@ logger.info('ICS Version: ' + ICS_VERSION)
 logger.info('Python version: ' + sys.version.replace('\n', ''))
 logger.info('Logging level: ' + logging.getLevelName(logger.getEffectiveLevel()))
 
-# Initialize server from configuration file
-config.load_config()
 
-threads = []
+# Run system
+system = System()
+system.startup()
+system.run()  # Run forever
 
-# Start event handler thread
-logger.info('Starting event handler...')
-thread_event_handler = threading.Thread(name='event handler', target=event_handler)
-thread_event_handler.daemon = True
-thread_event_handler.start()
-threads.append(thread_event_handler)
-
-# Start client handler thread
-logger.info('Starting client handler...')
-try:
-    sock = network.create_tcp_interface()
-except NetworkError:
-    logger.critical('Unable to create client interface, exiting...')
-    exit(1)
-thread_client_handler = threading.Thread(name='client handler', target=network.handle_clients, args=(sock,))
-thread_client_handler.daemon = True
-thread_client_handler.start()
-threads.append(thread_client_handler)
-
-# Start poll updater thread
-logger.info('Starting poll updater...')
-thread_poll_updater = threading.Thread(name='poll updater', target=poll_updater)
-thread_poll_updater.daemon = True
-thread_poll_updater.start()
-threads.append(thread_poll_updater)
-
-# Start RPC interface thread
-logger.info('Starting RPC interface...')
-thread_rpc_interface = threading.Thread(name='RPC interface', target=rpc_runner)
-thread_rpc_interface.daemon = True
-thread_rpc_interface.start()
-threads.append(thread_rpc_interface)
-
-logger.info('Server startup complete')
-
-while True:
-    for thread in threads:
-        if not thread.is_alive():
-            logger.critical('Thread {} no longer running'.format(thread.name))
-
-    time.sleep(5)
-    config.save_config()

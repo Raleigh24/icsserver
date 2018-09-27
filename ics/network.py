@@ -12,7 +12,6 @@ try:
 except ImportError:
     import cPickle as pickle  # Python2 version
 
-import config
 from environment import ICS_UDS
 from environment import ICS_UDS_FILE
 from custom_exceptions import NetworkConnectionError, NetworkError

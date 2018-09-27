@@ -20,9 +20,9 @@ def read_json(filename):
     try:
         with open(filename, 'r') as file:
             return json.load(file)
-    except IOError:
-        logger.error('Unable to load config file {}'.format(filename))
-        return
+    except IOError as error:
+        logger.error('Unable to load config file {}, {}'.format(filename, str(error)))
+        raise
 
 
 def write_json(filename, data):
@@ -30,9 +30,9 @@ def write_json(filename, data):
     try:
         with open(filename, 'w') as file:
             json.dump(data, file, indent=4, sort_keys=True)
-    except IOError:
-        logger.error('Unable to same config file {}'.format(filename))
-        return
+    except IOError as error:
+        logger.error('Unable to save config file {}, {}'.format(filename, str(error)))
+        raise
 
 
 def load_config():
@@ -62,25 +62,25 @@ def load_config():
     logger.debug('Resource configuration loaded from file {}'.format(ICS_CONF_FILE))
 
 
-def save_config():
+def write_config(data):
     """Save ICS configuration to file"""
-    data_dict = {}
-    default_attr = resource_attributes['resource']
+    #data_dict = {}
+    #default_attr = resource_attributes['resource']
 
-    for group in groups.values():
-        group_name = group.name
-        data_dict[group_name] = {}
-        for resource in group.members:
-            resource_name = resource.name
-            data_dict[group_name][resource_name] = {}
-            data_dict[group_name][resource_name]['attributes'] = {}
-            for attr_name in resource.attr.keys():
-                attr_value = resource.attr[attr_name]
-                if attr_value != default_attr[attr_name]['default']:
-                    data_dict[group_name][resource_name]['attributes'][attr_name] = attr_value
-            data_dict[group.name][resource_name]['dependencies'] = []
-            for parent in resource.parents:
-                data_dict[group_name][resource_name]['dependencies'].append(parent.name)
+    #for group in groups.values():
+    #    group_name = group.name
+    #    data_dict[group_name] = {}
+    #    for resource in group.members:
+    #        resource_name = resource.name
+    #        data_dict[group_name][resource_name] = {}
+    #        data_dict[group_name][resource_name]['attributes'] = {}
+    #        for attr_name in resource.attr.keys():
+    #            attr_value = resource.attr[attr_name]
+    #             if attr_value != default_attr[attr_name]['default']:
+    #                 data_dict[group_name][resource_name]['attributes'][attr_name] = attr_value
+    #         data_dict[group.name][resource_name]['dependencies'] = []
+    #         for parent in resource.parents:
+    #             data_dict[group_name][resource_name]['dependencies'].append(parent.name)
 
     if not os.path.isdir(ICS_CONF):
         try:
@@ -89,4 +89,4 @@ def save_config():
             logger.error('Unable to create config directory: {}'.format(ICS_CONF))
             logger.error('Reason: {}'.format(e))
 
-    write_json(ICS_CONF_FILE, data_dict)
+    write_json(ICS_CONF_FILE, data)
