@@ -23,10 +23,8 @@ except network.ConnectionError:
 
 rpc_proxy = RPCProxy(conn)
 
-
 if args.loglevel is not None:
-    print(args.loglevel)
+    #print(args.loglevel)
     result = rpc_proxy.set_log_level(args.loglevel)
-
 
 conn.close()
