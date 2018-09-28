@@ -19,7 +19,7 @@ if not os.path.isdir(ICS_LOG):
 # TODO: Check if file path exists
 logging.logFilename = ICS_LOG + '/icsserver.log'
 try:
-    logging.config.fileConfig(ICS_HOME + '/ics/logging.conf')
+    logging.config.fileConfig(ICS_HOME + '/etc/logging.conf')
 except IOError as e:
     print('ERROR: Unable to create log file: {}'.format(e))
     exit(1)
