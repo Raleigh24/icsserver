@@ -77,13 +77,19 @@ def set_log_level(level):
     root_logger = logging.getLogger()
     if level == 'CRITICAL':
         root_logger.setLevel(logging.CRITICAL)
+        logging.critical('Log level set: ' + level)
     elif level == 'ERROR':
         root_logger.setLevel(logging.ERROR)
+        logging.critical('Log level set: ' + level)
     elif level == 'WARNING':
         root_logger.setLevel(logging.WARNING)
+        logging.critical('Log level set: ' + level)
     elif level == 'INFO':
         root_logger.setLevel(logging.INFO)
+        logging.critical('Log level set: ' + level)
     elif level == 'DEBUG':
         root_logger.setLevel(logging.DEBUG)
+        logging.critical('Log level set: ' + level)
     elif level == 'NOTSET':
         root_logger.setLevel(logging.NOTSET)
+        logging.critical('Log level set: ' + level)
