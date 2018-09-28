@@ -7,6 +7,7 @@ from resource import Node
 from events import event_handler
 from rpcinterface import rpc_runner
 from custom_exceptions import NetworkError, SystemError
+from utils import set_log_level
 
 
 logger = logging.getLogger(__name__)
@@ -54,6 +55,7 @@ class System:
 
         # Function list to be registered with rpc interface
         rpc_function_list = [
+            set_log_level,
             self.node.res_online,
             self.node.res_offline,
             self.node.res_add,
@@ -112,7 +114,7 @@ class System:
         # for thread in self.threads:
         #     thread.join()
         #TODO: save config
-        pass
+        logging.shutdown()
 
 
 

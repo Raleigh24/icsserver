@@ -1,9 +1,11 @@
 import os
 import signal
 import json
+import logging
 
 from environment import ICS_PID_FILE
 
+logger = logging.getLogger(__name__)
 
 def is_process_running(pid):
     """Determine if a process is running based on it's PID"""
@@ -70,5 +72,18 @@ def write_json(filename, data):
         #logger.error('Unable to save config file {}, {}'.format(filename, str(error)))
         raise
 
-#def set_log_level(level):
 
+def set_log_level(level):
+    root_logger = logging.getLogger()
+    if level == 'CRITICAL':
+        root_logger.setLevel(logging.CRITICAL)
+    elif level == 'ERROR':
+        root_logger.setLevel(logging.ERROR)
+    elif level == 'WARNING':
+        root_logger.setLevel(logging.WARNING)
+    elif level == 'INFO':
+        root_logger.setLevel(logging.INFO)
+    elif level == 'DEBUG':
+        root_logger.setLevel(logging.DEBUG)
+    elif level == 'NOTSET':
+        root_logger.setLevel(logging.NOTSET)
