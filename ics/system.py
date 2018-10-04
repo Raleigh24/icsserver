@@ -6,7 +6,7 @@ import network
 from resource import Node
 from events import event_handler
 from rpcinterface import rpc_runner
-from custom_exceptions import NetworkError, SystemError
+from ics_exceptions import SystemError
 from utils import set_log_level
 
 
@@ -31,7 +31,7 @@ class System:
         logger.info('Starting client handler...')
         try:
             sock = network.create_tcp_interface()
-        except NetworkError:
+        except network.NetworkError:
             logger.critical('Unable to create client interface, exiting...')
             raise SystemError
         thread_client_handler = threading.Thread(name='client handler', target=network.handle_clients, args=(sock,))
