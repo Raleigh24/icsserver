@@ -6,7 +6,7 @@ import network
 from resource import Node
 from events import event_handler
 from rpcinterface import rpc_runner
-from ics_exceptions import SystemError
+from ics_exceptions import ICSError
 from utils import set_log_level
 
 
@@ -33,7 +33,7 @@ class System:
             sock = network.create_udp_interface()
         except network.NetworkError:
             logger.critical('Unable to create client interface, exiting...')
-            raise SystemError
+            raise ICSError
         thread_client_handler = threading.Thread(name='client handler', target=network.handle_clients, args=(sock,))
         thread_client_handler.daemon = True
         thread_client_handler.start()
@@ -56,6 +56,8 @@ class System:
         # Function list to be registered with rpc interface
         rpc_function_list = [
             set_log_level,
+            self.node.node_value,
+            self.node.node_modify,
             self.node.res_online,
             self.node.res_offline,
             self.node.res_add,

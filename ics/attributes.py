@@ -124,12 +124,12 @@ group_attributes = {
 
 
 system_attributes = {
-    "ClusterName":{
+    "ClusterName": {
         "default": "",
         "type": "string",
         "description": "The name of the cluster"
     },
-    "NodeName":{
+    "NodeName": {
         "default": "",
         "type": "string",
         "description": "The name of the node"

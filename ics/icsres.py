@@ -2,7 +2,7 @@ import argparse
 import sys
 
 import network
-from resource import DoesNotExist, AlreadyExists
+from ics_exceptions import DoesNotExist, AlreadyExists
 from rpcinterface import RPCProxy
 from tabular import print_table
 import utils
@@ -60,7 +60,7 @@ def perform(func, *func_args):
         return func(*func_args)
     except DoesNotExist as e:
         print('ERROR: ' + str(e))
-        exit(1)
+        sys.exit(1)
 
 
 if args.online is not None:
@@ -78,6 +78,7 @@ elif args.add is not None:
         perform(rpc_proxy.res_add, resource_name, group_name)
     except AlreadyExists as e:
         print('ERROR: ' + str(e))
+        sys.exit(1)
 
 elif args.delete is not None:
     resource_name = args.delete[0]
@@ -120,25 +121,25 @@ elif args.list is True:
 
 elif args.value is not None:
     resource_name = args.value[0]
-    value = args.value[1]
+    attr = args.value[1]
     try:
-        result = rpc_proxy.res_value(resource_name, value)
+        result = rpc_proxy.res_value(resource_name, attr)
+        print(result)
     except DoesNotExist as e:
         print('ERROR: ' + str(e))
+        sys.exit(1)
     except KeyError:
         print('ERROR: Attribute does not exists')
-        exit(1)
-
-    print(result)
+        sys.exit(1)
 
 elif args.modify is not None:
     resource_name = args.modify[0]
-    value = args.modify[1]
-    attr = ' '.join(args.modify[2:])
-    result = rpc_proxy.res_modify(resource_name, value, attr)
+    attr = args.modify[1]
+    value = ' '.join(args.modify[2:])
+    result = rpc_proxy.res_modify(resource_name, attr, value)
     if not result:
         print('ERROR: Attribute does not exists')
-        exit(1)
+        sys.exit(1)
 
 elif args.wait is not None:
     resource_name = args.wait[0]

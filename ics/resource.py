@@ -112,6 +112,18 @@ class Node(AttributeObject):
         else:
             raise DoesNotExist(msg='Resource {} does not exist'.format(resource_name))
 
+    def node_value(self, attr_name):
+        return self.attr[attr_name]
+
+    def node_modify(self, attr_name, value):
+        try:
+            previous_value = self.attr[attr_name]
+            self.attr[attr_name] = value
+            logging.info('Node attribute changed from {} to {}'.format(previous_value, value))
+            return True
+        except KeyError:
+            return False
+
     def res_online(self, resource_name):
         """RPC interface for bringing resource online"""
         resource = self.get_resource(resource_name)
@@ -233,7 +245,9 @@ class Node(AttributeObject):
         """RPC interface for modifying attribute for resource"""
         resource = self.resources[resource_name]
         try:
+            previous_value = resource.attr[attr_name]
             resource.attr[attr_name] = value
+            logging.info('Resource({}) attribute changed from {} to {}'.format(resource_name, previous_value, value))
             return True
         except KeyError:
             return False

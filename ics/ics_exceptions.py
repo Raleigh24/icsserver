@@ -25,6 +25,6 @@ class ResourceAttributeError(Exception):
     pass
 
 
-class SystemError(Exception):
-    """Exception is raised when there is a general system error"""
+class ICSError(Exception):
+    """General exception indicating an error occurred performing an ICS action"""
     pass
