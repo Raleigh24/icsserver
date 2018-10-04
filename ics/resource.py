@@ -222,7 +222,7 @@ class Node(AttributeObject):
 
     def res_list(self):
         """RPC interface for listing all resources"""
-        return self.resources
+        return self.resources.keys()
 
     def res_value(self, resource_name, attr_name):
         """RPC interface for getting attribute value for resource"""
