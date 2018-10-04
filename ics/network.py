@@ -14,7 +14,6 @@ except ImportError:
 
 from environment import ICS_UDS
 from environment import ICS_UDS_FILE
-from custom_exceptions import NetworkConnectionError, NetworkError
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +23,11 @@ PORT = ''
 clients = {}
 recv_queue = queue.Queue()
 poll = select.poll()
+
+
+class NetworkError(Exception):
+    """Exception is raised when there is a general network issue"""
+    pass
 
 
 class NetworkConnectionError(Exception):
