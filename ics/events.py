@@ -87,7 +87,9 @@ class ResourceOfflineEvent(ResourceStateEvent):
     def run(self):
         if self.last_state in ONLINE_STATES:
             self.resource.fault_count += 1
-            logger.info('Resource({}) fault detected'.format(self.resource.name))
+            restart_limit = self.resource.attr['RestartLimit']
+            logger.info('Resource({}) Fault detected ({} of {})'.format(self.resource.name,
+                                                                        self.resource.fault_count, restart_limit))
             logger.debug('Resource({}) last state: {}'.format(self.resource.name, self.last_state))
 
             if self.resource.fault_count >= self.resource.attr['RestartLimit']:
