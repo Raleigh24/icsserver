@@ -29,17 +29,19 @@ from system import System  # Not sure why this needs to be here
 # Setup logging information
 logger = logging.getLogger(__name__)
 
+system = System()
+
 
 # Set up signal handling
 def signal_handler(signal_code, frame):
     if signal_code is signal.SIGINT:
         logging.critical('Caught signal SIGINT (Ctrl + C), exiting...')
-        #config.write_config()
+        system.shutdown()
         # TODO: gracefully shutdown
     elif signal_code is signal.SIGTERM:
         logging.debug('SIGTERM line at {}'.format(frame.f_lineno))
         logging.critical('Caught signal SIGTERM, exiting...')
-        #config.write_config()
+        system.shutdown()
         # TODO: gracefully shutdown
     exit(1)
 
@@ -52,9 +54,6 @@ logger.info('ICS Version: ' + ICS_VERSION)
 logger.info('Python version: ' + sys.version.replace('\n', ''))
 logger.info('Logging level: ' + logging.getLevelName(logger.getEffectiveLevel()))
 
-
-# Run system
-system = System()
 system.startup()
 system.run()  # Run forever
 
