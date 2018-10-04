@@ -45,42 +45,44 @@ def create_client(sock):
     return Client(sock)
 
 
-def create_listen_socket(host, port):
+def create_tcp_listen_socket(host, port):
+    """Setup a TCP socket"""
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    sock.bind((host, port))
+    sock.listen(100)
+    return sock
+
+
+def create_udp_listen_socket(filename):
     """ Setup the sockets the server will receive connection requests on """
-
-    if not os.path.isdir(ICS_UDS):
-        logger.debug('UDS socket directory does not exist, will be created')
-        try:
-            os.makedirs(ICS_UDS)
-        except Exception as e:
-            logger.critical('Unable to create UDS socket directory, ' + str(e))
-            raise NetworkError
-
     try:
-        os.unlink(ICS_UDS_FILE)
+        os.unlink(filename)
     except OSError as e:
-        if os.path.exists(ICS_UDS_FILE):
+        if os.path.exists(filename):
             logging.critical('Unable to create listening socket, ' + str(e))
             raise NetworkError
 
     sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-    sock.bind(ICS_UDS_FILE)
+    sock.bind(filename)
     sock.listen(1)
-    os.chmod(ICS_UDS_FILE, 0o777)  # Change permissions to make writeable to everyone
-    #sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    #sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    #sock.bind((host, port))
-    #sock.listen(100)
+    os.chmod(filename, 0o777)  # Change permissions to make writeable to everyone
     return sock
 
 
-def connect(host, port):
+def connect_udp():
     try:
         sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         sock.connect(ICS_UDS_FILE)
-        #sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        #sock.connect((host, port))
         return sock
+    except socket.error:
+        raise NetworkConnectionError
+
+
+def connect_tcp(host, port):
+    try:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.connect((host, port))
     except socket.error:
         raise NetworkConnectionError
 
@@ -144,20 +146,34 @@ def send_client_msg(fd, msg):
 
 
 def create_tcp_interface():
+    """Create TCP interface and return socket"""
     try:
-        listen_sock = create_listen_socket(HOST, PORT)
-    except socket.error as e:
-        logger.error('Failed to create listening socket: {}'.format(e))
+        listen_sock = create_tcp_listen_socket(HOST, PORT)
+    except socket.error as error:
+        logger.error('Failed to create listening socket: {}'.format(error))
+        raise NetworkConnectionError
+    return listen_sock
+
+
+def create_udp_interface():
+    """Create UDP interface and return socket"""
+    if not os.path.isdir(ICS_UDS):
+        logger.debug('UDS socket directory does not exist, will be created')
+        try:
+            os.makedirs(ICS_UDS)
+        except Exception as e:
+            logger.critical('Unable to create UDS socket directory, ' + str(e))
+            raise NetworkError
+
+    try:
+        listen_sock = create_udp_listen_socket(ICS_UDS_FILE)
+    except socket.error as error:
+        logger.error('Failed to create listening socket: {}'.format(error))
         raise NetworkConnectionError
     return listen_sock
 
 
 def handle_clients(listen_sock):
-    #try:
-    #    listen_sock = create_listen_socket(HOST, PORT)
-    #except socket.error as e:
-    #    logger.error('Failed to setup listening socket: {}'.format(e))
-    #    return
     poll.register(listen_sock, select.POLLIN)
     addr = listen_sock.getsockname()
     logger.debug('Listening on {}'.format(addr))

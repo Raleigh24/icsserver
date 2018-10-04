@@ -47,7 +47,7 @@ if len(sys.argv) <= 1:
     exit()
 
 try:
-    conn = network.connect('', 4040)
+    conn = network.connect_udp()
 except network.NetworkConnectionError:
     print('ERROR: Unable to connect to ICS server')
     exit(1)

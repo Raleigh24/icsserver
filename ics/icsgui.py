@@ -59,7 +59,7 @@ class Application:
 
     def connect_server(self):
         try:
-            conn = network.connect('', 4040)
+            conn = network.connect_udp('', 4040)
         except network.ConnectionError:
             pass
         self.rpc_proxy = RPCProxy(conn)

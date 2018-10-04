@@ -7,7 +7,7 @@ from rpcinterface import RPCProxy
 description_text = ''
 epilog_text = ''
 parser = argparse.ArgumentParser(description=description_text)
-parser.add_argument('-loglevel', help='')
+parser.add_argument('-loglevel', help='Set system log level')
 
 args = parser.parse_args()
 
@@ -16,8 +16,8 @@ if len(sys.argv) <= 1:
     exit()
 
 try:
-    conn = network.connect('', 4040)
-except network.ConnectionError:
+    conn = network.connect_udp()
+except network.NetworkConnectionError:
     print('Unable to connect to ICS server')
     exit(1)
 

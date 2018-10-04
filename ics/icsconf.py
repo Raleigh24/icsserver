@@ -11,6 +11,7 @@ parser.add_argument('-makerw', action='store_true', help='')
 parser.add_argument('-makero', action='store_true', help='')
 parser.add_argument('-save', action='store_true', help='')
 parser.add_argument('-reload', action='store_true', help=())
+parser.add_argument('-verify')
 
 args = parser.parse_args()
 
@@ -19,8 +20,8 @@ if len(sys.argv) <= 1:
     exit()
 
 try:
-    conn = network.connect('', 4040)
-except network.ConnectionError:
+    conn = network.connect_udp()
+except network.NetworkConnectionError:
     print('Unable to connect to ICS server')
     exit(1)
 

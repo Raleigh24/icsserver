@@ -30,7 +30,7 @@ class System:
         # Start client handler thread
         logger.info('Starting client handler...')
         try:
-            sock = network.create_tcp_interface()
+            sock = network.create_udp_interface()
         except network.NetworkError:
             logger.critical('Unable to create client interface, exiting...')
             raise SystemError
