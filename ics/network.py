@@ -92,7 +92,7 @@ def parse_recvd_data(data):
     parts = data.split(b'\0')
     msgs = parts[:-1]
     rest = parts[-1]
-    return (msgs, rest)
+    return msgs, rest
 
 
 def prep_msg(msg):
@@ -128,7 +128,7 @@ def recv_msgs(sock, data=bytes()):
             raise socket.error
         data = data + recvd
         (msgs, rest) = parse_recvd_data(data)
-    return (msgs, rest)
+    return msgs, rest
 
 
 def remote_cmd(sock, msg):
