@@ -30,10 +30,6 @@ class NetworkError(Exception):
     pass
 
 
-class NetworkConnectionError(Exception):
-    pass
-
-
 class SystemError(Exception):
     """Exception is raised when there is a general system error"""
     pass

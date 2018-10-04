@@ -26,6 +26,10 @@ recv_queue = queue.Queue()
 poll = select.poll()
 
 
+class NetworkConnectionError(Exception):
+    pass
+
+
 class Client:
     def __init__(self, sock):
         self.sock = sock
