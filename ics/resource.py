@@ -7,7 +7,7 @@ import os
 import events
 from alerts import AlertSeverity, send_alert
 from attributes import AttributeObject, system_attributes, resource_attributes, group_attributes
-from custom_exceptions import DoesNotExist, AlreadyExists
+from ics_exceptions import DoesNotExist, AlreadyExists
 from utils import read_json, write_json
 from environment import ICS_RES_LOG, ICS_CONF_FILE
 from states import ResourceStates, GroupStates, ONLINE_STATES, TRANSITION_STATES
