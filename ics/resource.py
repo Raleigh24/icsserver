@@ -112,6 +112,10 @@ class Node(AttributeObject):
         else:
             raise DoesNotExist(msg='Resource {} does not exist'.format(resource_name))
 
+    def node_attr(self):
+        """Return a list of node attributes"""
+        return self.attr_list()
+
     def node_value(self, attr_name):
         return self.attr[attr_name]
 
@@ -243,7 +247,7 @@ class Node(AttributeObject):
 
     def res_modify(self, resource_name, attr_name, value):
         """RPC interface for modifying attribute for resource"""
-        resource = self.resources[resource_name]
+        resource = self.get_resource(resource_name)
         try:
             previous_value = resource.attr[attr_name]
             resource.attr[attr_name] = value
@@ -255,10 +259,7 @@ class Node(AttributeObject):
     def res_attr(self, resource_name):
         """RPC interface for getting resource attributes"""
         resource = self.get_resource(resource_name)
-        attr_dict = []
-        for attr_name in resource.attr.keys():
-            attr_dict.append([attr_name, resource.attr[attr_name]])
-        return attr_dict
+        return resource.attr_list()
 
     def get_group(self, group_name):
         """Get group object from groups list"""
@@ -346,6 +347,27 @@ class Node(AttributeObject):
     def grp_list(self):
         """RPC interface for listing all existing group names"""
         return self.groups.keys()
+
+    def grp_value(self, group_name, attr_name):
+        """"""  # TODO
+        group = self.get_group(group_name)
+        return group.attr[attr_name]
+
+    def grp_modify(self, group_name, attr_name, value):
+        """"""  # TODO
+        group = self.get_group(group_name)
+        try:
+            previous_value = group.attr[attr_name]
+            group.attr[attr_name] = value
+            logging.info('Group({}) attribute changed from {} to {}'.format(group_name, previous_value, value))
+            return True
+        except KeyError:
+            return False
+
+    def grp_attr(self, group_name):
+        """"""
+        group = self.get_group(group_name)
+        return group.attr_list()
 
 
 class Resource(AttributeObject):

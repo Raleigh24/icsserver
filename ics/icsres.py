@@ -33,6 +33,8 @@ parser.add_argument('-dep', nargs='*', metavar=('<res>'),
                     help='print dependencies')
 parser.add_argument('-list', action='store_true',
                     help='print list of all resources')
+parser.add_argument('-attr', nargs=1, metavar=('<res>'),
+                    help='print resource attributes')
 parser.add_argument('-value', nargs=2, metavar=('<res>', '<attr>'),
                     help='print resource  attribute value')
 parser.add_argument('-modify', nargs='+', #metavar=('<res>', '<attr>', '<value>'),
@@ -118,6 +120,11 @@ elif args.list is True:
     resources = rpc_proxy.res_list()
     for resource in resources:
         print(resource)
+
+elif args.attr is not None:
+    resource_name = args.attr[0]
+    result = rpc_proxy.res_attr(resource_name)
+    print_table(result)
 
 elif args.value is not None:
     resource_name = args.value[0]

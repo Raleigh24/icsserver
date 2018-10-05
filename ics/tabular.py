@@ -24,8 +24,8 @@ def print_table(table, header=None, col_sort=0):
     # Determine column width
     for row in table:
         for col_num in range(col_count):
-            if max_col_width[col_num] < len(row[col_num]):
-                max_col_width[col_num] = len(row[col_num])
+            if max_col_width[col_num] < len(str(row[col_num])):
+                max_col_width[col_num] = len(str(row[col_num]))
 
     # Sort table
     sorted_table = sorted(table, key=itemgetter(col_sort))
@@ -43,5 +43,5 @@ def print_table(table, header=None, col_sort=0):
     for row in sorted_table:
         table_row = ''
         for col_num in range(col_count):
-            table_row = table_row + row[col_num].ljust(max_col_width[col_num] + 4)
+            table_row = table_row + str(row[col_num]).ljust(max_col_width[col_num] + 4)
         print(table_row.strip(' '))

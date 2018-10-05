@@ -1,5 +1,8 @@
 import pickle
 import network
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 # Client interface class
@@ -34,10 +37,11 @@ class RPCHandler:
             try:
                 result = self._functions[func_name](*args, **kwargs)  # Run function
                 return pickle.dumps(result)
-            except Exception as e:
+            except Exception as error:
+                logger.exception(error)
                 #ex_type, ex, tb = sys.exc_info()
                 #logging.debug(traceback.print_tb(tb))
-                return pickle.dumps(e)
+                return pickle.dumps(error)
         except EOFError:
             pass
 

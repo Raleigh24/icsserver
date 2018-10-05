@@ -25,6 +25,13 @@ class AttributeObject(object):  # Inherits from object to enabling super() in py
     def get_attr(self):
         pass
 
+    def attr_list(self):
+        """"""  # TODO
+        attr_list = []
+        for attr in self.attr:
+            attr_list.append((attr, self.attr[attr]))
+        return attr_list
+
 
 resource_attributes = {
     "Group": {

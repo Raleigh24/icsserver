@@ -56,6 +56,7 @@ class System:
         # Function list to be registered with rpc interface
         rpc_function_list = [
             set_log_level,
+            self.node.node_attr,
             self.node.node_value,
             self.node.node_modify,
             self.node.res_online,
@@ -82,7 +83,10 @@ class System:
             self.node.grp_flush,
             self.node.grp_clear,
             self.node.grp_resources,
-            self.node.grp_list
+            self.node.grp_list,
+            self.node.grp_value,
+            self.node.grp_modify,
+            self.node.grp_attr
         ]
 
         # Start RPC interface thread

@@ -37,8 +37,10 @@ parser.add_argument('-resources', nargs=1, metavar=('<group>'),
                     help='list all resources for a given group')
 parser.add_argument('-list', action='store_true',
                     help='print list of all resources')
-# parser.add_argument('-value', nargs=2, metavar=('<res>', '<attr>'),
-#       help='print resource  attribute value')
+parser.add_argument('-attr', nargs=1, metavar=('<group>'),
+                    help='print group attributes')
+parser.add_argument('-value', nargs=2, metavar=('<res>', '<attr>'),
+                    help='print group  attribute value')
 parser.add_argument('-modify', nargs=3, metavar=('<group>', '<attr>', '<value>'),
                     help='modify resource attribute')
 parser.add_argument('-wait', nargs=4, metavar=('<group>', '<attr>', '<value>', '<timeout>'),
@@ -117,8 +119,33 @@ elif args.list is True:
     for group_name in groups:
         print(group_name)
 
+elif args.attr is not None:
+    group_name = args.attr[0]
+    result = rpc_proxy.grp_attr(group_name)
+    print_table(result)
+
+elif args.value is not None:
+    group_name = args.value[0]
+    attr = args.value[1]
+    try:
+        result = rpc_proxy.grp_value(group_name, attr)
+        print(result)
+    except DoesNotExist as error:
+        print('ERROR: ' + str(error))
+        sys.exit(1)
+    except KeyError:
+        print('Error: Attribute does not exists')
+        sys.exit(1)
+
 elif args.modify is not None:
-    pass
+    group_name = args.modify[0]
+    attr = args.modify[1]
+    value = ' '.join(args.modify[2:])
+    result = rpc_proxy.grp_modify(group_name, attr, value)
+    if not result:
+        print('ERROR: Attribute does not exist')
+        sys.exit(1)
+
 else:
     parser.print_help()
 
