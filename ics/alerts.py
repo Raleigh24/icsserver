@@ -6,7 +6,7 @@ from environment import HOSTNAME, ICS_HOME, ICS_CLUSTER_NAME, ICS_ALERT_LOG, ICS
 
 logger = logging.getLogger(__name__)
 
-alert_html_template = ICS_HOME + '/ics/alert.html'
+alert_html_template = ICS_HOME + '/etc/alert.html'
 
 
 class AlertSeverity:
