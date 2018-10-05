@@ -147,7 +147,7 @@ class Node(AttributeObject):
         elif group_name not in self.groups.keys():
             raise DoesNotExist(msg='Group {} does not exist'.format(group_name))
         elif len(self.resources) > int(self.attr['ResourceLimit']):
-            pass # TODO: raise exception
+            pass  # TODO: raise exception
         else:
             resource = Resource(resource_name, group_name)
             self.resources[resource_name] = resource
@@ -349,12 +349,12 @@ class Node(AttributeObject):
         return self.groups.keys()
 
     def grp_value(self, group_name, attr_name):
-        """"""  # TODO
+        """Return an attribute for a given group and attribute"""
         group = self.get_group(group_name)
         return group.attr[attr_name]
 
     def grp_modify(self, group_name, attr_name, value):
-        """"""  # TODO
+        """Modify an attribute for a given group"""
         group = self.get_group(group_name)
         try:
             previous_value = group.attr[attr_name]
@@ -365,7 +365,7 @@ class Node(AttributeObject):
             return False
 
     def grp_attr(self, group_name):
-        """"""
+        """Return a list of attributes for a given group"""
         group = self.get_group(group_name)
         return group.attr_list()
 
@@ -678,5 +678,3 @@ class Group(AttributeObject):
     def clear(self):
         for resource in self.members:
             resource.clear()
-
-

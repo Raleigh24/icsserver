@@ -26,7 +26,7 @@ class AttributeObject(object):  # Inherits from object to enabling super() in py
         pass
 
     def attr_list(self):
-        """"""  # TODO
+        """Return a list of attributes and their values"""
         attr_list = []
         for attr in self.attr:
             attr_list.append((attr, self.attr[attr]))

@@ -7,6 +7,7 @@ from environment import ICS_PID_FILE
 
 logger = logging.getLogger(__name__)
 
+
 def is_process_running(pid):
     """Determine if a process is running based on it's PID"""
     return os.path.exists('/proc/' + str(pid))

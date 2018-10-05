@@ -56,6 +56,4 @@ elif args.modify is not None:
         print('ERROR: Attribute does not exists')
         sys.exit(1)
 
-
-
 conn.close()

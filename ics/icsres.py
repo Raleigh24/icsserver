@@ -46,13 +46,13 @@ args = parser.parse_args()
 
 if len(sys.argv) <= 1:
     parser.print_help()
-    exit()
+    sys.exit()
 
 try:
     conn = network.connect_udp()
 except network.NetworkConnectionError:
     print('ERROR: Unable to connect to ICS server')
-    exit(1)
+    sys.exit(1)
 
 rpc_proxy = RPCProxy(conn)
 
@@ -158,24 +158,3 @@ else:
     parser.print_help()
 
 conn.close()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

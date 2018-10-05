@@ -2,7 +2,7 @@ import argparse
 import sys
 import network
 
-from resource import DoesNotExist, AlreadyExists
+from ics_exceptions import DoesNotExist, AlreadyExists
 from rpcinterface import RPCProxy
 from tabular import print_table
 import utils
@@ -47,16 +47,15 @@ parser.add_argument('-wait', nargs=4, metavar=('<group>', '<attr>', '<value>', '
                     help='wait for attribute to change to value')
 args = parser.parse_args()
 
-
 if len(sys.argv) <= 1:
     parser.print_help()
-    exit()
+    sys.exit()
 
 try:
     conn = network.connect_udp()
 except network.NetworkConnectionError:
     print('ERROR: Unable to connect to ICS server')
-    exit(1)
+    sys.exit(1)
 
 rpc_proxy = RPCProxy(conn)
 
@@ -66,7 +65,7 @@ def perform(func, *func_args):
         func(*func_args)
     except DoesNotExist as e:
         print('ERROR: ' + str(e))
-        exit(1)
+        sys.exit(1)
 
 
 if args.online is not None:
@@ -150,22 +149,3 @@ else:
     parser.print_help()
 
 conn.close()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

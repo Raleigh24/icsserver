@@ -3,7 +3,6 @@ import sys
 import network
 from rpcinterface import RPCProxy
 
-
 description_text = ''
 epilog_text = ''
 parser = argparse.ArgumentParser(description=description_text)
@@ -23,7 +22,7 @@ try:
     conn = network.connect_udp()
 except network.NetworkConnectionError:
     print('Unable to connect to ICS server')
-    exit(1)
+    sys.exit(1)
 
 rpc_proxy = RPCProxy(conn)
 

@@ -2,11 +2,7 @@ import logging
 from datetime import datetime
 
 import mail
-from environment import HOSTNAME
-from environment import ICS_HOME
-from environment import ICS_CLUSTER_NAME
-from environment import ICS_ALERT_LOG
-from environment import ICS_ALERT_RECIPIENTS
+from environment import HOSTNAME, ICS_HOME, ICS_CLUSTER_NAME, ICS_ALERT_LOG, ICS_ALERT_RECIPIENTS
 
 logger = logging.getLogger(__name__)
 

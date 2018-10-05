@@ -39,8 +39,6 @@ class RPCHandler:
                 return pickle.dumps(result)
             except Exception as error:
                 logger.exception(error)
-                #ex_type, ex, tb = sys.exc_info()
-                #logging.debug(traceback.print_tb(tb))
                 return pickle.dumps(error)
         except EOFError:
             pass
