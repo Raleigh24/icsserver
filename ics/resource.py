@@ -41,9 +41,10 @@ class Node(AttributeObject):
 
     def config(self):
         """Return config data of node in dictionary format"""
-        config_data = {}
-        config_data['system'] = self.modified_attributes()
-        config_data['resources'] = {}
+        config_data = {
+            'system': self.modified_attributes(),
+            'resources': {}
+        }
         for group in self.groups.values():
             group_name = group.name
             config_data['resources'][group_name] = {}
