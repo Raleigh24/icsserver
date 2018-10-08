@@ -422,7 +422,7 @@ class Resource(AttributeObject):
                 event_class = events.ResourceOfflineEvent
                 cur_state = ResourceStates.OFFLINE  # Fake the current state for propagation
             else:
-                logger.error('Resource({}) Attempted an invalid state change to {} when resource is disabled,'\
+                logger.error('Resource({}) Attempted an invalid state change to {} when resource is disabled,'
                              ' no change will occur'.format(self.name, new_state))
                 return False
         else:
@@ -525,8 +525,8 @@ class Resource(AttributeObject):
         """Handle resource command return"""
         if self.cmd_type in ['start', 'stop']:
             if self.cmd_exit_code != 0:
-                logger.warning('Resource({}) error occurred when running {} command, return code {}'
-                                .format(self.name, self.cmd_type, self.cmd_exit_code))
+                logger.warning('Resource({}) error occurred when running {} '
+                               'command, return code {}'.format(self.name, self.cmd_type, self.cmd_exit_code))
             else:
                 logger.debug('Resource({}) command {} ran successfully'.format(self.name, self.cmd_type))
             events.trigger_event(events.PollRunEvent(self))
@@ -538,8 +538,8 @@ class Resource(AttributeObject):
                 logger.debug('Resource({}) poll command found resource to be offline'.format(self.name))
                 event_class = self.poll_event_map[self.cmd_exit_code]
             else:
-                logger.warning('Resource({}) error occurred when polling resource, return code {}'
-                                .format(self.name, self.cmd_exit_code))
+                logger.warning('Resource({}) error occurred when polling '
+                               'resource, return code {}'.format(self.name, self.cmd_exit_code))
                 event_class = self.poll_event_map[-1]
 
             self.last_poll = int(time.time())
