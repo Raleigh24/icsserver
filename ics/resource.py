@@ -5,7 +5,7 @@ import time
 import os
 
 import events
-from alerts import AlertSeverity, send_alert
+import alerts
 from attributes import AttributeObject, system_attributes, resource_attributes, group_attributes
 from ics_exceptions import DoesNotExist, AlreadyExists
 from utils import read_json, write_json
@@ -22,6 +22,20 @@ class Node(AttributeObject):
         self.init_attr(system_attributes)
         self.resources = {}
         self.groups = {}
+
+    def set_attr(self, attr, value):
+
+        if attr == "ClusterName":
+            pass
+        elif attr == "NodeName":
+            pass
+        elif attr == "AlertRecipients":
+            pass
+        elif attr == "AlertLevel":
+            alerts.set_level(value)
+            self.attr[attr] = value
+
+        super(Node, self).set_attr(attr, value)
 
     def poll_updater(self):
         """Continuously check for resources ready for poll"""
@@ -123,7 +137,8 @@ class Node(AttributeObject):
     def node_modify(self, attr_name, value):
         try:
             previous_value = self.attr[attr_name]
-            self.attr[attr_name] = value
+            self.set_attr(attr_name, value)
+            #self.attr[attr_name] = value
             logging.info('Node attribute changed from {} to {}'.format(previous_value, value))
             return True
         except KeyError:
@@ -507,7 +522,8 @@ class Resource(AttributeObject):
 
             elif int(time.time()) >= self.cmd_end_time:
                 logger.warning('Resource({}) timeout occurred while attempting to {}'.format(self.name, self.cmd_type))
-                send_alert(self, AlertSeverity.WARNING, reason='Resource {} timeout'.format(self.cmd_type))
+                #send_alert(self, AlertLevel.WARNING, reason='Resource {} timeout'.format(self.cmd_type))
+                alerts.warning(self, 'Resource {} timeout'.format(self.cmd_type))
                 self.cmd_process.kill()
                 # TODO: add some action here
             else:

@@ -25,3 +25,4 @@ ICS_RES_LOG = ICS_LOG + '/resource.log'
 
 ICS_CLUSTER_NAME = HOSTNAME  # Temporary
 ICS_ALERT_RECIPIENTS = ["raleigh.waters@intelsat.com"]
+ICS_ALERT_LEVEL = 'NOTSET'

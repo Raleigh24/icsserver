@@ -5,6 +5,7 @@ import time
 import network
 from resource import Node
 from events import event_handler
+from alerts import alert_handler
 from rpcinterface import rpc_runner
 from ics_exceptions import ICSError
 from utils import set_log_level
@@ -23,6 +24,13 @@ class System:
         # Start event handler thread
         logger.info('Starting event handler...')
         thread_event_handler = threading.Thread(name='event handler', target=event_handler)
+        thread_event_handler.daemon = True
+        thread_event_handler.start()
+        self.threads.append(thread_event_handler)
+
+        # Start alert handler thread
+        logger.info('Starting alert handler...')
+        thread_event_handler = threading.Thread(name='alert handler', target=alert_handler)
         thread_event_handler.daemon = True
         thread_event_handler.start()
         self.threads.append(thread_event_handler)

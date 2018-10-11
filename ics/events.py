@@ -4,8 +4,8 @@ try:
 except ImportError:
     import Queue as queue  # Python2 version
 
+import alerts
 from states import ResourceStates, ONLINE_STATES, OFFLINE_STATES
-from alerts import AlertSeverity, send_alert
 
 logger = logging.getLogger(__name__)
 
@@ -125,7 +125,8 @@ class ResourceOnlineEvent(ResourceStateEvent):
     def run(self):
         if self.last_state in OFFLINE_STATES:
             logger.warning('Resource({}) came online unexpectedly'.format(self.resource.name))
-            send_alert(self.resource, AlertSeverity.WARNING, reason='Resource came online by itself')
+            #send_alert(self.resource, AlertLevel.WARNING, reason='Resource came online by itself')
+            alerts.warning(self.resource, 'Resource came online by itself')
         elif self.resource.propagate:
             self.resource.propagate = False  # Resource has successfully propagated from children
             for child in self.resource.children:
@@ -140,8 +141,8 @@ class ResourceOnlineEvent(ResourceStateEvent):
                         child.change_state(ResourceStates.ONLINE, force=True)
                     # TODO: to be more robust, add cases for when state is other than online or offline
                 else:
-                    logger.debug('Resource({}) Unable to start, waiting for parents to become online'
-                                  .format(child.name))
+                    logger.debug('Resource({}) Unable to start, waiting for parents '
+                                 'to become online'.format(child.name))
 
 
 class ResourceStartingEvent(ResourceStateEvent):
@@ -153,14 +154,16 @@ class ResourceFaultedEvent(ResourceStateEvent):
     def run(self):
         self.resource.flush()
         trigger_event(AlertEvent(self.resource))
-        send_alert(self.resource, AlertSeverity.ERROR, reason='Resource faulted')
+        alerts.error(self.resource, 'Resource faulted')
+        #send_alert(self.resource, AlertLevel.ERROR, reason='Resource faulted')
         # TODO: propagate any offline
 
 
 class ResourceUnknownEvent(ResourceStateEvent):
     def run(self):
         if self.last_state is not ResourceStates.UNKNOWN:
-            send_alert(self.resource, AlertSeverity.WARNING, reason='Resource in unknown state')
+            alerts.warning(self.resource, 'Resource in unknown state')
+            #send_alert(self.resource, AlertLevel.WARNING, reason='Resource in unknown state')
 
 
 class AlertEvent(Event):
