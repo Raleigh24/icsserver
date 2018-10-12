@@ -161,23 +161,3 @@ class ResourceUnknownEvent(ResourceStateEvent):
     def run(self):
         if self.last_state is not ResourceStates.UNKNOWN:
             alerts.warning(self.resource, 'Resource in unknown state')
-
-
-class AlertEvent(Event):
-    def __init__(self, resource, severity=''):
-        self.resource = resource
-        self.resource_name = self.resource.name
-        self.group_name = 'test'
-        self.severity = severity
-
-    def run(self):
-        pass
-        #send_alert(self.resource_name, self.group_name, self.severity)
-
-
-
-
-
-
-
-
