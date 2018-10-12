@@ -152,7 +152,6 @@ class ResourceStartingEvent(ResourceStateEvent):
 class ResourceFaultedEvent(ResourceStateEvent):
     def run(self):
         self.resource.flush()
-        trigger_event(AlertEvent(self.resource))
         alerts.error(self.resource, 'Resource faulted')
         # TODO: propagate any offline
 
