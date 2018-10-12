@@ -41,7 +41,7 @@ class Node(AttributeObject):
         """Continuously check for resources ready for poll"""
         while True:
             for resource in self.resources.values():
-                if resource.attr['Enabled'] == 'false':
+                if resource.attr_value('Enabled') == 'false':
                     logger.debug('Resource({}) is not enabled, skipping poll'.format(resource.name))
                     continue
                 elif resource.cmd_process is not None:
@@ -109,7 +109,7 @@ class Node(AttributeObject):
 
     def backup_config(self):
         while True:
-            interval = int(self.attr['BackupInterval'])
+            interval = int(self.attr_value('BackupInterval'))
             if interval != 0:
                 logging.debug('Creating backup of config file')
                 if os.path.isfile(ICS_CONF_FILE):
@@ -138,7 +138,6 @@ class Node(AttributeObject):
         try:
             previous_value = self.attr[attr_name]
             self.set_attr(attr_name, value)
-            #self.attr[attr_name] = value
             logging.info('Node attribute changed from {} to {}'.format(previous_value, value))
             return True
         except KeyError:
@@ -181,7 +180,7 @@ class Node(AttributeObject):
         for child in resource.children:
             child.parents.remove(resource)
 
-        group = self.get_group(resource.attr['Group'])
+        group = self.get_group(resource.attr_value('Group'))
         group.delete_resource(resource)
         del self.resources[resource_name]
         logger.info('Resource({}) resource deleted'.format(resource_name))
@@ -206,7 +205,7 @@ class Node(AttributeObject):
         """RPC interface to link two resources"""
         resource = self.get_resource(resource_name)
         parent_resource = self.get_resource(parent_name)
-        if resource.attr['Group'] != parent_resource.attr['Group']:
+        if resource.attr_value('Group') != parent_resource.attr_value('Group'):
             raise Exception
 
         resource.add_parent(parent_resource)
@@ -235,14 +234,14 @@ class Node(AttributeObject):
         dep_list = []
         if len(resource_args) == 0:
             for resource in self.resources.values():
-                resource_group_name = resource.attr['Group']
+                resource_group_name = resource.attr_value('Group')
                 for parent in resource.parents:
                     row = [resource_group_name, parent.name, resource.name]
                     dep_list.append(row)
         else:
             for resource_name in resource_args:
                 resource = self.get_resource(resource_name)
-                resource_group_name = resource.attr['Group']
+                resource_group_name = resource.attr_value('Group')
                 for parent in resource.parents:
                     row = [resource_group_name, parent.name, resource.name]
                     dep_list.append(row)
@@ -259,14 +258,14 @@ class Node(AttributeObject):
     def res_value(self, resource_name, attr_name):
         """RPC interface for getting attribute value for resource"""
         resource = self.get_resource(resource_name)
-        return resource.attr[attr_name]
+        return resource.attr_value(attr_name)
 
     def res_modify(self, resource_name, attr_name, value):
         """RPC interface for modifying attribute for resource"""
         resource = self.get_resource(resource_name)
         try:
-            previous_value = resource.attr[attr_name]
-            resource.attr[attr_name] = value
+            previous_value = resource.attr_value(attr_name)
+            resource.set_attr(attr_name, value)
             logging.info('Resource({}) attribute changed from {} to {}'.format(resource_name, previous_value, value))
             return True
         except KeyError:
@@ -374,8 +373,8 @@ class Node(AttributeObject):
         group = self.get_group(group_name)
         try:
             previous_value = group.attr[attr_name]
-            group.attr[attr_name] = value
-            logging.info('Group({}) attribute changed from {} to {}'.format(group_name, previous_value, value))
+            group.set_attr(attr_name, value)
+            logger.info('Group({}) attribute changed from {} to {}'.format(group_name, previous_value, value))
             return True
         except KeyError:
             return False
@@ -393,7 +392,7 @@ class Resource(AttributeObject):
         self.init_attr(resource_attributes)
         self.name = name
         self.state = ResourceStates.OFFLINE
-        self.attr['Group'] = group_name
+        self.set_attr('Group', group_name)
         self.last_poll = int(time.time()) - random.randint(0, 60)  # Set at random times to prevent poll clustering
         self.poll_running = False
         self.fault_count = 0
@@ -422,7 +421,7 @@ class Resource(AttributeObject):
             if new_state is cur_state:
                 return False
 
-        if self.attr['Enabled'] == 'false':
+        if self.attr_value('Enabled') == 'false':
             self.state = ResourceStates.OFFLINE  # Set resource offline regardless of current state
             logger.info('Resource({}) Unable to change state, resource is disabled'.format(self.name))
 
@@ -468,22 +467,22 @@ class Resource(AttributeObject):
 
     def parents_ready(self):
         for parent in self.parents:
-            if parent.state is not ResourceStates.ONLINE and parent.attr['Enabled'] == 'true':
+            if parent.state is not ResourceStates.ONLINE and parent.attr_value('Enabled') == 'true':
                 return False
         return True
 
     def children_ready(self):
         for child in self.children:
-            if child.state is not ResourceStates.OFFLINE and child.attr['Enabled'] == 'true':
+            if child.state is not ResourceStates.OFFLINE and child.attr_value('Enabled') == 'true':
                 return False
         return True
 
     def update_poll(self):
         cur_time = int(time.time())
         if self.state in ONLINE_STATES:
-            poll_interval = int(self.attr['MonitorInterval'])
+            poll_interval = int(self.attr_value('MonitorInterval'))
         else:
-            poll_interval = int(self.attr['OfflineMonitorInterval'])
+            poll_interval = int(self.attr_value('OfflineMonitorInterval'))
 
         if cur_time - self.last_poll >= poll_interval and not self.poll_running:
             self.poll_running = True
@@ -519,10 +518,8 @@ class Resource(AttributeObject):
                 logger.debug('Resource({}) {} command returned'.format(self.name, self.cmd_type))
                 self.cmd_exit_code = self.cmd_process.poll()
                 return True
-
             elif int(time.time()) >= self.cmd_end_time:
                 logger.warning('Resource({}) timeout occurred while attempting to {}'.format(self.name, self.cmd_type))
-                #send_alert(self, AlertLevel.WARNING, reason='Resource {} timeout'.format(self.cmd_type))
                 alerts.warning(self, 'Resource {} timeout'.format(self.cmd_type))
                 self.cmd_process.kill()
                 # TODO: add some action here
@@ -584,7 +581,7 @@ class Resource(AttributeObject):
     def start(self):
         """Run command to start resource"""
         logger.info('Resource({}) running command to start resource'.format(self.name))
-        cmd = self.attr['StartProgram'].split()
+        cmd = self.attr_value('StartProgram').split()
         if not cmd:
             logger.error('Resource({}) unable to start, attribute StartProgram not set'.format(self.name))
             self.flush()
@@ -595,23 +592,23 @@ class Resource(AttributeObject):
     def stop(self):
         """Run command to stop resource"""
         logger.info('Resource({}) running command to stop resource'.format(self.name))
-        cmd = self.attr['StopProgram'].split()
+        cmd = self.attr_value('StopProgram').split()
         if not cmd:
             logger.error('Resource({}) unable to start, attribute StopProgram not set'.format(self.name))
             self.flush()
             return
-        offline_timeout = int(self.attr['OfflineTimeout'])
+        offline_timeout = int(self.attr_value('OfflineTimeout'))
         self._run_cmd(cmd, 'stop', timeout=offline_timeout)
 
     def poll(self):
         """Run command to poll resource"""
         logger.debug('Resource({}) running command to poll resource'.format(self.name))
-        cmd = self.attr['MonitorProgram'].split()
+        cmd = self.attr_value('MonitorProgram').split()
         if not cmd:
             logger.error('Resource({}) unable to monitor, attribute MonitorProgram not set'.format(self.name))
             self.flush()
             return
-        monitor_timeout = int(self.attr['MonitorTimeout'])
+        monitor_timeout = int(self.attr_value('MonitorTimeout'))
         self._run_cmd(cmd, 'poll', timeout=monitor_timeout)
 
 
@@ -632,7 +629,7 @@ class Group(AttributeObject):
         resource_states = []
         # Get all unique resource states
         for member in self.members:
-            if member.attr['Enabled'] == 'true':  # Only consider enabled resources when calculating group state
+            if member.attr_value('Enabled') == 'true':  # Only consider enabled resources when calculating group state
                 resource_states.append(member.state)
         states = list(set(resource_states))
 
@@ -658,11 +655,11 @@ class Group(AttributeObject):
 
     def enable(self):
         for member in self.members:
-            member.attr['Enabled'] = 'true'
+            member.set_attr('Enabled', 'true')
 
     def disable(self):
         for member in self.members:
-            member.attr['Enabled'] = 'false'
+            member.set_attr('Enabled', 'false')
 
     def start(self):
         self.flush()  # Start from clean slate

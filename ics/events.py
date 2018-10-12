@@ -87,16 +87,16 @@ class ResourceOfflineEvent(ResourceStateEvent):
     def run(self):
         if self.last_state in ONLINE_STATES:
             self.resource.fault_count += 1
-            restart_limit = self.resource.attr['RestartLimit']
+            restart_limit = self.resource.attr_value('RestartLimit')
             logger.info('Resource({}) Fault detected ({} of {})'.format(self.resource.name,
                                                                         self.resource.fault_count, restart_limit))
             logger.debug('Resource({}) last state: {}'.format(self.resource.name, self.last_state))
 
-            if self.resource.fault_count >= self.resource.attr['RestartLimit']:
-                logger.info('Resource({}) reached max fault count ({})'
-                             .format(self.resource.name, self.resource.attr['RestartLimit']))
+            if self.resource.fault_count >= self.resource.attr_value('RestartLimit'):
+                logger.info('Resource({}) reached max fault count ({})'.format(self.resource.name,
+                                                                               self.resource.attr_value('RestartLimit')))
                 self.resource.change_state(ResourceStates.FAULTED)
-            elif self.resource.attr['AutoRestart'] == 'true':
+            elif self.resource.attr_value('AutoRestart') == 'true':
                 self.resource.change_state(ResourceStates.STARTING)
         elif self.resource.propagate:
             self.resource.propagate = False  # Resource has successfully propagated from parent
@@ -125,7 +125,6 @@ class ResourceOnlineEvent(ResourceStateEvent):
     def run(self):
         if self.last_state in OFFLINE_STATES:
             logger.warning('Resource({}) came online unexpectedly'.format(self.resource.name))
-            #send_alert(self.resource, AlertLevel.WARNING, reason='Resource came online by itself')
             alerts.warning(self.resource, 'Resource came online by itself')
         elif self.resource.propagate:
             self.resource.propagate = False  # Resource has successfully propagated from children
@@ -155,7 +154,6 @@ class ResourceFaultedEvent(ResourceStateEvent):
         self.resource.flush()
         trigger_event(AlertEvent(self.resource))
         alerts.error(self.resource, 'Resource faulted')
-        #send_alert(self.resource, AlertLevel.ERROR, reason='Resource faulted')
         # TODO: propagate any offline
 
 
@@ -163,7 +161,6 @@ class ResourceUnknownEvent(ResourceStateEvent):
     def run(self):
         if self.last_state is not ResourceStates.UNKNOWN:
             alerts.warning(self.resource, 'Resource in unknown state')
-            #send_alert(self.resource, AlertLevel.WARNING, reason='Resource in unknown state')
 
 
 class AlertEvent(Event):

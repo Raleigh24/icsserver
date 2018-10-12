@@ -1,6 +1,11 @@
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 class AttributeObject(object):  # Inherits from object to enabling super() in python2.7
     def __init__(self):
+        self.name = None
         self.attr = {}
         self.default_attr = None
 
@@ -19,11 +24,15 @@ class AttributeObject(object):  # Inherits from object to enabling super() in py
                 data[attribute] = attribute_value
         return data
 
-    def set_attr(self):
-        pass
+    def set_attr(self, attr, value):
+        """Set attribute value"""
+        previous_value = self.attr[attr]
+        self.attr[attr] = value
+        logger.info('{}({}) attribute changed from {} to {}'.format(self.__class__.__name__, self.name, previous_value, value))
 
-    def get_attr(self):
-        pass
+    def attr_value(self, attr):
+        """Retrun value of attribute"""
+        return self.attr[attr]
 
     def attr_list(self):
         """Return a list of attributes and their values"""
@@ -162,7 +171,7 @@ system_attributes = {
         "description": ""
     },
     "AlertLevel": {
-        "default": "",
+        "default": "WARNING",
         "type": "string"
         "description"
     }
