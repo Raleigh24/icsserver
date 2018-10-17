@@ -26,7 +26,12 @@ def event_handler():
             logger.debug('Remaining events in event queue ({})'.format(queue_size))
         event = event_queue.get()
         logger.debug('Running event ({})'.format(event))
-        event.run()
+        try:
+            event.run()
+        except Exception:
+            logger.exception('Event {} encountered an error:'.format(str(event)))
+            continue
+
         del event
 
 
@@ -35,14 +40,14 @@ class Event:
     def run(self):
         pass
 
+    def __str__(self):
+        return '{} for {}'.format(self.__class__.__name__, self.resource.name)
+
 
 class PollEvent(Event):
     """Base poll event class"""
     def __init__(self, resource):
         self.resource = resource
-
-    def __str__(self):
-        return '{} for {}'.format(self.__class__.__name__, self.resource.name)
 
     def run(self):
         pass
@@ -75,9 +80,6 @@ class ResourceStateEvent(Event):
     def __init__(self, resource, last_state):
         self.resource = resource
         self.last_state = last_state
-
-    def __str__(self):
-        return '{} for {}'.format(self.__class__.__name__, self.resource.name)
 
     def run(self):
         pass
