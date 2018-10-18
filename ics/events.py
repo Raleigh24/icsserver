@@ -26,10 +26,13 @@ def event_handler():
             logger.debug('Remaining events in event queue ({})'.format(queue_size))
         event = event_queue.get()
         logger.debug('Running event ({})'.format(event))
+
+        # Catch and log all exceptions that occur and continue to process events
         try:
             event.run()
-        except Exception:
+        except Exception:  # Catch and log all exceptions that occur
             logger.exception('Event {} encountered an error:'.format(str(event)))
+            alerts.error(event.resource.name, "Error occurred while processing event. Please check logs.")
             continue
 
         del event
