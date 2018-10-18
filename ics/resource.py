@@ -53,61 +53,63 @@ class Node(AttributeObject):
                     resource.update_poll()
             time.sleep(1)
 
-    def config(self):
-        """Return config data of node in dictionary format"""
-        config_data = {
-            'system': self.modified_attributes(),
-            'resources': {}
-        }
+    def config_dict(self):
+        """Return system configuration data in dictionary format"""
+        config_data = {'system': {'attributes': self.modified_attributes()}, 'groups': {}, 'resources': {}}
         for group in self.groups.values():
-            group_name = group.name
-            config_data['resources'][group_name] = {}
-            for resource in group.members:
-                resource_name = resource.name
-                config_data['resources'][group_name][resource_name] = {}
-                config_data['resources'][group_name][resource_name]['attributes'] = resource.modified_attributes()
-                config_data['resources'][group_name][resource_name]['dependencies'] = resource.dependencies()
-
+            config_data['groups'][group.name] = {'attributes': group.modified_attributes()}
+        for resource in self.resources.values():
+            config_data['resources'][resource.name] = {'attributes': resource.modified_attributes(),
+                                                       'dependencies': resource.dependencies()}
         return config_data
 
-    def load_config(self):
+    def load_config(self, filename):
         """Load configuration from file"""
         logger.info('Loading configuration...')
-        if not os.path.isfile(ICS_CONF_FILE):
+        if not os.path.isfile(filename):
             logger.info('No config found, skipping load...')
             return
+
         try:
-            data = read_json(ICS_CONF_FILE)
+            data = read_json(filename)
         except ValueError as error:
             logging.error('Error occurred while loading config: {}'.format(str(error)))
             return
 
-        # Set system attributes
-        system_data = data['system']
-        for attr in system_data:
-            self.attr[attr] = system_data[attr]
+        try:
+            # Set system attributes from config
+            system_data = data['system']
+            for attr_name in system_data['attributes']:
+                self.set_attr(attr_name, system_data['attributes'][attr_name])
 
-        # Create groups and resources
-        resource_data = data['resources']
-        for group_name in resource_data.keys():
-            self.grp_add(group_name)
-            for resource_name in resource_data[group_name]:
-                self.res_add(resource_name, group_name)
-                resource = self.get_resource(resource_name)
-                for attr_name in resource_data[group_name][resource_name]['attributes']:
-                    resource.attr[attr_name] = str(resource_data[group_name][resource_name]['attributes'][attr_name])
+            # Create groups from config
+            group_data = data['groups']
+            for group_name in group_data:
+                group = self.grp_add(group_name)
+                for attr_name in group_data[group_name]['attributes']:
+                    group.set_attr(attr_name, str(group_data[group_name]['attributes'][attr_name]))
 
-        # Create resources links
-        # Note: Links need to be done in separate loop to guarantee parent resources
-        # are created first when establishing links
-        for group_name in resource_data.keys():
-            for resource_name in resource_data[group_name]:
-                for parent_name in resource_data[group_name][resource_name]['dependencies']:
-                    self.res_link(parent_name, resource_name)
+            # Create resources from config
+            resource_data = data['resources']
+            for resource_name in resource_data.keys():
+                group_name = resource_data[resource_name]['attributes']['Group']
+                resource = self.res_add(resource_name, group_name)
+                for attr_name in resource_data[resource_name]['attributes']:
+                    resource.set_attr(attr_name, str(resource_data[resource_name]['attributes'][attr_name]))
+
+            # Create resource dependency links
+            # Note: Links need to be done in separate loop to guarantee parent resources
+            # are created first when establishing links
+            for resource_name in resource_data.keys():
+                for dep_name in resource_data[resource_name]['dependencies']:
+                    self.res_link(dep_name, resource_name)
+        except (TypeError, KeyError) as error:
+            logging.error('Error occurred while loading config: {}:{}'.format(error.__class__.__name__, str(error)))
+            raise
 
     def write_config(self, filename):
         """Write configuration to file"""
-        data = self.config()
+        data = self.config_dict()
         write_json(filename, data)
 
     def backup_config(self):
@@ -158,6 +160,7 @@ class Node(AttributeObject):
 
     def res_add(self, resource_name, group_name):
         """RPC interface for adding new resource"""
+        logger.info('Adding new resource {}'.format(group_name))
         if resource_name in self.resources.keys():
             raise AlreadyExists(msg='Resource {} already exists'.format(resource_name))
         elif group_name not in self.groups.keys():
@@ -169,7 +172,7 @@ class Node(AttributeObject):
             self.resources[resource_name] = resource
             group = self.groups[group_name]
             group.add_resource(resource)
-            logger.info('Resource({}) new resource added'.format(resource_name))
+            return resource
 
     def res_delete(self, resource_name):
         """RPC interface for deleting existing resource"""
@@ -325,6 +328,7 @@ class Node(AttributeObject):
         else:
             group = Group(group_name)
             self.groups[group_name] = group
+            return group
 
     def grp_delete(self, group_name):
         """RPC interface for deleting an existing group"""

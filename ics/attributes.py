@@ -26,7 +26,10 @@ class AttributeObject(object):  # Inherits from object to enabling super() in py
 
     def set_attr(self, attr, value):
         """Set attribute value"""
-        previous_value = self.attr[attr]
+        if self.attr[attr] == "":
+            previous_value = '<empty>'
+        else:
+            previous_value = self.attr[attr]
         self.attr[attr] = value
         logger.info('{}({}) attribute changed from {} to {}'.format(self.__class__.__name__, self.name, previous_value, value))
 

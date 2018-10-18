@@ -1,6 +1,7 @@
 import threading
 import logging
 import time
+import sys
 
 import network
 from resource import Node
@@ -107,10 +108,16 @@ class System:
     def startup(self):
         logger.info('Server starting up...')
         self.node = Node()
-        #TODO: Add config startup management here
-        self.node.load_config()
+        # TODO: Add config_dict startup management here
+        try:
+            self.node.load_config(ICS_CONF_FILE)
+        except Exception:
+            logging.critical('Server shutting down...')
+            sys.exit(1)  # TODO: better system handling
+
         self.start_threads()
         self.node.grp_online_auto()
+        # TODO: start polling updater
         logger.info('Server startup complete')
 
     def run(self):
