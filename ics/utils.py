@@ -59,8 +59,11 @@ def read_json(filename):
     try:
         with open(filename, 'r') as file:
             return json.load(file)
-    except IOError as error:
+    except IOError as e:
         #logger.error('Unable to load config file {}, {}'.format(filename, str(error)))
+        raise
+    except ValueError as error:
+        logger.exception('Error occurred while reading file:')
         raise
 
 

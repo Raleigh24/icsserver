@@ -76,8 +76,11 @@ class Node(AttributeObject):
         if not os.path.isfile(ICS_CONF_FILE):
             logger.info('No config found, skipping load...')
             return
-        else:
+        try:
             data = read_json(ICS_CONF_FILE)
+        except ValueError as error:
+            logging.error('Error occurred while loading config: {}'.format(str(error)))
+            return
 
         # Set system attributes
         system_data = data['system']
@@ -136,12 +139,10 @@ class Node(AttributeObject):
 
     def node_modify(self, attr_name, value):
         try:
-            previous_value = self.attr[attr_name]
             self.set_attr(attr_name, value)
-            logging.info('Node attribute changed from {} to {}'.format(previous_value, value))
-            return True
         except KeyError:
             return False
+        return True
 
     def res_online(self, resource_name):
         """RPC interface for bringing resource online"""
@@ -264,12 +265,10 @@ class Node(AttributeObject):
         """RPC interface for modifying attribute for resource"""
         resource = self.get_resource(resource_name)
         try:
-            previous_value = resource.attr_value(attr_name)
             resource.set_attr(attr_name, value)
-            logging.info('Resource({}) attribute changed from {} to {}'.format(resource_name, previous_value, value))
-            return True
         except KeyError:
             return False
+        return True
 
     def res_attr(self, resource_name):
         """RPC interface for getting resource attributes"""
@@ -289,6 +288,12 @@ class Node(AttributeObject):
         logger.info('Group({}) bringing online'.format(group_name))
         group = self.get_group(group_name)
         group.start()
+
+    def grp_online_auto(self):
+        """Auto start service groups which have the AutoStart attribute enabled"""
+        for group in self.groups.values():
+            if group.attr_value('AutoStart') == 'true':
+                group.start()
 
     def grp_offline(self, group_name):
         """RPC interface for bringing a group offline"""
@@ -372,12 +377,10 @@ class Node(AttributeObject):
         """Modify an attribute for a given group"""
         group = self.get_group(group_name)
         try:
-            previous_value = group.attr[attr_name]
             group.set_attr(attr_name, value)
-            logger.info('Group({}) attribute changed from {} to {}'.format(group_name, previous_value, value))
-            return True
         except KeyError:
             return False
+        return True
 
     def grp_attr(self, group_name):
         """Return a list of attributes for a given group"""

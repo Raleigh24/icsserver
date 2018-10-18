@@ -9,7 +9,7 @@ from alerts import alert_handler
 from rpcinterface import rpc_runner
 from ics_exceptions import ICSError
 from utils import set_log_level
-
+from environment import ICS_CONF_FILE
 
 logger = logging.getLogger(__name__)
 
@@ -110,6 +110,7 @@ class System:
         #TODO: Add config startup management here
         self.node.load_config()
         self.start_threads()
+        self.node.grp_online_auto()
         logger.info('Server startup complete')
 
     def run(self):
@@ -121,13 +122,15 @@ class System:
             time.sleep(5)
 
     def shutdown(self):
+        logging.info('Server shutting down...')
         # for thread in self.threads:
         #     thread_name = thread.name
         #     thread.set()
         #
         # for thread in self.threads:
         #     thread.join()
-        #TODO: save config
+        self.node.write_config(ICS_CONF_FILE)
+        logging.info('Server shutdown complete')
         logging.shutdown()
 
 

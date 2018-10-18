@@ -31,7 +31,7 @@ class AttributeObject(object):  # Inherits from object to enabling super() in py
         logger.info('{}({}) attribute changed from {} to {}'.format(self.__class__.__name__, self.name, previous_value, value))
 
     def attr_value(self, attr):
-        """Retrun value of attribute"""
+        """Return value of attribute"""
         return self.attr[attr]
 
     def attr_list(self):
@@ -121,7 +121,7 @@ resource_attributes = {
         "default": "true",
         "type": "boolean",
         "description": ""
-    },
+    }
 }
 
 
