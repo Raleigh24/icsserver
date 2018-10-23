@@ -1,5 +1,6 @@
 import argparse
 import sys
+import time
 
 import network
 from ics_exceptions import ICSError
@@ -39,8 +40,10 @@ parser.add_argument('-value', nargs=2, metavar=('<res>', '<attr>'),
                     help='print resource  attribute value')
 parser.add_argument('-modify', nargs='+', #metavar=('<res>', '<attr>', '<value>'),
                     help='modify resource attribute')
-parser.add_argument('-wait', nargs=4, metavar=('<res>', '<attr>', '<value>', '<timeout>'),
-                    help='wait for attribute to change to value')
+#parser.add_argument('-wait', nargs=4, metavar=('<res>', '<attr>', '<value>', '<timeout>'),
+#                    help='wait for attribute to change to value')
+parser.add_argument('-wait', nargs=3, metavar=('<res>', '<state>', '<timeout>'),
+                    help='wait for resource to change state')
 
 args = parser.parse_args()
 
@@ -132,10 +135,20 @@ elif args.modify is not None:
     perform(rpc_proxy.res_modify, resource_name, attr, value)
 
 elif args.wait is not None:
-    resource_name = args.wait[0]
-    attr_name = args.wait[1]
-    value_name = args.wait[2]
-    timeout = args.wait[3]
+    resource_name, state_name, timeout = args.wait
+
+    try:
+        timer = int(timeout)
+    except ValueError:
+        print('ERROR: Timeout parameter not in correct format')
+        sys.exit(1)
+
+    while timer != 0:
+        if perform(rpc_proxy.res_state, [resource_name])[0][0] == state_name:
+            sys.exit(0)  # Exit with return code 0 when state value matches
+        time.sleep(1)
+        timer -= 1
+    sys.exit(1)  # Exit with return code 1 when timeout is reached
 
 else:
     parser.print_help()

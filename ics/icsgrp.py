@@ -1,6 +1,7 @@
 import argparse
 import sys
 import network
+import time
 
 from ics_exceptions import ICSError
 from rpcinterface import RPCProxy
@@ -43,8 +44,8 @@ parser.add_argument('-value', nargs=2, metavar=('<res>', '<attr>'),
                     help='print group  attribute value')
 parser.add_argument('-modify', nargs=3, metavar=('<group>', '<attr>', '<value>'),
                     help='modify resource attribute')
-parser.add_argument('-wait', nargs=4, metavar=('<group>', '<attr>', '<value>', '<timeout>'),
-                    help='wait for attribute to change to value')
+parser.add_argument('-wait', nargs=3, metavar=('<group>', '<state>', '<timeout>'),
+                    help='wait for resource to change state')
 args = parser.parse_args()
 
 if len(sys.argv) <= 1:
@@ -131,6 +132,22 @@ elif args.modify is not None:
     attr = args.modify[1]
     value = ' '.join(args.modify[2:])
     perform(rpc_proxy.grp_modify, group_name, attr, value)
+
+elif args.wait is not None:
+    group_name, state_name, timeout = args.wait
+
+    try:
+        timer = int(timeout)
+    except ValueError:
+        print('ERROR: Timeout parameter not in correct format')
+        sys.exit(1)
+
+    while timer != 0:
+        if perform(rpc_proxy.grp_state, [group_name])[0][0] == state_name:
+            sys.exit(0)  # Exit with return code 0 when state value matches
+        time.sleep(1)
+        timer -= 1
+    sys.exit(1)  # Exit with return code 1 when timeout is reached
 
 else:
     parser.print_help()
