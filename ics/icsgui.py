@@ -74,7 +74,7 @@ class Application:
         self.paned_window.add(self.res_navigation, weight=0)
         #self.resNavigation.pack(side=LEFT, fill=BOTH, anchor='w', expand=True)
         self.res_navigation.pack(side=LEFT, fill=BOTH, expand=True)
-        self.res_navigation.config(relief=SUNKEN, padding=(5, 5))
+        self.res_navigation.config_dict(relief=SUNKEN, padding=(5, 5))
         self.res_navigation.rowconfigure(0, weight=1)
         self.res_navigation.columnconfigure(0, weight=1)
 
@@ -82,23 +82,23 @@ class Application:
         self.res_navigation_tree = Treeview(self.res_navigation)
         #self.resNavigationTree.pack(anchor='nw', fill=BOTH, expand=True)
         self.res_navigation_tree.grid(row=0, column=0, sticky='nsew')
-        self.res_navigation_tree.config(show='tree')
+        self.res_navigation_tree.config_dict(show='tree')
         self.res_navigation_tree.bind('<<TreeviewSelect>>', self.update_res_viewer)
 
         # Add scroll bar to navigation tree
         self.res_navtree_scrollbarY = Scrollbar(self.res_navigation, orient=VERTICAL, command=self.res_navigation_tree.yview)
         self.res_navtree_scrollbarY.grid(row=0, column=1, sticky='ns')
-        self.res_navigation_tree.config(yscrollcommand=self.res_navtree_scrollbarY.set)
+        self.res_navigation_tree.config_dict(yscrollcommand=self.res_navtree_scrollbarY.set)
 
         self.res_navtree_scrollbarX = Scrollbar(self.res_navigation, orient=HORIZONTAL, command=self.res_navigation_tree.xview)
         self.res_navtree_scrollbarX.grid(row=1, column=0, sticky='ew')
-        self.res_navigation_tree.config(xscrollcommand=self.res_navtree_scrollbarX.set)
+        self.res_navigation_tree.config_dict(xscrollcommand=self.res_navtree_scrollbarX.set)
 
         # Create resource viewer navigation pane
         self.res_viewer = Frame(self.paned_window)
         self.paned_window.add(self.res_viewer, weight=4)
         self.res_viewer.pack(expand=True, fill=BOTH, side=LEFT, anchor='e')
-        self.res_viewer.config(relief=SUNKEN, padding=(5, 5))
+        self.res_viewer.config_dict(relief=SUNKEN, padding=(5, 5))
 
         # Create tabbed view
         self.res_viewer_tabs = Notebook(self.res_viewer)
@@ -119,12 +119,12 @@ class Application:
         # Create resource dependancy view
         self.res_link_view = Canvas(self.resources_view_tab)
         self.res_link_view.pack(expand=True, fill=BOTH)
-        self.res_link_view.config(bg='green')
+        self.res_link_view.config_dict(bg='green')
         self.line = self.res_link_view.create_line(0, 0, 100, 100)
 
         self.resource_icon = Label(self.res_link_view)
         self.resource_icon.pack()
-        self.resource_icon.config(text='A')
+        self.resource_icon.config_dict(text='A')
 
 
         attributes = self.rpc_proxy.attr('proc-a1')
@@ -133,7 +133,7 @@ class Application:
 
     def build_menu_bar(self):
         self.menu_bar = Menu(self.master)
-        self.menu_bar.config(relief=FLAT)
+        self.menu_bar.config_dict(relief=FLAT)
 
         self.file_menu = Menu(self.menu_bar, tearoff=0)
         self.menu_bar.add_cascade(label='File', menu=self.file_menu)
@@ -152,7 +152,7 @@ class Application:
         self.menu_bar.add_cascade(label='Help', menu=self.help_menu)
         self.help_menu.add_command(label='About')
 
-        self.master.config(menu=self.menu_bar)
+        self.master.config_dict(menu=self.menu_bar)
 
     def create_table(self, root, data, header=None):
 
@@ -182,7 +182,7 @@ class Application:
             for item in row:
                 x = Label(root, text='{}'.format(item, row_count, col_count))
                 x.grid(row=row_count, column=col_count)
-                x.config(justify=LEFT, width=max_col_width[col_count], background='white')
+                x.config_dict(justify=LEFT, width=max_col_width[col_count], background='white')
                 col_count += 1
             row_count += 1
 
@@ -226,7 +226,7 @@ class Application:
     def build_resource_view(self):
         self.resources_view_canvas = Canvas(self.status_view_tab)
         self.resources_view_canvas.pack()
-        self.resources_view_canvas.config(width=600, height=600)
+        self.resources_view_canvas.config_dict(width=600, height=600)
 
         self.test_line = self.resources_view_canvas.create_line(100, 100, 100, 100, fill='blue', width=5)
         self.resources_view_canvas.itemconfigure(self.test_line, fill='green')

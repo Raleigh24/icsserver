@@ -9,7 +9,7 @@ from tabular import print_table
 import utils
 
 utils.setup_signal_handler()
-description_text = ''
+description_text = 'Manage ICS resources'
 epilog_text = ''
 parser = argparse.ArgumentParser(description=description_text)
 parser.add_argument('-online', nargs=1, metavar='<res>',
