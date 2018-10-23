@@ -40,8 +40,6 @@ parser.add_argument('-value', nargs=2, metavar=('<res>', '<attr>'),
                     help='print resource  attribute value')
 parser.add_argument('-modify', nargs='+', #metavar=('<res>', '<attr>', '<value>'),
                     help='modify resource attribute')
-#parser.add_argument('-wait', nargs=4, metavar=('<res>', '<attr>', '<value>', '<timeout>'),
-#                    help='wait for attribute to change to value')
 parser.add_argument('-wait', nargs=3, metavar=('<res>', '<state>', '<timeout>'),
                     help='wait for resource to change state')
 

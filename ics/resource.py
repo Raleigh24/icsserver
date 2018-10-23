@@ -7,7 +7,7 @@ import os
 import events
 import alerts
 from attributes import AttributeObject, system_attributes, resource_attributes, group_attributes
-from ics_exceptions import DoesNotExist, AlreadyExists, ICSError
+from ics_exceptions import ICSError
 from utils import read_json, write_json
 from environment import ICS_RES_LOG, ICS_CONF_FILE
 from states import ResourceStates, GroupStates, ONLINE_STATES, TRANSITION_STATES
@@ -145,7 +145,6 @@ class Node(AttributeObject):
             return resource
         else:
             raise ICSError('Resource {} does not exist'.format(resource_name))
-            #raise DoesNotExist(msg='Resource {} does not exist'.format(resource_name))
 
     def res_online(self, resource_name):
         """RPC interface for bringing resource online"""
@@ -164,10 +163,8 @@ class Node(AttributeObject):
         logger.info('Adding new resource {}'.format(group_name))
         if resource_name in self.resources.keys():
             raise ICSError('Resource {} already exists'.format(resource_name))
-            #raise AlreadyExists(msg='Resource {} already exists'.format(resource_name))
         elif group_name not in self.groups.keys():
             raise ICSError('Group {} does not exist'.format(group_name))
-            #raise DoesNotExist(msg='Group {} does not exist'.format(group_name))
         elif len(self.resources) >= int(self.attr_value('ResourceLimit')):
             raise ICSError('Max resource count reached, unable to add new resource')
         else:
@@ -286,7 +283,6 @@ class Node(AttributeObject):
             group = self.groups[group_name]
             return group
         else:
-            #raise DoesNotExist(msg='Group {} does not exist'.format(group_name))
             raise ICSError('Group {} does not exist'.format(group_name))
 
     def grp_online(self, group_name):
@@ -328,7 +324,6 @@ class Node(AttributeObject):
         logger.info('Adding new group {}'.format(group_name))
         if group_name in self.groups.keys():
             ICSError('Group {} already exists'.format(group_name))
-            #raise AlreadyExists(msg='Group {} already exists'.format(group_name))
         elif len(self.groups) >= int(self.attr_value('GroupLimit')):
             raise ICSError('Max group count reached, unable to add new group')
         else:

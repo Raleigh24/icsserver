@@ -1,6 +1,7 @@
 import logging
 
 from ics_exceptions import ICSError
+
 logger = logging.getLogger(__name__)
 
 
@@ -13,13 +14,12 @@ class AttributeObject(object):  # Inherits from object to enabling super() in py
     def init_attr(self, default_attributes):
         """Initialize attributes with defaults"""
         self.default_attr = default_attributes
-        #for attribute in default_attributes.keys():
         for attribute in default_attributes:
             self.attr[attribute] = default_attributes[attribute]['default']
 
     def modified_attributes(self):
         """Return dictionary of modified attributes (non-default)"""
-        # ChainMap
+        # TODO: ChainMap in python 3
         data = {}
         for attribute in self.attr:
             attribute_value = self.attr[attribute]
@@ -136,7 +136,6 @@ resource_attributes = {
     }
 }
 
-
 group_attributes = {
     "Enabled": {
         "default": "false",
@@ -149,7 +148,6 @@ group_attributes = {
         "description": "Indicates weather a service group is automatically started when system starts"
     }
 }
-
 
 system_attributes = {
     "ClusterName": {
