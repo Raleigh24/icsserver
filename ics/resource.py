@@ -7,7 +7,7 @@ import os
 import events
 import alerts
 from attributes import AttributeObject, system_attributes, resource_attributes, group_attributes
-from ics_exceptions import DoesNotExist, AlreadyExists
+from ics_exceptions import DoesNotExist, AlreadyExists, ICSError
 from utils import read_json, write_json
 from environment import ICS_RES_LOG, ICS_CONF_FILE
 from states import ResourceStates, GroupStates, ONLINE_STATES, TRANSITION_STATES
@@ -165,8 +165,8 @@ class Node(AttributeObject):
             raise AlreadyExists(msg='Resource {} already exists'.format(resource_name))
         elif group_name not in self.groups.keys():
             raise DoesNotExist(msg='Group {} does not exist'.format(group_name))
-        elif len(self.resources) > int(self.attr['ResourceLimit']):
-            pass  # TODO: raise exception
+        elif len(self.resources) >= int(self.attr_value('ResourceLimit')):
+            raise ICSError('Max resource count reached, unable to add new resource')
         else:
             resource = Resource(resource_name, group_name)
             self.resources[resource_name] = resource
@@ -325,6 +325,8 @@ class Node(AttributeObject):
         logger.info('Adding new group {}'.format(group_name))
         if group_name in self.groups.keys():
             raise AlreadyExists(msg='Group {} already exists'.format(group_name))
+        elif len(self.groups) >= int(self.attr_value('GroupLimit')):
+            raise ICSError('Max group count reached, unable to add new group')
         else:
             group = Group(group_name)
             self.groups[group_name] = group
