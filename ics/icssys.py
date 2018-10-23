@@ -11,7 +11,7 @@ epilog_text = ''
 parser = argparse.ArgumentParser(description=description_text)
 parser.add_argument('-loglevel', nargs=1, metavar='<level>', help='Set system log level')
 parser.add_argument('-attr', action='store_true', help='list node attributes')
-parser.add_argument('-value', nargs=1, metavar=('<attr>'),
+parser.add_argument('-value', nargs=1, metavar='<attr>',
                     help='print resource  attribute value')
 parser.add_argument('-modify', nargs='+', #metavar=('<res>', '<attr>', '<value>'),
                     help='modify resource attribute')

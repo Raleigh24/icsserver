@@ -12,33 +12,33 @@ utils.setup_signal_handler()
 description_text = ''
 epilog_text = ''
 parser = argparse.ArgumentParser(description=description_text)
-parser.add_argument('-online', nargs=1, metavar=('<group>'),
+parser.add_argument('-online', nargs=1, metavar='<group>',
                     help='bring group online')
-parser.add_argument('-offline', nargs=1, metavar=('<group>'),
+parser.add_argument('-offline', nargs=1, metavar='<group>',
                     help='bring group offline')
-parser.add_argument('-add', nargs=1, metavar=('<group>'),
+parser.add_argument('-add', nargs=1, metavar='<group>',
                     help='add new resource')
-parser.add_argument('-delete', nargs=1, metavar=('<group>'),
+parser.add_argument('-delete', nargs=1, metavar='<group>',
                     help='delete existing group')
-parser.add_argument('-enable', nargs=1, metavar=('<group>'),
+parser.add_argument('-enable', nargs=1, metavar='<group>',
                     help='enable resources for a group')
-parser.add_argument('-disable', nargs=1, metavar=('<group>'),
+parser.add_argument('-disable', nargs=1, metavar='<group>',
                     help='disable resources for a group')
-parser.add_argument('-state', nargs='*', metavar=('<group>'),
+parser.add_argument('-state', nargs='*', metavar='<group>',
                     help='print current state of resource')
 parser.add_argument('-link', nargs=2, metavar=('<parent>', '<child>'),
                     help='create dependancy link between two resources')
 parser.add_argument('-unlink', nargs=2, metavar=('<parent>', '<child>'),
                     help='remove dependancy link between two resources')
-parser.add_argument('-clear', nargs=1, metavar=('<group>'),
+parser.add_argument('-clear', nargs=1, metavar='<group>',
                     help='remove fault status')
-parser.add_argument('-flush', nargs=1, metavar=('<group>'),
-                    help='')
-parser.add_argument('-resources', nargs=1, metavar=('<group>'),
+parser.add_argument('-flush', nargs=1, metavar='<group>',
+                    help='flush resource')
+parser.add_argument('-resources', nargs=1, metavar='<group>',
                     help='list all resources for a given group')
 parser.add_argument('-list', action='store_true',
                     help='print list of all resources')
-parser.add_argument('-attr', nargs=1, metavar=('<group>'),
+parser.add_argument('-attr', nargs=1, metavar='<group>',
                     help='print group attributes')
 parser.add_argument('-value', nargs=2, metavar=('<res>', '<attr>'),
                     help='print group  attribute value')
