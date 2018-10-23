@@ -38,7 +38,7 @@ class RPCHandler:
                 result = self._functions[func_name](*args, **kwargs)  # Run function
                 return pickle.dumps(result)
             except Exception as error:
-                logger.exception(error)
+                #logger.exception(error)  # TODO: need to do something about this, logs normal exceptions
                 return pickle.dumps(error)
         except EOFError:
             pass
