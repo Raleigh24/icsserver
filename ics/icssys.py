@@ -6,7 +6,7 @@ from rpcinterface import RPCProxy
 from tabular import print_table
 from ics_exceptions import ICSError
 
-description_text = ''
+description_text = 'Manage ICS system'
 epilog_text = ''
 parser = argparse.ArgumentParser(description=description_text)
 parser.add_argument('-loglevel', nargs=1, metavar='<level>', help='Set system log level')
