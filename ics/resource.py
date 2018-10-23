@@ -124,14 +124,6 @@ class Node(AttributeObject):
             else:
                 time.sleep(60)
 
-    def get_resource(self, resource_name):
-        """Get resource object from resources list"""
-        if resource_name in self.resources.keys():
-            resource = self.resources[resource_name]
-            return resource
-        else:
-            raise DoesNotExist(msg='Resource {} does not exist'.format(resource_name))
-
     def node_attr(self):
         """Return a list of node attributes"""
         return self.attr_list()
@@ -145,6 +137,15 @@ class Node(AttributeObject):
         except KeyError:
             return False
         return True
+
+    def get_resource(self, resource_name):
+        """Get resource object from resources list"""
+        if resource_name in self.resources.keys():
+            resource = self.resources[resource_name]
+            return resource
+        else:
+            raise ICSError('Resource {} does not exist'.format(resource_name))
+            #raise DoesNotExist(msg='Resource {} does not exist'.format(resource_name))
 
     def res_online(self, resource_name):
         """RPC interface for bringing resource online"""
@@ -162,9 +163,11 @@ class Node(AttributeObject):
         """RPC interface for adding new resource"""
         logger.info('Adding new resource {}'.format(group_name))
         if resource_name in self.resources.keys():
-            raise AlreadyExists(msg='Resource {} already exists'.format(resource_name))
+            raise ICSError('Resource {} already exists'.format(resource_name))
+            #raise AlreadyExists(msg='Resource {} already exists'.format(resource_name))
         elif group_name not in self.groups.keys():
-            raise DoesNotExist(msg='Group {} does not exist'.format(group_name))
+            raise ICSError('Group {} does not exist'.format(group_name))
+            #raise DoesNotExist(msg='Group {} does not exist'.format(group_name))
         elif len(self.resources) >= int(self.attr_value('ResourceLimit')):
             raise ICSError('Max resource count reached, unable to add new resource')
         else:
@@ -210,8 +213,7 @@ class Node(AttributeObject):
         resource = self.get_resource(resource_name)
         parent_resource = self.get_resource(parent_name)
         if resource.attr_value('Group') != parent_resource.attr_value('Group'):
-            raise Exception
-
+            raise ICSError('Unable to add link, resources not in same group')
         resource.add_parent(parent_resource)
         parent_resource.add_child(resource)
         logger.info('Resource({}) created dependency on {}'.format(resource_name, parent_name))
@@ -284,7 +286,8 @@ class Node(AttributeObject):
             group = self.groups[group_name]
             return group
         else:
-            raise DoesNotExist(msg='Group {} does not exist'.format(group_name))
+            #raise DoesNotExist(msg='Group {} does not exist'.format(group_name))
+            raise ICSError('Group {} does not exist'.format(group_name))
 
     def grp_online(self, group_name):
         """RPC interface for bringing a group online"""
@@ -324,7 +327,8 @@ class Node(AttributeObject):
         """RPC interface for adding a new group"""
         logger.info('Adding new group {}'.format(group_name))
         if group_name in self.groups.keys():
-            raise AlreadyExists(msg='Group {} already exists'.format(group_name))
+            ICSError('Group {} already exists'.format(group_name))
+            #raise AlreadyExists(msg='Group {} already exists'.format(group_name))
         elif len(self.groups) >= int(self.attr_value('GroupLimit')):
             raise ICSError('Max group count reached, unable to add new group')
         else:

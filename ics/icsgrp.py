@@ -2,7 +2,7 @@ import argparse
 import sys
 import network
 
-from ics_exceptions import DoesNotExist, AlreadyExists
+from ics_exceptions import ICSError
 from rpcinterface import RPCProxy
 from tabular import print_table
 import utils
@@ -62,9 +62,9 @@ rpc_proxy = RPCProxy(conn)
 
 def perform(func, *func_args):
     try:
-        func(*func_args)
-    except DoesNotExist as e:
-        print('ERROR: ' + str(e))
+        return func(*func_args)
+    except ICSError as error:
+        print('ERROR: ' + str(error))
         sys.exit(1)
 
 
@@ -78,10 +78,7 @@ elif args.offline is not None:
 
 elif args.add is not None:
     group_name = args.add[0]
-    try:
-        perform(rpc_proxy.grp_add, group_name)
-    except AlreadyExists as e:
-        print('ERROR: ' + str(e))
+    perform(rpc_proxy.grp_add, group_name)
 
 elif args.delete is not None:
     group_name = args.delete[0]
@@ -96,7 +93,7 @@ elif args.disable is not None:
     perform(rpc_proxy.grp_disable, group_name)
 
 elif args.state is not None:
-    results = rpc_proxy.grp_state(args.state)
+    results = perform(rpc_proxy.grp_state, args.state)
     print_table(results)
 
 elif args.clear is not None:
@@ -109,7 +106,7 @@ elif args.flush is not None:
 
 elif args.resources is not None:
     group_name = args.resources[0]
-    result = rpc_proxy.grp_resources(group_name)
+    result = perform(rpc_proxy.grp_resources, group_name)
     for resource_name in result:
         print(resource_name)
 
@@ -120,30 +117,20 @@ elif args.list is True:
 
 elif args.attr is not None:
     group_name = args.attr[0]
-    result = rpc_proxy.grp_attr(group_name)
+    result = perform(rpc_proxy.grp_attr, group_name)
     print_table(result)
 
 elif args.value is not None:
     group_name = args.value[0]
     attr = args.value[1]
-    try:
-        result = rpc_proxy.grp_value(group_name, attr)
-        print(result)
-    except DoesNotExist as error:
-        print('ERROR: ' + str(error))
-        sys.exit(1)
-    except KeyError:
-        print('Error: Attribute does not exists')
-        sys.exit(1)
+    result = perform(rpc_proxy.grp_value, group_name, attr)
+    print(result)
 
 elif args.modify is not None:
     group_name = args.modify[0]
     attr = args.modify[1]
     value = ' '.join(args.modify[2:])
-    result = rpc_proxy.grp_modify(group_name, attr, value)
-    if not result:
-        print('ERROR: Attribute does not exist')
-        sys.exit(1)
+    perform(rpc_proxy.grp_modify, group_name, attr, value)
 
 else:
     parser.print_help()

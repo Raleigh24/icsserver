@@ -2,7 +2,7 @@ import argparse
 import sys
 
 import network
-from ics_exceptions import DoesNotExist, AlreadyExists
+from ics_exceptions import ICSError
 from rpcinterface import RPCProxy
 from tabular import print_table
 import utils
@@ -60,8 +60,8 @@ rpc_proxy = RPCProxy(conn)
 def perform(func, *func_args):
     try:
         return func(*func_args)
-    except DoesNotExist as e:
-        print('ERROR: ' + str(e))
+    except ICSError as error:
+        print('ERROR: ' + str(error))
         sys.exit(1)
 
 
@@ -76,32 +76,25 @@ elif args.offline is not None:
 elif args.add is not None:
     resource_name = args.add[0]
     group_name = args.add[1]
-    try:
-        perform(rpc_proxy.res_add, resource_name, group_name)
-    except AlreadyExists as e:
-        print('ERROR: ' + str(e))
-        sys.exit(1)
+    perform(rpc_proxy.res_add, resource_name, group_name)
 
 elif args.delete is not None:
     resource_name = args.delete[0]
     perform(rpc_proxy.res_delete, resource_name)
 
 elif args.state is not None:
-    #results = rpc_proxy.state(args.state)
     results = perform(rpc_proxy.res_state, args.state)
     print_table(results)
-
 
 elif args.link is not None:
     parent_name = args.link[0]
     child_name = args.link[1]
     perform(rpc_proxy.res_link, parent_name, child_name)
-    # TODO: handle exception when link exists or not in same group
 
 elif args.unlink is not None:
     parent_name = args.unlink[0]
     child_name = args.unlink[1]
-    rpc_proxy.res_unlink(parent_name, child_name)
+    perform(rpc_proxy.res_unlink, parent_name, child_name)
 
 elif args.clear is not None:
     resource_name = args.clear[0]
@@ -112,41 +105,31 @@ elif args.probe is not None:
     perform(rpc_proxy.res_probe, resource_name)
 
 elif args.dep is not None:
-    results = rpc_proxy.res_dep(args.dep)
+    results = perform(rpc_proxy.res_dep, args.dep)
     header = ['Group', 'Parent', 'Child']
     print_table(results, header=header, col_sort=0)
 
 elif args.list is True:
-    resources = rpc_proxy.res_list()
+    resources = perform(rpc_proxy.res_list)
     for resource in resources:
         print(resource)
 
 elif args.attr is not None:
     resource_name = args.attr[0]
-    result = rpc_proxy.res_attr(resource_name)
+    result = perform(rpc_proxy.res_attr, resource_name)
     print_table(result)
 
 elif args.value is not None:
     resource_name = args.value[0]
-    attr = args.value[1]
-    try:
-        result = rpc_proxy.res_value(resource_name, attr)
-        print(result)
-    except DoesNotExist as e:
-        print('ERROR: ' + str(e))
-        sys.exit(1)
-    except KeyError:
-        print('ERROR: Attribute does not exists')
-        sys.exit(1)
+    attr_name = args.value[1]
+    result = perform(rpc_proxy.res_value, resource_name, attr_name)
+    print(result)
 
 elif args.modify is not None:
     resource_name = args.modify[0]
     attr = args.modify[1]
     value = ' '.join(args.modify[2:])
-    result = rpc_proxy.res_modify(resource_name, attr, value)
-    if not result:
-        print('ERROR: Attribute does not exists')
-        sys.exit(1)
+    perform(rpc_proxy.res_modify, resource_name, attr, value)
 
 elif args.wait is not None:
     resource_name = args.wait[0]

@@ -1,5 +1,6 @@
 import logging
 
+from ics_exceptions import ICSError
 logger = logging.getLogger(__name__)
 
 
@@ -12,11 +13,13 @@ class AttributeObject(object):  # Inherits from object to enabling super() in py
     def init_attr(self, default_attributes):
         """Initialize attributes with defaults"""
         self.default_attr = default_attributes
-        for attribute in default_attributes.keys():
+        #for attribute in default_attributes.keys():
+        for attribute in default_attributes:
             self.attr[attribute] = default_attributes[attribute]['default']
 
     def modified_attributes(self):
         """Return dictionary of modified attributes (non-default)"""
+        # ChainMap
         data = {}
         for attribute in self.attr:
             attribute_value = self.attr[attribute]
@@ -26,6 +29,9 @@ class AttributeObject(object):  # Inherits from object to enabling super() in py
 
     def set_attr(self, attr, value):
         """Set attribute value"""
+        if attr not in self.attr:
+            raise ICSError('{}({}) Attribute {} does not exist'.format(self.__class__.__name__, self.name, attr))
+
         if self.attr[attr] == "":
             previous_value = '<empty>'
         else:
@@ -35,7 +41,10 @@ class AttributeObject(object):  # Inherits from object to enabling super() in py
 
     def attr_value(self, attr):
         """Return value of attribute"""
-        return self.attr[attr]
+        if attr not in self.attr:
+            raise ICSError('{}({}) Attribute {} does not exist'.format(self.__class__.__name__, self.name, attr))
+        else:
+            return self.attr[attr]
 
     def attr_list(self):
         """Return a list of attributes and their values"""
