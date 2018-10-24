@@ -4,6 +4,7 @@ import json
 import logging
 
 from environment import ICS_PID_FILE
+from ics_exceptions import ICSError
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +27,7 @@ def check_running():
         pid = get_ics_pid()
         return is_process_running(pid)
     else:
-        False
+        return False
 
 
 def create_pid_file(pid):
@@ -59,11 +60,8 @@ def read_json(filename):
     try:
         with open(filename, 'r') as file:
             return json.load(file)
-    except IOError as e:
-        #logger.error('Unable to load config file {}, {}'.format(filename, str(error)))
-        raise
-    except ValueError as error:
-        logger.exception('Error occurred while reading file:')
+    except (IOError, ValueError):
+        logger.exception('Error occurred while reading file')
         raise
 
 
@@ -72,28 +70,26 @@ def write_json(filename, data):
     try:
         with open(filename, 'w') as file:
             json.dump(data, file, indent=4, sort_keys=True)
-    except IOError as error:
-        #logger.error('Unable to save config file {}, {}'.format(filename, str(error)))
+    except IOError:
+        logger.exception('Error occurred while reading file')
         raise
 
 
 def set_log_level(level):
     root_logger = logging.getLogger()
-    if level == 'CRITICAL':
-        root_logger.setLevel(logging.CRITICAL)
-        logging.critical('Log level set: ' + level)
-    elif level == 'ERROR':
-        root_logger.setLevel(logging.ERROR)
-        logging.critical('Log level set: ' + level)
-    elif level == 'WARNING':
-        root_logger.setLevel(logging.WARNING)
-        logging.critical('Log level set: ' + level)
-    elif level == 'INFO':
-        root_logger.setLevel(logging.INFO)
-        logging.critical('Log level set: ' + level)
-    elif level == 'DEBUG':
-        root_logger.setLevel(logging.DEBUG)
-        logging.critical('Log level set: ' + level)
-    elif level == 'NOTSET':
-        root_logger.setLevel(logging.NOTSET)
-        logging.critical('Log level set: ' + level)
+    level_map = {
+        'CRITICAL': logging.CRITICAL,
+        'ERROR': logging.ERROR,
+        'WARNING': logging.WARNING,
+        'INFO': logging.INFO,
+        'DEBUG': logging.DEBUG,
+        'NOTSET': logging.NOTSET
+    }
+
+    try:
+        set_level = level_map[level]
+        root_logger.setLevel(set_level)
+    except KeyError:
+        raise ICSError('Invalid logging level: {}'.format(level))
+
+    logging.critical('Log level set: ' + level)

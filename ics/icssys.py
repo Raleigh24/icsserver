@@ -11,21 +11,20 @@ epilog_text = ''
 parser = argparse.ArgumentParser(description=description_text)
 parser.add_argument('-loglevel', nargs=1, metavar='<level>', help='Set system log level')
 parser.add_argument('-attr', action='store_true', help='list node attributes')
-parser.add_argument('-value', nargs=1, metavar='<attr>',
-                    help='print resource  attribute value')
+parser.add_argument('-value', nargs=1, metavar='<attr>', help='print resource  attribute value')
 parser.add_argument('-modify', nargs='+', #metavar=('<res>', '<attr>', '<value>'),
                     help='modify resource attribute')
 args = parser.parse_args()
 
 if len(sys.argv) <= 1:
     parser.print_help()
-    exit()
+    sys.exit(1)
 
 try:
     conn = network.connect_udp()
 except network.NetworkConnectionError:
     print('Unable to connect to ICS server')
-    exit(1)
+    sys.exit(1)
 
 rpc_proxy = RPCProxy(conn)
 
@@ -39,7 +38,7 @@ def perform(func, *func_args):
 
 
 if args.loglevel is not None:
-    perform(rpc_proxy.set_log_level, args.loglevel)
+    perform(rpc_proxy.set_log_level, args.loglevel[0])
 
 elif args.attr:
     result = perform(rpc_proxy.node_attr)
