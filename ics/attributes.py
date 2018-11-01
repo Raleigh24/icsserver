@@ -37,8 +37,8 @@ class AttributeObject(object):  # Inherits from object to enabling super() in py
         else:
             previous_value = self._attr[attr]
         self._attr[attr] = value
-        logger.info('{}({}) attribute {} changed from {} to {}'.format(self.__class__.__name__, attr,
-                                                                       self.name, previous_value, value))
+        logger.info('{}({}) attribute {} changed from {} to {}'.format(self.__class__.__name__, self.name, attr,
+                                                                       previous_value, value))
 
     def attr_value(self, attr):
         """Return value of attribute"""
