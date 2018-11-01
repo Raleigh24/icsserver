@@ -8,50 +8,50 @@ logger = logging.getLogger(__name__)
 class AttributeObject(object):  # Inherits from object to enabling super() in python2.7
     def __init__(self):
         self.name = None
-        self.attr = {}
+        self._attr = {}
         self.default_attr = None
 
     def init_attr(self, default_attributes):
         """Initialize attributes with defaults"""
         self.default_attr = default_attributes
         for attribute in default_attributes:
-            self.attr[attribute] = default_attributes[attribute]['default']
+            self._attr[attribute] = default_attributes[attribute]['default']
 
     def modified_attributes(self):
         """Return dictionary of modified attributes (non-default)"""
         # TODO: ChainMap in python 3
         data = {}
-        for attribute in self.attr:
-            attribute_value = self.attr[attribute]
+        for attribute in self._attr:
+            attribute_value = self._attr[attribute]
             if attribute_value != self.default_attr[attribute]['default']:
                 data[attribute] = attribute_value
         return data
 
     def set_attr(self, attr, value):
         """Set attribute value"""
-        if attr not in self.attr:
+        if attr not in self._attr:
             raise ICSError('{}({}) Attribute {} does not exist'.format(self.__class__.__name__, self.name, attr))
 
-        if self.attr[attr] == "":
+        if self._attr[attr] == "":
             previous_value = '<empty>'
         else:
-            previous_value = self.attr[attr]
-        self.attr[attr] = value
+            previous_value = self._attr[attr]
+        self._attr[attr] = value
         logger.info('{}({}) attribute {} changed from {} to {}'.format(self.__class__.__name__, attr,
                                                                        self.name, previous_value, value))
 
     def attr_value(self, attr):
         """Return value of attribute"""
-        if attr not in self.attr:
+        if attr not in self._attr:
             raise ICSError('{}({}) Attribute {} does not exist'.format(self.__class__.__name__, self.name, attr))
         else:
-            return self.attr[attr]
+            return self._attr[attr]
 
     def attr_list(self):
         """Return a list of attributes and their values"""
         attr_list = []
-        for attr in self.attr:
-            attr_list.append((attr, self.attr[attr]))
+        for attr in self._attr:
+            attr_list.append((attr, self._attr[attr]))
         return attr_list
 
 

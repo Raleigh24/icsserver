@@ -52,9 +52,11 @@ class Node(AttributeObject):
         return self.attr_list()
 
     def node_value(self, attr_name):
-        return self.attr[attr_name]
+        """Return node attribute"""
+        return self.attr_value(attr_name)
 
     def node_modify(self, attr_name, value):
+        """Modify a node attribute"""
         try:
             self.set_attr(attr_name, value)
         except KeyError:
