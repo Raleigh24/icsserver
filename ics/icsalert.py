@@ -9,7 +9,7 @@ description_text = 'Manage ICS alerts'
 epilog_text = ''
 parser = argparse.ArgumentParser(description=description_text)
 parser.add_argument('-level', nargs=1, metavar='<level>', help='Set system log level')
-parser.add_argument('-test', action='store_true', help='')
+#parser.add_argument('-test', action='store_true', help='')
 parser.add_argument('-add', nargs=1, help='add mail recipient')
 parser.add_argument('-remove', nargs=1, help='remove mail recipient')
 args = parser.parse_args()
@@ -36,7 +36,7 @@ def perform(func, *func_args):
 
 
 if args.level is not None:
-    pass
+    perform(rpc_proxy.set_level, args.level[0])
 elif args.test:
     pass
 elif args.add is not None:

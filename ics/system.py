@@ -99,7 +99,8 @@ class System:
             self.node.grp_modify,
             self.node.grp_attr,
             self.alert_handler.add_recipient,
-            self.alert_handler.remove_recipient
+            self.alert_handler.remove_recipient,
+            self.alert_handler.set_level
         ]
 
         # Start RPC interface thread

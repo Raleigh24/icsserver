@@ -118,7 +118,10 @@ class AlertHandler:
 
     def set_level(self, level):
         previous_level = self.alert_level
-        self.alert_level = get_level_name(level)
+        try:
+            self.alert_level = get_level_name(level)
+        except KeyError:
+            raise ICSError('Invalid alert level')
         logging.info("Alert level changed from {} to {}".format(previous_level, get_level_name(self.alert_level)))
 
     def add_recipient(self, recipient):
