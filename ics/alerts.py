@@ -43,7 +43,7 @@ class Alert:
         self.system_name = ICS_CLUSTER_NAME
         self.host_name = HOSTNAME
         self.resource_name = resource.name
-        self.group_name = resource.attr['Group']
+        self.group_name = resource.attr_value('Group')
         self.level = level
         self.levelname = get_level_name(level)
         self.msg = msg
