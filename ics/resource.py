@@ -47,77 +47,6 @@ class Node(AttributeObject):
                     resource.update_poll()
             time.sleep(1)
 
-    # def config_dict(self):
-    #     """Return system configuration data in dictionary format"""
-    #     config_data = {'system': {'attributes': self.modified_attributes()}, 'groups': {}, 'resources': {}}
-    #     for group in self.groups.values():
-    #         config_data['groups'][group.name] = {'attributes': group.modified_attributes()}
-    #     for resource in self.resources.values():
-    #         config_data['resources'][resource.name] = {'attributes': resource.modified_attributes(),
-    #                                                    'dependencies': resource.dependencies()}
-    #     return config_data
-
-    # def load_config(self, filename):
-    #     """Load configuration from file"""
-    #     logger.info('Loading configuration...')
-    #     if not os.path.isfile(filename):
-    #         logger.info('No config found, skipping load...')
-    #         return
-    #
-    #     try:
-    #         data = read_json(filename)
-    #     except ValueError as error:
-    #         logging.error('Error occurred while loading config: {}'.format(str(error)))
-    #         return
-    #
-    #     try:
-    #         # Set system attributes from config
-    #         system_data = data['system']
-    #         for attr_name in system_data['attributes']:
-    #             self.set_attr(attr_name, system_data['attributes'][attr_name])
-    #
-    #         # Create groups from config
-    #         group_data = data['groups']
-    #         for group_name in group_data:
-    #             group = self.grp_add(group_name)
-    #             for attr_name in group_data[group_name]['attributes']:
-    #                 group.set_attr(attr_name, str(group_data[group_name]['attributes'][attr_name]))
-    #
-    #         # Create resources from config
-    #         resource_data = data['resources']
-    #         for resource_name in resource_data.keys():
-    #             group_name = resource_data[resource_name]['attributes']['Group']
-    #             resource = self.res_add(resource_name, group_name)
-    #             for attr_name in resource_data[resource_name]['attributes']:
-    #                 resource.set_attr(attr_name, str(resource_data[resource_name]['attributes'][attr_name]))
-    #
-    #         # Create resource dependency links
-    #         # Note: Links need to be done in separate loop to guarantee parent resources
-    #         # are created first when establishing links
-    #         for resource_name in resource_data.keys():
-    #             for dep_name in resource_data[resource_name]['dependencies']:
-    #                 self.res_link(dep_name, resource_name)
-    #     except (TypeError, KeyError) as error:
-    #         logging.error('Error occurred while loading config: {}:{}'.format(error.__class__.__name__, str(error)))
-    #         raise
-
-    # def write_config(self, filename):
-    #     """Write configuration to file"""
-    #     data = self.config_dict()
-    #     write_json(filename, data)
-
-    # def backup_config(self):
-    #     while True:
-    #         interval = int(self.attr_value('BackupInterval'))
-    #         if interval != 0:
-    #             logging.debug('Creating backup of config file')
-    #             if os.path.isfile(ICS_CONF_FILE):
-    #                 os.rename(ICS_CONF_FILE, ICS_CONF_FILE + '.autobackup')
-    #             self.write_config(ICS_CONF_FILE)
-    #             time.sleep(interval * 60)
-    #         else:
-    #             time.sleep(60)
-
     def node_attr(self):
         """Return a list of node attributes"""
         return self.attr_list()
@@ -141,19 +70,19 @@ class Node(AttributeObject):
             raise ICSError('Resource {} does not exist'.format(resource_name))
 
     def res_online(self, resource_name):
-        """RPC interface for bringing resource online"""
+        """Interface for bringing resource online"""
         resource = self.get_resource(resource_name)
         if resource.state is not ResourceStates.ONLINE:
             resource.change_state(ResourceStates.STARTING)
 
     def res_offline(self, resource_name):
-        """RPC interface for bringing resource offline"""
+        """Interface for bringing resource offline"""
         resource = self.get_resource(resource_name)
         if resource.state is not ResourceStates.OFFLINE:
             resource.change_state(ResourceStates.STOPPING)
 
     def res_add(self, resource_name, group_name):
-        """RPC interface for adding new resource"""
+        """Interface for adding new resource"""
         logger.info('Adding new resource {}'.format(group_name))
         if resource_name in self.resources.keys():
             raise ICSError('Resource {} already exists'.format(resource_name))
@@ -169,7 +98,7 @@ class Node(AttributeObject):
             return resource
 
     def res_delete(self, resource_name):
-        """RPC interface for deleting existing resource"""
+        """Interface for deleting existing resource"""
         resource = self.get_resource(resource_name)
 
         for parent in resource.parents:
@@ -184,7 +113,7 @@ class Node(AttributeObject):
         logger.info('Resource({}) resource deleted'.format(resource_name))
 
     def res_state(self, resource_args):
-        """RPC interface for getting resource current state """
+        """Interface for getting resource current state """
         resource_states = []
         if len(resource_args) == 1:
             resource = self.get_resource(resource_args[0])
@@ -200,7 +129,7 @@ class Node(AttributeObject):
         return resource_states
 
     def res_link(self, parent_name, resource_name):
-        """RPC interface to link two resources"""
+        """Interface to link two resources"""
         resource = self.get_resource(resource_name)
         parent_resource = self.get_resource(parent_name)
         if resource.attr_value('Group') != parent_resource.attr_value('Group'):
@@ -210,25 +139,24 @@ class Node(AttributeObject):
         logger.info('Resource({}) created dependency on {}'.format(resource_name, parent_name))
 
     def res_unlink(self, parent_name, resource_name):
-        """RPC interface to unlink two resources"""
+        """Interface to unlink two resources"""
         resource = self.get_resource(resource_name)
         parent_resource = self.get_resource(parent_name)
         resource.remove_parent(parent_name)
         parent_resource.remove_child(resource)
 
     def res_clear(self, resource_name):
-        """RPC interface for clearing resource in a faulted state"""
+        """Interface for clearing resource in a faulted state"""
         resource = self.get_resource(resource_name)
         resource.clear()
 
     def res_probe(self, resource_name):
-        """RPC interface for manually triggering a poll"""
+        """Interface for manually triggering a poll"""
         resource = self.get_resource(resource_name)
         resource.probe()
-        #events.trigger_event(events.PollRunEvent(resource))
 
     def res_dep(self, resource_args):
-        """RPC interface for getting resource dependencies"""
+        """Interface for getting resource dependencies"""
         dep_list = []
         if len(resource_args) == 0:
             for resource in self.resources.values():
@@ -250,16 +178,16 @@ class Node(AttributeObject):
         return dep_list
 
     def res_list(self):
-        """RPC interface for listing all resources"""
+        """Interface for listing all resources"""
         return self.resources.keys()
 
     def res_value(self, resource_name, attr_name):
-        """RPC interface for getting attribute value for resource"""
+        """Interface for getting attribute value for resource"""
         resource = self.get_resource(resource_name)
         return resource.attr_value(attr_name)
 
     def res_modify(self, resource_name, attr_name, value):
-        """RPC interface for modifying attribute for resource"""
+        """Interface for modifying attribute for resource"""
         resource = self.get_resource(resource_name)
         try:
             resource.set_attr(attr_name, value)
@@ -268,7 +196,7 @@ class Node(AttributeObject):
         return True
 
     def res_attr(self, resource_name):
-        """RPC interface for getting resource attributes"""
+        """Interface for getting resource attributes"""
         resource = self.get_resource(resource_name)
         return resource.attr_list()
 
@@ -281,7 +209,7 @@ class Node(AttributeObject):
             raise ICSError('Group {} does not exist'.format(group_name))
 
     def grp_online(self, group_name):
-        """RPC interface for bringing a group online"""
+        """Interface for bringing a group online"""
         logger.info('Group({}) bringing online'.format(group_name))
         group = self.get_group(group_name)
         group.start()
@@ -293,13 +221,13 @@ class Node(AttributeObject):
                 group.start()
 
     def grp_offline(self, group_name):
-        """RPC interface for bringing a group offline"""
+        """Interface for bringing a group offline"""
         logger.info('Group({}) bringing offline'.format(group_name))
         group = self.get_group(group_name)
         group.stop()
 
     def grp_state(self, group_args):
-        """RPC interface for getting state of group"""
+        """Interface for getting state of group"""
         group_states = []
         if len(group_args) == 1:
             group = self.get_group(group_args[0])
@@ -315,7 +243,7 @@ class Node(AttributeObject):
         return group_states
 
     def grp_add(self, group_name):
-        """RPC interface for adding a new group"""
+        """Interface for adding a new group"""
         logger.info('Adding new group {}'.format(group_name))
         if group_name in self.groups.keys():
             ICSError('Group {} already exists'.format(group_name))
@@ -327,7 +255,7 @@ class Node(AttributeObject):
             return group
 
     def grp_delete(self, group_name):
-        """RPC interface for deleting an existing group"""
+        """Interface for deleting an existing group"""
         logger.info('Deleting group {}'.format(group_name))
         group = self.get_group(group_name)
         if not group.members:
@@ -337,27 +265,27 @@ class Node(AttributeObject):
             pass  # delete object?
 
     def grp_enable(self, group_name):
-        """RPC interface to enable a group"""
+        """Interface to enable a group"""
         group = self.get_group(group_name)
         group.enable()
 
     def grp_disable(self, group_name):
-        """RPC interface to disable a group"""
+        """Interface to disable a group"""
         group = self.get_group(group_name)
         group.disable()
 
     def grp_flush(self, group_name):
-        """RPC interface for flushing a group"""
+        """Interface for flushing a group"""
         group = self.get_group(group_name)
         group.flush()
 
     def grp_clear(self, group_name):
-        """RPC interface for clearing a group"""
+        """Interface for clearing a group"""
         group = self.get_group(group_name)
         group.clear()
 
     def grp_resources(self, group_name):
-        """RPC interface for getting members of a group"""
+        """Interface for getting members of a group"""
         group = self.get_group(group_name)
         resource_names = []
         for member in group.members:
@@ -365,7 +293,7 @@ class Node(AttributeObject):
         return resource_names
 
     def grp_list(self):
-        """RPC interface for listing all existing group names"""
+        """Interface for listing all existing group names"""
         return self.groups.keys()
 
     def grp_value(self, group_name, attr_name):
