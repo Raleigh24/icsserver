@@ -24,16 +24,10 @@ class Node(AttributeObject):
         self.groups = {}
 
     def set_attr(self, attr, value):
-
         if attr == "ClusterName":
             pass
         elif attr == "NodeName":
             pass
-        elif attr == "AlertRecipients":
-            pass
-        elif attr == "AlertLevel":
-            alerts.set_level(value)
-            self.attr[attr] = value
 
         super(Node, self).set_attr(attr, value)
 
@@ -53,76 +47,76 @@ class Node(AttributeObject):
                     resource.update_poll()
             time.sleep(1)
 
-    def config_dict(self):
-        """Return system configuration data in dictionary format"""
-        config_data = {'system': {'attributes': self.modified_attributes()}, 'groups': {}, 'resources': {}}
-        for group in self.groups.values():
-            config_data['groups'][group.name] = {'attributes': group.modified_attributes()}
-        for resource in self.resources.values():
-            config_data['resources'][resource.name] = {'attributes': resource.modified_attributes(),
-                                                       'dependencies': resource.dependencies()}
-        return config_data
+    # def config_dict(self):
+    #     """Return system configuration data in dictionary format"""
+    #     config_data = {'system': {'attributes': self.modified_attributes()}, 'groups': {}, 'resources': {}}
+    #     for group in self.groups.values():
+    #         config_data['groups'][group.name] = {'attributes': group.modified_attributes()}
+    #     for resource in self.resources.values():
+    #         config_data['resources'][resource.name] = {'attributes': resource.modified_attributes(),
+    #                                                    'dependencies': resource.dependencies()}
+    #     return config_data
 
-    def load_config(self, filename):
-        """Load configuration from file"""
-        logger.info('Loading configuration...')
-        if not os.path.isfile(filename):
-            logger.info('No config found, skipping load...')
-            return
+    # def load_config(self, filename):
+    #     """Load configuration from file"""
+    #     logger.info('Loading configuration...')
+    #     if not os.path.isfile(filename):
+    #         logger.info('No config found, skipping load...')
+    #         return
+    #
+    #     try:
+    #         data = read_json(filename)
+    #     except ValueError as error:
+    #         logging.error('Error occurred while loading config: {}'.format(str(error)))
+    #         return
+    #
+    #     try:
+    #         # Set system attributes from config
+    #         system_data = data['system']
+    #         for attr_name in system_data['attributes']:
+    #             self.set_attr(attr_name, system_data['attributes'][attr_name])
+    #
+    #         # Create groups from config
+    #         group_data = data['groups']
+    #         for group_name in group_data:
+    #             group = self.grp_add(group_name)
+    #             for attr_name in group_data[group_name]['attributes']:
+    #                 group.set_attr(attr_name, str(group_data[group_name]['attributes'][attr_name]))
+    #
+    #         # Create resources from config
+    #         resource_data = data['resources']
+    #         for resource_name in resource_data.keys():
+    #             group_name = resource_data[resource_name]['attributes']['Group']
+    #             resource = self.res_add(resource_name, group_name)
+    #             for attr_name in resource_data[resource_name]['attributes']:
+    #                 resource.set_attr(attr_name, str(resource_data[resource_name]['attributes'][attr_name]))
+    #
+    #         # Create resource dependency links
+    #         # Note: Links need to be done in separate loop to guarantee parent resources
+    #         # are created first when establishing links
+    #         for resource_name in resource_data.keys():
+    #             for dep_name in resource_data[resource_name]['dependencies']:
+    #                 self.res_link(dep_name, resource_name)
+    #     except (TypeError, KeyError) as error:
+    #         logging.error('Error occurred while loading config: {}:{}'.format(error.__class__.__name__, str(error)))
+    #         raise
 
-        try:
-            data = read_json(filename)
-        except ValueError as error:
-            logging.error('Error occurred while loading config: {}'.format(str(error)))
-            return
+    # def write_config(self, filename):
+    #     """Write configuration to file"""
+    #     data = self.config_dict()
+    #     write_json(filename, data)
 
-        try:
-            # Set system attributes from config
-            system_data = data['system']
-            for attr_name in system_data['attributes']:
-                self.set_attr(attr_name, system_data['attributes'][attr_name])
-
-            # Create groups from config
-            group_data = data['groups']
-            for group_name in group_data:
-                group = self.grp_add(group_name)
-                for attr_name in group_data[group_name]['attributes']:
-                    group.set_attr(attr_name, str(group_data[group_name]['attributes'][attr_name]))
-
-            # Create resources from config
-            resource_data = data['resources']
-            for resource_name in resource_data.keys():
-                group_name = resource_data[resource_name]['attributes']['Group']
-                resource = self.res_add(resource_name, group_name)
-                for attr_name in resource_data[resource_name]['attributes']:
-                    resource.set_attr(attr_name, str(resource_data[resource_name]['attributes'][attr_name]))
-
-            # Create resource dependency links
-            # Note: Links need to be done in separate loop to guarantee parent resources
-            # are created first when establishing links
-            for resource_name in resource_data.keys():
-                for dep_name in resource_data[resource_name]['dependencies']:
-                    self.res_link(dep_name, resource_name)
-        except (TypeError, KeyError) as error:
-            logging.error('Error occurred while loading config: {}:{}'.format(error.__class__.__name__, str(error)))
-            raise
-
-    def write_config(self, filename):
-        """Write configuration to file"""
-        data = self.config_dict()
-        write_json(filename, data)
-
-    def backup_config(self):
-        while True:
-            interval = int(self.attr_value('BackupInterval'))
-            if interval != 0:
-                logging.debug('Creating backup of config file')
-                if os.path.isfile(ICS_CONF_FILE):
-                    os.rename(ICS_CONF_FILE, ICS_CONF_FILE + '.autobackup')
-                self.write_config(ICS_CONF_FILE)
-                time.sleep(interval * 60)
-            else:
-                time.sleep(60)
+    # def backup_config(self):
+    #     while True:
+    #         interval = int(self.attr_value('BackupInterval'))
+    #         if interval != 0:
+    #             logging.debug('Creating backup of config file')
+    #             if os.path.isfile(ICS_CONF_FILE):
+    #                 os.rename(ICS_CONF_FILE, ICS_CONF_FILE + '.autobackup')
+    #             self.write_config(ICS_CONF_FILE)
+    #             time.sleep(interval * 60)
+    #         else:
+    #             time.sleep(60)
 
     def node_attr(self):
         """Return a list of node attributes"""

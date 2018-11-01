@@ -2,14 +2,15 @@ import threading
 import logging
 import time
 import sys
+import os
 
 import network
 from resource import Node
 from events import event_handler
-from alerts import alert_handler
+from alerts import AlertHandler
 from rpcinterface import rpc_runner
 from ics_exceptions import ICSError
-from utils import set_log_level
+from utils import set_log_level, read_json, write_json
 from environment import ICS_CONF_FILE
 
 logger = logging.getLogger(__name__)
@@ -19,7 +20,8 @@ class System:
 
     def __init__(self):
         self.threads = []
-        self.node = None
+        self.node = Node()
+        self.alert_handler = AlertHandler()
 
     def start_threads(self):
         # Start event handler thread
@@ -31,10 +33,10 @@ class System:
 
         # Start alert handler thread
         logger.info('Starting alert handler...')
-        thread_event_handler = threading.Thread(name='alert handler', target=alert_handler)
-        thread_event_handler.daemon = True
-        thread_event_handler.start()
-        self.threads.append(thread_event_handler)
+        thread_alert_handler = threading.Thread(name='alert handler', target=self.alert_handler.run)
+        thread_alert_handler.daemon = True
+        thread_alert_handler.start()
+        self.threads.append(thread_alert_handler)
 
         # Start client handler thread
         logger.info('Starting client handler...')
@@ -57,7 +59,7 @@ class System:
 
         # Start config backup
         logger.info('Starting auto backups...')
-        thread_config_backup = threading.Thread(name='backup config', target=self.node.backup_config)
+        thread_config_backup = threading.Thread(name='backup config', target=self.backup_config)
         thread_config_backup.daemon = True
         thread_config_backup.start()
         self.threads.append(thread_config_backup)
@@ -95,7 +97,9 @@ class System:
             self.node.grp_list,
             self.node.grp_value,
             self.node.grp_modify,
-            self.node.grp_attr
+            self.node.grp_attr,
+            self.alert_handler.add_recipient,
+            self.alert_handler.remove_recipient
         ]
 
         # Start RPC interface thread
@@ -105,16 +109,98 @@ class System:
         thread_rpc_interface.start()
         self.threads.append(thread_rpc_interface)
 
+    def config_data(self):
+        """Return system configuration data in dictionary format"""
+        config_data = {
+            'system': {'attributes': self.node.modified_attributes()},
+            'alerts': {'attributes': {
+                'AlertLevel': self.alert_handler.get_level(), 'AlertRecipients': self.alert_handler.recipients},
+            },
+            'groups': {},
+            'resources': {}
+        }
+
+        for group in self.node.groups.values():
+            config_data['groups'][group.name] = {'attributes': group.modified_attributes()}
+        for resource in self.node.resources.values():
+            config_data['resources'][resource.name] = {'attributes': resource.modified_attributes(),
+                                                       'dependencies': resource.dependencies()}
+        return config_data
+
+    def load_config(self, filename):
+        logger.info('Loading configuration...')
+        if not os.path.isfile(filename):
+            logger.info('No config found, skipping load')
+            return
+
+        try:
+            data = read_json(filename)
+        except ValueError as error:
+            logging.error('Error occurred while loading config: {}'.format(str(error)))
+            return
+
+        try:
+            # Set system attributes from config
+            system_data = data['system']
+            for attr_name in system_data['attributes']:
+                self.node.set_attr(attr_name, system_data['attributes'][attr_name])
+
+            # Set alert attributes from config
+            alert_data = data['alerts']
+            self.alert_handler.set_level(alert_data['attributes']['AlertLevel'])
+            for recipient in alert_data['attributes']['AlertRecipients']:
+                self.alert_handler.add_recipient(recipient)
+
+            # Create groups from config
+            group_data = data['groups']
+            for group_name in group_data:
+                group = self.node.grp_add(group_name)
+                for attr_name in group_data[group_name]['attributes']:
+                    group.set_attr(attr_name, str(group_data[group_name]['attributes'][attr_name]))
+
+            # Create resources from config
+            resource_data = data['resources']
+            for resource_name in resource_data.keys():
+                group_name = resource_data[resource_name]['attributes']['Group']
+                resource = self.node.res_add(resource_name, group_name)
+                for attr_name in resource_data[resource_name]['attributes']:
+                    resource.set_attr(attr_name, str(resource_data[resource_name]['attributes'][attr_name]))
+
+            # Create resource dependency links
+            # Note: Links need to be done in separate loop to guarantee parent resources
+            # are created first when establishing links
+            for resource_name in resource_data.keys():
+                for dep_name in resource_data[resource_name]['dependencies']:
+                    self.node.res_link(dep_name, resource_name)
+        except (TypeError, KeyError) as error:
+            logging.error('Error occurred while loading config: {}:{}'.format(error.__class__.__name__, str(error)))
+            raise
+
+    def write_config(self, filename):
+        """Write configuration to file"""
+        data = self.config_data()
+        write_json(filename, data)
+
+    def backup_config(self):
+        while True:
+            interval = int(self.node.attr_value('BackupInterval'))
+            if interval != 0:
+                logging.debug('Creating backup of config file')
+                if os.path.isfile(ICS_CONF_FILE):
+                    os.rename(ICS_CONF_FILE, ICS_CONF_FILE + '.autobackup')
+                self.write_config(ICS_CONF_FILE)
+                time.sleep(interval * 60)
+            else:
+                time.sleep(60)
+
     def startup(self):
         logger.info('Server starting up...')
-        self.node = Node()
         # TODO: Add config_dict startup management here
         try:
-            self.node.load_config(ICS_CONF_FILE)
-        except Exception:
-            logging.critical('Server shutting down...')
+            self.load_config(ICS_CONF_FILE)
+        except Exception as e:
+            logging.critical('Error reading config file: {}'.format(str(e)))
             sys.exit(1)  # TODO: better system handling
-
         self.start_threads()
         self.node.grp_online_auto()
         # TODO: start polling updater
@@ -136,7 +222,7 @@ class System:
         #
         # for thread in self.threads:
         #     thread.join()
-        self.node.write_config(ICS_CONF_FILE)
+        self.write_config(ICS_CONF_FILE)
         logging.info('Server shutdown complete')
         logging.shutdown()
 
