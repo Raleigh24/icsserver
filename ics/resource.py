@@ -74,12 +74,16 @@ class Node(AttributeObject):
     def res_online(self, resource_name):
         """Interface for bringing resource online"""
         resource = self.get_resource(resource_name)
+        if resource.attr_value('MonitorOnly') == 'true':
+            raise ICSError('Unable to online resource, MonitoryOnly mode enabled')
         if resource.state is not ResourceStates.ONLINE:
             resource.change_state(ResourceStates.STARTING)
 
     def res_offline(self, resource_name):
         """Interface for bringing resource offline"""
         resource = self.get_resource(resource_name)
+        if resource.attr_value('MonitorOnly') == 'true':
+            raise ICSError('Unable to offline resource, MonitoryOnly mode enabled')
         if resource.state is not ResourceStates.OFFLINE:
             resource.change_state(ResourceStates.STOPPING)
 
@@ -354,7 +358,7 @@ class Resource(AttributeObject):
             if new_state is cur_state:
                 return False
 
-        if self.attr_value('Enabled') == 'false':
+        if self.attr_value('Enabled') == 'false' or self.attr_value('MonitorOnly') == 'true':
             self.state = ResourceStates.OFFLINE  # Set resource offline regardless of current state
             logger.info('Resource({}) Unable to change state, resource is disabled'.format(self.name))
 
@@ -399,16 +403,28 @@ class Resource(AttributeObject):
         self.children.remove(resource)
 
     def parents_ready(self):
+        """Determine weather resources parents are ready by checking for specific conditions"""
         for parent in self.parents:
-            if parent.state is not ResourceStates.ONLINE and parent.attr_value('Enabled') == 'true':
-                return False
-        return True
+            if parent.state is ResourceStates.ONLINE:
+                return True
+            elif parent.attr_value('Enabled') == 'false':
+                return True
+            elif parent.attr_value('MonitorOnly') == 'true':
+                return True
+
+        return False
 
     def children_ready(self):
+        """Determine weather resources children are ready by checking for specific conditions"""
         for child in self.children:
-            if child.state is not ResourceStates.OFFLINE and child.attr_value('Enabled') == 'true':
-                return False
-        return True
+            if child.state is ResourceStates.OFFLINE:
+                return True
+            elif child.attr_value('Enabled') == 'false':
+                return True
+            elif child.attr_value('MonitorOnly') == 'true':
+                return True
+
+        return False
 
     def update_poll(self):
         cur_time = int(time.time())
@@ -492,7 +508,7 @@ class Resource(AttributeObject):
             self.poll_running = False
             events.trigger_event(event_class(self))
         else:
-            logger.error('Resource({}) received unknown command type'.format(self.name))
+            logger.error('Resource({}) received unknown command type: {}'.format(self.name, self.cmd_type))
 
         self._reset_cmd()
 
@@ -566,7 +582,8 @@ class Group(AttributeObject):
         resource_states = []
         # Get all unique resource states
         for member in self.members:
-            if member.attr_value('Enabled') == 'true':  # Only consider enabled resources when calculating group state
+            # Only consider enabled and not MonitorOnly resources when calculating group state
+            if member.attr_value('Enabled') == 'true' and member.attr_value('MonitorOnly') == 'false':
                 resource_states.append(member.state)
         states = list(set(resource_states))
 
