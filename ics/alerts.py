@@ -75,18 +75,6 @@ def log_alert(alert):
         FILE.write(str(alert) + '\n')
 
 
-# def mail_alert(alert, template):
-#     for recipient in ALERT_RECIPIENTS:
-#         sender = 'ics@' + HOSTNAME
-#         subject = 'ICS {} Alert - {}'.format('Warning', alert.resource_name)
-#         body = render_template(alert, template)
-#         #try:
-#         logger.debug('Sending alert to {}'.format(recipient))
-#         mail.send_html(recipient, sender, subject, body)
-#         #except Exception as e:
-#         #logger.error('Unable to send mail: {}'.format(e))
-
-
 def critical(resource, msg):
     alert = Alert(resource, CRITICAL, msg)
     alert_queue.put(alert)

@@ -30,7 +30,7 @@ def event_handler():
         # Catch and log all exceptions that occur and continue to process events
         try:
             event.run()
-        except Exception:  # Catch and log all exceptions that occur
+        except Exception:
             logger.exception('Event {} encountered an error:'.format(str(event)))
             alerts.error(event.resource.name, "Error occurred while processing event. Please check logs.")
             continue
