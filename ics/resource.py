@@ -521,7 +521,7 @@ class Resource(AttributeObject):
             logger.error('Resource({}) unable to start, attribute StartProgram not set'.format(self.name))
             self.flush()
             return
-        online_timeout = int(self.attr['OnlineTimeout'])
+        online_timeout = int(self.attr_value('OnlineTimeout'))
         self._run_cmd(cmd, 'start', timeout=online_timeout)
 
     def stop(self):
