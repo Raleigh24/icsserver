@@ -224,7 +224,8 @@ class Node(AttributeObject):
     def res_probe(self, resource_name):
         """RPC interface for manually triggering a poll"""
         resource = self.get_resource(resource_name)
-        events.trigger_event(events.PollRunEvent(resource))
+        resource.probe()
+        #events.trigger_event(events.PollRunEvent(resource))
 
     def res_dep(self, resource_args):
         """RPC interface for getting resource dependencies"""
@@ -579,6 +580,10 @@ class Resource(AttributeObject):
             self.change_state(ResourceStates.OFFLINE)
         elif self.state is ResourceStates.STOPPING:
             self.change_state(ResourceStates.ONLINE)
+
+    def probe(self):
+        """Manually trigger resource poll"""
+        events.trigger_event(events.PollRunEvent(self))
 
     def start(self):
         """Run command to start resource"""
