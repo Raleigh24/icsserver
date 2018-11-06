@@ -2,14 +2,12 @@ import logging
 import random
 import subprocess
 import time
-import os
 
 import events
 import alerts
 from attributes import AttributeObject, system_attributes, resource_attributes, group_attributes
 from ics_exceptions import ICSError
-from utils import read_json, write_json
-from environment import ICS_RES_LOG, ICS_CONF_FILE
+from environment import ICS_RES_LOG
 from states import ResourceStates, GroupStates, ONLINE_STATES, TRANSITION_STATES
 
 logger = logging.getLogger(__name__)
