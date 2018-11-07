@@ -130,7 +130,7 @@ resource_attributes = {
         "description": "Maximum time (in seconds) within which the monitor\
                         function must complete or else be terminated"
     },
-    "AutoRestart": {
+    "AutoStart": {
         "default": "true",
         "type": "boolean",
         "description": ""

@@ -101,7 +101,8 @@ class ResourceOfflineEvent(ResourceStateEvent):
                 logger.info('Resource({}) reached max fault count ({})'.format(self.resource.name,
                                                                                self.resource.attr_value('RestartLimit')))
                 self.resource.change_state(ResourceStates.FAULTED)
-            elif self.resource.attr_value('AutoRestart') == 'true':
+            #elif self.resource.attr_value('AutoRestart') == 'true':
+            else:
                 self.resource.change_state(ResourceStates.STARTING)
         elif self.resource.propagate:
             self.resource.propagate = False  # Resource has successfully propagated from parent

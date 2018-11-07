@@ -90,6 +90,8 @@ class System:
             self.node.grp_delete,
             self.node.grp_enable,
             self.node.grp_disable,
+            self.node.grp_enable_resources,
+            self.node.grp_disable_resources,
             self.node.grp_state,
             self.node.grp_flush,
             self.node.grp_clear,

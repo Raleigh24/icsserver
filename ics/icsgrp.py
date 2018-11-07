@@ -24,6 +24,10 @@ parser.add_argument('-enable', nargs=1, metavar='<group>',
                     help='enable resources for a group')
 parser.add_argument('-disable', nargs=1, metavar='<group>',
                     help='disable resources for a group')
+parser.add_argument('-enableresources', nargs=1, metavar='<group>',
+                    help='enable all resources for a group')
+parser.add_argument('-disableresources', nargs=1, metavar='<group>',
+                    help='disable all resources for a group')
 parser.add_argument('-state', nargs='*', metavar='<group>',
                     help='print current state of resource')
 parser.add_argument('-link', nargs=2, metavar=('<parent>', '<child>'),
@@ -93,6 +97,14 @@ elif args.disable is not None:
     group_name = args.disable[0]
     perform(rpc_proxy.grp_disable, group_name)
 
+elif args.enableresources is not None:
+    group_name = args.enableresources[0]
+    perform(rpc_proxy.grp_enable_resources, group_name)
+
+elif args.disableresources is not None:
+    group_name = args.disableresources[0]
+    perform(rpc_proxy.grp_disable_resources, group_name)
+
 elif args.state is not None:
     results = perform(rpc_proxy.grp_state, args.state)
     print_table(results)
@@ -135,7 +147,6 @@ elif args.modify is not None:
 
 elif args.wait is not None:
     group_name, state_name, timeout = args.wait
-
     try:
         timer = int(timeout)
     except ValueError:

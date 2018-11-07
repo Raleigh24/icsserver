@@ -34,7 +34,7 @@ class Node(AttributeObject):
         while True:
             for resource in self.resources.values():
                 if resource.attr_value('Enabled') == 'false':
-                    logger.debug('Resource({}) is not enabled, skipping poll'.format(resource.name))
+                    #logger.debug('Resource({}) is not enabled, skipping poll'.format(resource.name))
                     continue
                 elif resource.cmd_process is not None:
                     if resource.check_cmd():
@@ -235,14 +235,14 @@ class Node(AttributeObject):
         group_states = []
         if len(group_args) == 1:
             group = self.get_group(group_args[0])
-            group_states.append([group.state.upper()])
+            group_states.append([group.state().upper()])
         elif group_args:
             for group_name in group_args:
                 group = self.get_group(group_name)
-                group_states.append([group.name, group.state.upper()])
+                group_states.append([group.name, group.state().upper()])
         else:
             for group in self.groups.values():
-                group_states.append([group.name, group.state.upper()])
+                group_states.append([group.name, group.state().upper()])
 
         return group_states
 
@@ -271,12 +271,22 @@ class Node(AttributeObject):
     def grp_enable(self, group_name):
         """Interface to enable a group"""
         group = self.get_group(group_name)
-        group.enable()
+        group.set_attr('Enabled', 'true')
 
     def grp_disable(self, group_name):
         """Interface to disable a group"""
         group = self.get_group(group_name)
-        group.disable()
+        group.set_attr('Enabled', 'false')
+
+    def grp_enable_resources(self, group_name):
+        """Interface to enable a group resources """
+        group = self.get_group(group_name)
+        group.enable_resources()
+
+    def grp_disable_resources(self, group_name):
+        """Interface to disable a group resources"""
+        group = self.get_group(group_name)
+        group.disable_resources()
 
     def grp_flush(self, group_name):
         """Interface for flushing a group"""
@@ -571,7 +581,6 @@ class Group(AttributeObject):
         self.name = name
         self.members = []  # TODO: rename member for group class?
 
-    @property
     def state(self):
         """Get state of group by checking state of member resources"""
         if not self.members:
@@ -581,11 +590,13 @@ class Group(AttributeObject):
         # Get all unique resource states
         for member in self.members:
             # Only consider enabled and not MonitorOnly resources when calculating group state
-            if member.attr_value('Enabled') == 'true' and member.attr_value('MonitorOnly') == 'false':
+            if member.attr_value('Enabled') == 'true' and member.attr_value('AutoStart') == 'true':
                 resource_states.append(member.state)
         states = list(set(resource_states))
 
-        if len(states) > 1:
+        if len(states) == 0:
+            return GroupStates.OFFLINE
+        elif len(states) > 1:
             return GroupStates.PARTIAL  # TODO: having multiple states does not necessarily mean a partial state
         else:
             if states[0] == ResourceStates.ONLINE:
@@ -605,17 +616,23 @@ class Group(AttributeObject):
     def delete_resource(self, resource):
         self.members.remove(resource)
 
-    def enable(self):
+    def enable_resources(self):
         for member in self.members:
             member.set_attr('Enabled', 'true')
 
-    def disable(self):
+    def disable_resources(self):
         for member in self.members:
             member.set_attr('Enabled', 'false')
 
     def start(self):
+        if self.attr_value('Enabled') == 'false':
+            logger.info('Unable to start, group is not enabled')
+            return
+
         self.flush()  # Start from clean slate
         for resource in self.members:
+            if resource.attr_value('AutoStart') == 'false':
+                break
             if not resource.parents:
                 resource.propagate = True
                 if resource.state is not ResourceStates.ONLINE:
@@ -626,6 +643,10 @@ class Group(AttributeObject):
                     resource.change_state(ResourceStates.ONLINE, force=True)
 
     def stop(self):
+        if self.attr_value('Enabled') == 'false':
+            logger.info('Unable to start, group is not enabled')
+            return
+
         self.flush()  # Start from clean slate
         for resource in self.members:
             if not resource.children:
