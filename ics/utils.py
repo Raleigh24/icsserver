@@ -55,23 +55,28 @@ def setup_signal_handler():
     signal.signal(signal.SIGINT, cli_signal_handler)
 
 
-def read_json(filename):
-    """Read data from configuration file and return data"""
+def read_config(filename):
+    """Read configuration file"""
+    logger.info('Reading configuration file...')
     try:
-        with open(filename, 'r') as file:
-            return json.load(file)
-    except (IOError, ValueError):
-        logger.exception('Error occurred while reading file')
-        raise
+        with open(filename, 'r') as f:
+            data = json.load(f)
+        return data
+    except ValueError as error:
+        logging.error('Error occurred while loading config: {}'.format(str(error)))
+        return {}
+    except IOError as error:
+        logging.error('Error occurred while loading config: {}'.format(str(error)))
+        return {}
 
 
-def write_json(filename, data):
-    """Write configuration data in json to file"""
+def write_config(filename, data):
+    """Write configuration to file"""
     try:
         with open(filename, 'w') as file:
             json.dump(data, file, indent=4, sort_keys=True)
-    except IOError:
-        logger.exception('Error occurred while reading file')
+    except IOError as error:
+        logger.exception('Error occurred while writing file: {}'.format(str(error)))
         raise
 
 

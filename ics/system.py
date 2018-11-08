@@ -1,8 +1,9 @@
-import threading
+import json
 import logging
-import time
-import sys
 import os
+import sys
+import threading
+import time
 
 import network
 from resource import Node
@@ -10,7 +11,7 @@ from events import event_handler
 from alerts import AlertHandler
 from rpcinterface import rpc_runner
 from ics_exceptions import ICSError
-from utils import set_log_level, read_json, write_json
+from utils import set_log_level, read_config, write_config
 from environment import ICS_CONF_FILE
 
 logger = logging.getLogger(__name__)
@@ -130,17 +131,8 @@ class System:
                                                        'dependencies': resource.dependencies()}
         return config_data
 
-    def load_config(self, filename):
+    def load_config(self, data):
         logger.info('Loading configuration...')
-        if not os.path.isfile(filename):
-            logger.info('No config found, skipping load')
-            return
-
-        try:
-            data = read_json(filename)
-        except ValueError as error:
-            logging.error('Error occurred while loading config: {}'.format(str(error)))
-            return
 
         try:
             # Set system attributes from config
@@ -179,11 +171,6 @@ class System:
             logging.error('Error occurred while loading config: {}:{}'.format(error.__class__.__name__, str(error)))
             raise
 
-    def write_config(self, filename):
-        """Write configuration to file"""
-        data = self.config_data()
-        write_json(filename, data)
-
     def backup_config(self):
         while True:
             interval = int(self.node.attr_value('BackupInterval'))
@@ -191,19 +178,26 @@ class System:
                 logging.debug('Creating backup of config file')
                 if os.path.isfile(ICS_CONF_FILE):
                     os.rename(ICS_CONF_FILE, ICS_CONF_FILE + '.autobackup')
-                self.write_config(ICS_CONF_FILE)
+                write_config(ICS_CONF_FILE, self.config_data())
                 time.sleep(interval * 60)
             else:
                 time.sleep(60)
 
     def startup(self):
         logger.info('Server starting up...')
-        # TODO: Add config_dict startup management here
-        try:
-            self.load_config(ICS_CONF_FILE)
-        except Exception as e:
-            logging.critical('Error reading config file: {}'.format(str(e)))
-            sys.exit(1)  # TODO: better system handling
+        # TODO: Add config startup management here
+
+        data = read_config(ICS_CONF_FILE)
+        if data:
+            try:
+                self.load_config(data)
+            except Exception as e:
+                logging.critical('Error reading config data: {}'.format(str(e)))
+                #TODO: send alert
+                sys.exit(1)  # TODO: better system handling
+        else:
+            logger.info('No configuration data found')
+
         self.start_threads()
         self.node.grp_online_auto()
         # TODO: start polling updater
@@ -214,18 +208,11 @@ class System:
             for thread in self.threads:
                 if not thread.is_alive():
                     logger.critical('Thread {} no longer running'.format(thread.name))
-                    #thread.start()  # Attempt to restart thread
             time.sleep(5)
 
     def shutdown(self):
         logging.info('Server shutting down...')
-        # for thread in self.threads:
-        #     thread_name = thread.name
-        #     thread.set()
-        #
-        # for thread in self.threads:
-        #     thread.join()
-        self.write_config(ICS_CONF_FILE)
+        write_config(ICS_CONF_FILE, self.config_data())
         logging.info('Server shutdown complete')
         logging.shutdown()
 
