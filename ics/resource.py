@@ -34,7 +34,6 @@ class Node(AttributeObject):
         while True:
             for resource in self.resources.values():
                 if resource.attr_value('Enabled') == 'false':
-                    #logger.debug('Resource({}) is not enabled, skipping poll'.format(resource.name))
                     continue
                 elif resource.cmd_process is not None:
                     if resource.check_cmd():
@@ -586,12 +585,14 @@ class Group(AttributeObject):
         if not self.members:
             return GroupStates.UNKNOWN  # A group with no resources has an unknown state
 
-        resource_states = []
         # Get all unique resource states
+        resource_states = []
         for member in self.members:
-            # Only consider enabled and not MonitorOnly resources when calculating group state
-            if member.attr_value('Enabled') == 'true' and member.attr_value('AutoStart') == 'true':
+            if self.attr_value('IgnoreDisabled') == 'true' and member.attr_value('Enabled') == 'false':
+                continue
+            else:
                 resource_states.append(member.state)
+
         states = list(set(resource_states))
 
         if len(states) == 0:
@@ -629,10 +630,10 @@ class Group(AttributeObject):
             logger.info('Unable to start, group is not enabled')
             return
 
-        self.flush()  # Start from clean slate
+        self.flush()
+
+        # Start all resources which don't have parent resources to initiate group online
         for resource in self.members:
-            if resource.attr_value('AutoStart') == 'false':
-                break
             if not resource.parents:
                 resource.propagate = True
                 if resource.state is not ResourceStates.ONLINE:
@@ -647,7 +648,9 @@ class Group(AttributeObject):
             logger.info('Unable to start, group is not enabled')
             return
 
-        self.flush()  # Start from clean slate
+        self.flush()
+
+        # Stop all resources which don't have children resources to initiate group online
         for resource in self.members:
             if not resource.children:
                 resource.propagate = True

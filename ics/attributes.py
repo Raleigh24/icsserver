@@ -129,11 +129,6 @@ resource_attributes = {
         "type": "int",
         "description": "Maximum time (in seconds) within which the monitor\
                         function must complete or else be terminated"
-    },
-    "AutoStart": {
-        "default": "true",
-        "type": "boolean",
-        "description": ""
     }
 }
 
@@ -147,6 +142,11 @@ group_attributes = {
         "default": "false",
         "type": "boolean",
         "description": "Indicates weather a service group is automatically started when system starts"
+    },
+    "IgnoreDisabled": {
+        "default": "false",
+        "type": "boolean",
+        "description": ""
     }
 }
 
