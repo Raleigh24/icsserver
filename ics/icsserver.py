@@ -24,12 +24,12 @@ except IOError as e:
     print('ERROR: Unable to create log file: {}'.format(e))
     exit(1)
 
-from system import System  # Not sure why this needs to be here
+from system import NodeSystem  # Not sure why this needs to be here
 
 # Setup logging information
 logger = logging.getLogger(__name__)
 
-system = System()
+system = NodeSystem()
 
 
 # Set up signal handling
