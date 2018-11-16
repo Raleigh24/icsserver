@@ -28,18 +28,18 @@ class NodeSystem(AttributeObject):
         self.cluster_name = ""
 
         self.threads = []
-        self.alert_handler = AlertHandler()
+        self.alert_handler = AlertHandler(cluster_name=self.cluster_name, node_name=self.node_name)
 
         self.resources = {}
         self.groups = {}
 
     def set_attr(self, attr, value):
-        if attr == "ClusterName":
-            pass
-        elif attr == "NodeName":
-            pass
 
         super(NodeSystem, self).set_attr(attr, value)
+        if attr == "ClusterName":
+            self.cluster_name = value
+        elif attr == "NodeName":
+            self.node_name = value
 
     def node_attr(self):
         """Return a list of node attributes"""

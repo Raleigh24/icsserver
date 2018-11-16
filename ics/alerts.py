@@ -12,19 +12,22 @@ from ics_exceptions import ICSError
 logger = logging.getLogger(__name__)
 alert_queue = queue.Queue()
 
-CRITICAL = 30
-ERROR = 20
-WARNING = 10
+CRITICAL = 40
+ERROR = 30
+WARNING = 20
+INFO = 10
 NOTSET = 0
 
 _level_names = {
     CRITICAL: 'CRITICAL',
     ERROR: 'ERROR',
     WARNING: 'WARNING',
+    INFO: 'INFO',
     NOTSET: 'NOTSET',
     'CRITICAL': CRITICAL,
     'ERROR': ERROR,
     'WARNING': WARNING,
+    'INFO': INFO,
     'NOTSET': NOTSET
 }
 
@@ -95,7 +98,7 @@ def warning(resource, msg):
 
 class AlertHandler:
 
-    def __init__(self):
+    def __init__(self, cluster_name="", node_name=""):
         self.daemon = True
         self.alert_level = NOTSET
         self.recipients = []
