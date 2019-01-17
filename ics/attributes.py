@@ -103,12 +103,12 @@ resource_attributes = {
         "description": ""
     },
     "MonitorInterval": {
-        "default": "55",
+        "default": "60",
         "type": "int",
         "description": ""
     },
     "OfflineMonitorInterval": {
-        "default": "55",
+        "default": "60",
         "type": "int",
         "description": ""
     },
