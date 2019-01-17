@@ -9,7 +9,7 @@ description_text = 'Manage ICS alerts'
 epilog_text = ''
 parser = argparse.ArgumentParser(description=description_text)
 parser.add_argument('-level', nargs=1, metavar='<level>', help='Set system log level')
-#parser.add_argument('-test', action='store_true', help='')
+#parser.add_argument('-test', action='store_true', help='') TODO: add test option and functionality
 parser.add_argument('-add', nargs=1, help='add mail recipient')
 parser.add_argument('-remove', nargs=1, help='remove mail recipient')
 args = parser.parse_args()

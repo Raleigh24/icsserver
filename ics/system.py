@@ -5,16 +5,15 @@ import threading
 import time
 
 import network
-from events import event_handler
 from alerts import AlertHandler
-from rpcinterface import rpc_runner
-from ics_exceptions import ICSError
-from utils import set_log_level, read_config, write_config
-from environment import ICS_CONF_FILE
-
 from attributes import AttributeObject, system_attributes
-from states import ResourceStates, TRANSITION_STATES
+from events import event_handler
+from environment import ICS_CONF_FILE
+from ics_exceptions import ICSError
 from resource import Resource, Group
+from rpcinterface import rpc_runner
+from states import ResourceStates, TRANSITION_STATES
+from utils import set_log_level, read_config, write_config
 
 logger = logging.getLogger(__name__)
 
@@ -26,15 +25,12 @@ class NodeSystem(AttributeObject):
         self.init_attr(system_attributes)
         self.node_name = ""
         self.cluster_name = ""
-
+        self.resources = {}
+        self.groups = {}
         self.threads = []
         self.alert_handler = AlertHandler(cluster_name=self.cluster_name, node_name=self.node_name)
 
-        self.resources = {}
-        self.groups = {}
-
     def set_attr(self, attr, value):
-
         super(NodeSystem, self).set_attr(attr, value)
         if attr == "ClusterName":
             self.cluster_name = value
@@ -509,14 +505,12 @@ class NodeSystem(AttributeObject):
                 self.load_config(data)
             except Exception as e:
                 logging.critical('Error reading config data: {}'.format(str(e)))
-                #TODO: send alert
                 sys.exit(1)  # TODO: better system handling
         else:
             logger.info('No configuration data found')
 
         self.start_threads()
         self.grp_online_auto()
-        # TODO: start polling updater
         logger.info('Server startup complete')
 
     def run(self):
@@ -524,6 +518,7 @@ class NodeSystem(AttributeObject):
             for thread in self.threads:
                 if not thread.is_alive():
                     logger.critical('Thread {} no longer running'.format(thread.name))
+                    #TODO: send alert that thread is no longer running
             time.sleep(5)
 
     def shutdown(self):
