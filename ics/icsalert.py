@@ -37,8 +37,8 @@ def perform(func, *func_args):
 
 if args.level is not None:
     perform(rpc_proxy.set_level, args.level[0])
-elif args.test:
-    pass
+#elif args.test:
+#    pass
 elif args.add is not None:
     perform(rpc_proxy.add_recipient, args.add[0])
 elif args.remove is not None:
