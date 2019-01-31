@@ -79,7 +79,7 @@ class NodeSystem(AttributeObject):
 
     def res_add(self, resource_name, group_name):
         """Interface for adding new resource"""
-        logger.info('Adding new resource {}'.format(group_name))
+        logger.info('Adding new resource {}'.format(resource_name))
         if resource_name in self.resources.keys():
             raise ICSError('Resource {} already exists'.format(resource_name))
         elif group_name not in self.groups.keys():
