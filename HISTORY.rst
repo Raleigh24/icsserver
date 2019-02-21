@@ -4,22 +4,40 @@ Release History
 ---------------
 
 
-Current
+1.3.0 (2019-02-20)
 ++++++++++++++++++
 
 **New Features**
 
+- Added system level attribute control
+- Added icssys command for system level control
 - Added ClusterName system attribute
 - Added NodeName system attribute
 - Added GroupLimit system attribute
 - Added BackupInterval system attribute
 - Added AlertRecipients system attribute
 - Added AlertLevel system attribute
+- Added AutoStart group attribute
+- Added IgnoreDisabled group attribute
 - Added config backup feature
+- Added ability to change log level during runtime
+- Added attribute list method to attribute class
+- Added attribute option to icsgrp command
+- Added attribute value option to icsgrp command
+- Added attribute modify option to icsgrp command
+- Added attribute option to icsres command
+- Added attribute option to icssys command
+- Added enabledresources to icsgrp command
+- Added disableresources to icsgrp command
 
 **Improvements**
 
-- Moved AutoStart from resource to group attribute
+-
+
+**Bugfixes**
+
+- Fixed issue where listing resources would hang in a system with a large number of resources
+
 
 **Miscellaneous**
 
@@ -27,6 +45,7 @@ Current
 - Refactored rpc interface functions
 - Refactored environment variable configuration
 - Refactored config file functions
+- Added exception logging to rpc handler
 
 
 1.2.2 (2018-06-28)
