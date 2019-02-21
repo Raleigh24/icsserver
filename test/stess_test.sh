@@ -4,7 +4,7 @@ export ICS_HOME=${ICS_HOME:-/opt/ICS}
 source ${ICS_HOME}/test/test_setup.sh
 
 grp_res_count=300  # Number of resources per group
-resource_id=$(seq 1 1 ${grp_res_count})
+resource_id=$(seq -w 1 1 ${grp_res_count})
 
 create_resource_file()
 {

@@ -2,17 +2,9 @@
 
 export ICS_HOME=${ICS_HOME:-/opt/ICS}
 source ${ICS_HOME}/test/test_setup.sh
-ICSRES=${ICS_HOME}/bin/icsres
-ICSGRP=${ICS_HOME}/bin/icsgrp
 
 grp_res_count=7  # Amount of resources per group
-resource_id=$(seq 1 1 ${grp_res_count})
-
-create_resource_file()
-{
-    resource_name=${1}
-    echo "0" > ${RES_FILES}/${resource_name}
-}
+resource_id=$(seq -w 1 1 ${grp_res_count})
 
 for letter in {a..a}; do
 	group_name=group-${letter}
@@ -38,6 +30,7 @@ for letter in {a..a}; do
 	${ICSRES} -link proc-${letter}3 proc-${letter}7
 
 	echo "Enabling group"
+	${ICSGRP} -enableresources ${group_name}
 	${ICSGRP} -enable ${group_name}
 done
 

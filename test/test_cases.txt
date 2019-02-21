@@ -1,6 +1,22 @@
 ##### Test Cases #####
-1. create new group
-2. create new resources
-3. delete existing resources
-4. delete existing group
-5. Perform stress test
+
+
+
+Test Case 1 - Basic online and offline
+Test Case 2 - Test Enable/Disable resource
+Test Case 3 - Test Enable/Disable group
+Test Case 4 - Test Fault detection
+Test Case 5 - Test pass thought propagation
+Test Case 6 - Test MonitorOnly Attribute
+Test Case 7 - Test AutoStart group attribute
+Test Case 8 - Test IgnoreDisabled group attributes
+
+
+
+
+- Test resource RestartLimit
+- Test main.cf persistence
+- Test pass through propagation
+- Test FaultPropagation attribute
+- Test pass though propagation (inverted-tree)
+- Test AutoStart resource Attribute
