@@ -21,6 +21,7 @@ if __name__ == '__main__':
     epilog_text = ''
     parser = argparse.ArgumentParser(description=description_text)
     parser.add_argument('-v', '--version', action='store_true', help='')
+    parser.add_argument('--onenode', action='store_true', help='start ICS as a single node cluster')
     args = parser.parse_args()
 
     if args.version is True:
@@ -28,6 +29,6 @@ if __name__ == '__main__':
     else:
         if utils.check_running():
             print('ERROR: Server is already running')
-            exit(1)
+            sys.exit(1)
         else:
             start_server()

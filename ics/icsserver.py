@@ -3,6 +3,9 @@ import logging.config
 import signal
 import sys
 import os
+import socket
+
+import Pyro4 as Pyro
 
 from environment import ICS_VERSION
 from environment import ICS_HOME
@@ -22,14 +25,12 @@ try:
     logging.config.fileConfig(ICS_HOME + '/etc/logging.conf')
 except IOError as e:
     print('ERROR: Unable to create log file: {}'.format(e))
-    exit(1)
+    sys.exit(1)
 
-from system import NodeSystem  # Not sure why this needs to be here
+from cluster import Cluster  # Not sure why this needs to be here
 
 # Setup logging information
 logger = logging.getLogger(__name__)
-
-system = NodeSystem()
 
 
 # Set up signal handling
@@ -43,7 +44,7 @@ def signal_handler(signal_code, frame):
         logging.critical('Caught signal SIGTERM, exiting...')
         system.shutdown()
         # TODO: gracefully shutdown
-    exit(1)
+    sys.exit(1)
 
 
 signal.signal(signal.SIGINT, signal_handler)
@@ -54,6 +55,20 @@ logger.info('ICS Version: ' + ICS_VERSION)
 logger.info('Python version: ' + sys.version.replace('\n', ''))
 logger.info('Logging level: ' + logging.getLevelName(logger.getEffectiveLevel()))
 
+system = Cluster()
+
+logging.getLogger("Pyro4").setLevel(logging.INFO)
+logging.getLogger("Pyro4.core").setLevel(logging.INFO)
+
 system.startup()
-system.run()  # Run forever
+#system.cluster_connect()
+#system.run()  # Run forever
+
+Pyro.Daemon.serveSimple(
+    {
+        system: 'system'
+    },
+    port=9090,
+    host=socket.gethostname(),
+    ns=False)
 

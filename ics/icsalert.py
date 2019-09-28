@@ -1,13 +1,16 @@
 import argparse
 import sys
+import socket
 
-import network
-from rpcinterface import RPCProxy
-from ics_exceptions import ICSError
+import Pyro4 as Pyro
 
+from utils import setup_signal_handler
+from utils import remote_execute
+
+setup_signal_handler()
 description_text = 'Manage ICS alerts'
 epilog_text = ''
-parser = argparse.ArgumentParser(description=description_text)
+parser = argparse.ArgumentParser(description=description_text, allow_abbrev=False)
 parser.add_argument('-level', nargs=1, metavar='<level>', help='Set system log level')
 #parser.add_argument('-test', action='store_true', help='') TODO: add test option and functionality
 parser.add_argument('-add', nargs=1, help='add mail recipient')
@@ -18,30 +21,14 @@ if len(sys.argv) <= 1:
     parser.print_help()
     sys.exit(1)
 
-try:
-    conn = network.connect_udp()
-except network.NetworkConnectionError:
-    print('Unable to connect to ICS server')
-    sys.exit(1)
-
-rpc_proxy = RPCProxy(conn)
-
-
-def perform(func, *func_args):
-    try:
-        return func(*func_args)
-    except ICSError as error:
-        print('ERROR: ' + str(error))
-        sys.exit(1)
-
+uri = 'PYRO:system@' + socket.gethostname() + ':9090'
+system = Pyro.Proxy(uri)
 
 if args.level is not None:
-    perform(rpc_proxy.set_level, args.level[0])
+    remote_execute(system.set_level, args.level[0])
 #elif args.test:
 #    pass
 elif args.add is not None:
-    perform(rpc_proxy.add_recipient, args.add[0])
+    remote_execute(system.add_recipient, args.add[0])
 elif args.remove is not None:
-    perform(rpc_proxy.remove_recipient, args.remove[0])
-
-conn.close()
+    remote_execute(system.remove_recipient, args.remove[0])

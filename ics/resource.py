@@ -15,11 +15,11 @@ logger = logging.getLogger(__name__)
 
 class Resource(AttributeObject):
 
-    def __init__(self, name, group_name):
+    def __init__(self, name, group_name, init_state=ResourceStates.OFFLINE):
         super(Resource, self).__init__()
         self.init_attr(resource_attributes)
         self.name = name
-        self.state = ResourceStates.OFFLINE
+        self.state = init_state
         self.set_attr('Group', group_name)
         self.last_poll = int(time.time()) - random.randint(0, 60)  # Set at random times to prevent poll clustering
         self.poll_running = False

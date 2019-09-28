@@ -19,7 +19,7 @@ from environment import ICS_UDS_FILE
 logger = logging.getLogger(__name__)
 
 HOST = ''
-PORT = ''
+PORT = 2424
 
 clients = {}
 recv_queue = queue.Queue()
@@ -46,11 +46,11 @@ def create_client(sock):
     return Client(sock)
 
 
-def create_tcp_listen_socket(host, port):
+def create_tcp_listen_socket(port):
     """Setup a TCP socket"""
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    sock.bind((host, port))
+    sock.bind((socket.gethostname(), port))
     sock.listen(100)
     return sock
 

@@ -37,6 +37,7 @@ class AttributeObject(object):  # Inherits from object to enabling super() in py
         else:
             previous_value = self._attr[attr]
         self._attr[attr] = value
+        # update cluster
         logger.info('{}({}) attribute {} changed from {} to {}'.format(self.__class__.__name__, self.name, attr,
                                                                        previous_value, value))
 
@@ -147,7 +148,13 @@ group_attributes = {
         "default": "false",
         "type": "boolean",
         "description": ""
+    },
+    "Parallel": {
+        "default": "false",
+        "type": "boolean",
+        "description": ""
     }
+
 }
 
 system_attributes = {

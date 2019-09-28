@@ -2,6 +2,9 @@ import os
 import signal
 import json
 import logging
+import sys
+
+import Pyro4 as Pyro
 
 from environment import ICS_PID_FILE
 from ics_exceptions import ICSError
@@ -62,10 +65,10 @@ def read_config(filename):
         with open(filename, 'r') as f:
             data = json.load(f)
         return data
-    except ValueError as error:
-        logging.error('Error occurred while loading config: {}'.format(str(error)))
-        return {}
-    except IOError as error:
+    except FileNotFoundError as error:
+        logging.info('No configuration file found')
+        raise
+    except (ValueError, IOError) as error:
         logging.error('Error occurred while loading config: {}'.format(str(error)))
         return {}
 
@@ -98,3 +101,18 @@ def set_log_level(level):
         raise ICSError('Invalid logging level: {}'.format(level))
 
     logging.critical('Log level set: ' + level)
+
+
+def remote_execute(func, *func_args, **func_kwargs):
+    """Wrapper for running commands remotely"""
+    try:
+        return func(*func_args, **func_kwargs)
+    except ICSError as error:
+        print('ERROR: ' + str(error))
+        sys.exit(1)
+    except Pyro.errors.CommunicationError as error:
+        print('ERROR: Unable to connect to ICS server')
+        print('ERROR: ' + str(error))
+    except Exception:
+        print('Pyro traceback:')
+        print("".join(Pyro.util.getPyroTraceback()))

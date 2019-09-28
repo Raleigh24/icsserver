@@ -1,17 +1,17 @@
 import logging
 import os
+import socket
 import sys
 import threading
 import time
 
-import network
+
 from alerts import AlertHandler
 from attributes import AttributeObject, system_attributes
 from events import event_handler
-from environment import ICS_CONF_FILE
+from environment import ICS_CONF, ICS_CONF_FILE
 from ics_exceptions import ICSError
 from resource import Resource, Group
-from rpcinterface import rpc_runner
 from states import ResourceStates, TRANSITION_STATES
 from utils import set_log_level, read_config, write_config
 
@@ -23,7 +23,7 @@ class NodeSystem(AttributeObject):
     def __init__(self):
         super(NodeSystem, self).__init__()
         self.init_attr(system_attributes)
-        self.node_name = ""
+        self.node_name = socket.gethostname()
         self.cluster_name = ""
         self.resources = {}
         self.groups = {}
@@ -77,7 +77,7 @@ class NodeSystem(AttributeObject):
         if resource.state is not ResourceStates.OFFLINE:
             resource.change_state(ResourceStates.STOPPING)
 
-    def res_add(self, resource_name, group_name):
+    def res_add(self, resource_name, group_name, init_state=ResourceStates.OFFLINE):
         """Interface for adding new resource"""
         logger.info('Adding new resource {}'.format(resource_name))
         if resource_name in self.resources.keys():
@@ -87,11 +87,11 @@ class NodeSystem(AttributeObject):
         elif len(self.resources) >= int(self.attr_value('ResourceLimit')):
             raise ICSError('Max resource count reached, unable to add new resource')
         else:
-            resource = Resource(resource_name, group_name)
+            resource = Resource(resource_name, group_name, init_state=init_state)
             self.resources[resource_name] = resource
             group = self.groups[group_name]
             group.add_resource(resource)
-            return resource
+            #return resource
 
     def res_delete(self, resource_name):
         """Interface for deleting existing resource"""
@@ -108,19 +108,25 @@ class NodeSystem(AttributeObject):
         del self.resources[resource_name]
         logger.info('Resource({}) resource deleted'.format(resource_name))
 
-    def res_state(self, resource_args):
-        """Interface for getting resource current state """
+    def res_state(self, resource_name):
+        """Return state for a given resource"""
+        resource = self.get_resource(resource_name)
+        return resource.state.upper()
+
+    def res_state_many(self, resource_list, include_node=False):
+        """Return states for a given list of resources"""
         resource_states = []
-        if len(resource_args) == 1:
-            resource = self.get_resource(resource_args[0])
-            resource_states.append([resource.state.upper()])
-        elif resource_args:
-            for resource_name in resource_args:
+        if resource_list:
+            for resource_name in resource_list:
                 resource = self.get_resource(resource_name)
                 resource_states.append([resource.name, resource.state.upper()])
         else:
             for resource in self.resources.values():
                 resource_states.append([resource.name, resource.state.upper()])
+
+        if include_node:
+            for item in resource_states:
+                item.append(self.attr_value('NodeName'))
 
         return resource_states
 
@@ -211,7 +217,7 @@ class NodeSystem(AttributeObject):
         group.start()
 
     def grp_online_auto(self):
-        """Auto start service groups which have the AutoStart attribute enabled"""
+        """Start all groups with the attribute AutoStart set to true"""
         for group in self.groups.values():
             if group.attr_value('AutoStart') == 'true':
                 group.start()
@@ -222,19 +228,25 @@ class NodeSystem(AttributeObject):
         group = self.get_group(group_name)
         group.stop()
 
-    def grp_state(self, group_args):
+    def grp_state(self, group_name):
         """Interface for getting state of group"""
+        group = self.get_group(group_name)
+        return group.state().upper()
+
+    def grp_state_many(self, group_list, include_node=False):
         group_states = []
-        if len(group_args) == 1:
-            group = self.get_group(group_args[0])
-            group_states.append([group.state().upper()])
-        elif group_args:
-            for group_name in group_args:
+        logger.info(group_list)
+        if group_states:
+            for group_name in group_list:
                 group = self.get_group(group_name)
                 group_states.append([group.name, group.state().upper()])
         else:
             for group in self.groups.values():
                 group_states.append([group.name, group.state().upper()])
+
+        if include_node:
+            for item in group_states:
+                item.append(self.attr_value('NodeName'))
 
         return group_states
 
@@ -248,7 +260,7 @@ class NodeSystem(AttributeObject):
         else:
             group = Group(group_name)
             self.groups[group_name] = group
-            return group
+            #return group
 
     def grp_delete(self, group_name):
         """Interface for deleting an existing group"""
@@ -351,18 +363,6 @@ class NodeSystem(AttributeObject):
         thread_alert_handler.start()
         self.threads.append(thread_alert_handler)
 
-        # Start client handler thread
-        logger.info('Starting client handler...')
-        try:
-            sock = network.create_udp_interface()
-        except network.NetworkError:
-            logger.critical('Unable to create client interface, exiting...')
-            raise ICSError
-        thread_client_handler = threading.Thread(name='client handler', target=network.handle_clients, args=(sock,))
-        thread_client_handler.daemon = True
-        thread_client_handler.start()
-        self.threads.append(thread_client_handler)
-
         # Start poll updater thread
         logger.info('Starting poll updater...')
         thread_poll_updater = threading.Thread(name='poll updater', target=self.poll_updater)
@@ -377,53 +377,12 @@ class NodeSystem(AttributeObject):
         thread_config_backup.start()
         self.threads.append(thread_config_backup)
 
-        # Function list to be registered with rpc interface
-        rpc_function_list = [
-            set_log_level,
-            self.node_attr,
-            self.node_value,
-            self.node_modify,
-            self.res_online,
-            self.res_offline,
-            self.res_add,
-            self.res_delete,
-            self.res_state,
-            self.res_clear,
-            self.res_probe,
-            self.res_dep,
-            self.res_list,
-            self.res_link,
-            self.res_unlink,
-            self.res_value,
-            self.res_modify,
-            self.res_attr,
-            self.grp_online,
-            self.grp_offline,
-            self.grp_add,
-            self.grp_delete,
-            self.grp_enable,
-            self.grp_disable,
-            self.grp_enable_resources,
-            self.grp_disable_resources,
-            self.grp_state,
-            self.grp_flush,
-            self.grp_clear,
-            self.grp_resources,
-            self.grp_list,
-            self.grp_value,
-            self.grp_modify,
-            self.grp_attr,
-            self.alert_handler.add_recipient,
-            self.alert_handler.remove_recipient,
-            self.alert_handler.set_level
-        ]
-
-        # Start RPC interface thread
-        logger.info('Starting RPC interface...')
-        thread_rpc_interface = threading.Thread(name='RPC interface', target=rpc_runner, args=(rpc_function_list,))
-        thread_rpc_interface.daemon = True
-        thread_rpc_interface.start()
-        self.threads.append(thread_rpc_interface)
+        # Start heartbeat thread
+        # logger.info('Starting heartbeat thread...')
+        # thread_heartbeat = threading.Thread(name='heartbeat', target=self.heartbeat)
+        # thread_heartbeat.daemon = True
+        # thread_heartbeat.start()
+        # self.threads.append(thread_heartbeat)
 
     def config_data(self):
         """Return system configuration data in dictionary format"""
@@ -461,7 +420,8 @@ class NodeSystem(AttributeObject):
             # Create groups from config
             group_data = data['groups']
             for group_name in group_data:
-                group = self.grp_add(group_name)
+                self.grp_add(group_name)
+                group = self.get_group(group_name)
                 for attr_name in group_data[group_name]['attributes']:
                     group.set_attr(attr_name, str(group_data[group_name]['attributes'][attr_name]))
 
@@ -469,7 +429,8 @@ class NodeSystem(AttributeObject):
             resource_data = data['resources']
             for resource_name in resource_data.keys():
                 group_name = resource_data[resource_name]['attributes']['Group']
-                resource = self.res_add(resource_name, group_name)
+                self.res_add(resource_name, group_name, init_state=ResourceStates.OFFLINE)
+                resource = self.get_resource(resource_name)
                 for attr_name in resource_data[resource_name]['attributes']:
                     resource.set_attr(attr_name, str(resource_data[resource_name]['attributes'][attr_name]))
 
@@ -498,8 +459,13 @@ class NodeSystem(AttributeObject):
     def startup(self):
         logger.info('Server starting up...')
         # TODO: Add config startup management here
+        data = {}
+        try:
+            data = read_config(ICS_CONF_FILE)
+        except FileNotFoundError:
+            if not os.path.exists(ICS_CONF):
+                os.makedirs(ICS_CONF)
 
-        data = read_config(ICS_CONF_FILE)
         if data:
             try:
                 self.load_config(data)
@@ -514,12 +480,13 @@ class NodeSystem(AttributeObject):
         logger.info('Server startup complete')
 
     def run(self):
-        while True:
-            for thread in self.threads:
-                if not thread.is_alive():
-                    logger.critical('Thread {} no longer running'.format(thread.name))
-                    #TODO: send alert that thread is no longer running
-            time.sleep(5)
+        pass
+        # while True:
+        #     for thread in self.threads:
+        #         if not thread.is_alive():
+        #             logger.critical('Thread {} no longer running'.format(thread.name))
+        #             #TODO: send alert that thread is no longer running
+        #     time.sleep(5)
 
     def shutdown(self):
         logging.info('Server shutting down...')
