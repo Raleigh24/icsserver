@@ -5,6 +5,7 @@ import sys
 import threading
 import time
 
+import Pyro4 as Pyro
 
 from alerts import AlertHandler
 from attributes import AttributeObject, system_attributes
@@ -29,6 +30,275 @@ class NodeSystem(AttributeObject):
         self.groups = {}
         self.threads = []
         self.alert_handler = AlertHandler(cluster_name=self.cluster_name, node_name=self.node_name)
+        self.remote_systems = {}  # Remote systems
+        self.node_name = ""
+
+    @Pyro.expose
+    def ping(self, host=None):
+        if host is None:
+            logging.debug('Received ping')
+        else:
+            logging.debug('Received ping from ' + str(host))
+        return True
+
+    def register_node(self, host):
+        logger.info('Registering node ' + str(host))
+        uri = 'PYRO:system@' + str(host) + ':9090'
+        self.remote_systems[host] = Pyro.Proxy(uri)
+
+    @Pyro.expose
+    def add_node(self, host):
+        """Add a node to the cluster"""
+        logger.info('Adding node {}'.format(host))
+        self.register_node(host)
+
+        current = list(self.attr_value('NodeList'))
+        current.append(host)
+        self.set_attr('NodeList', current)
+
+    @Pyro.expose
+    def delete_node(self, host):
+        """Delete a node from the cluster"""
+        logger.info('Deleting node {}'.format(host))
+        del self.remote_systems[host]
+        self.set_attr('NodeList', self.attr_value('NodeList').remove(host))
+
+    def heartbeat(self):
+        while True:
+            for host in self.remote_systems:
+                try:
+                    self.remote_systems[host].ping(host=self.node_name)
+                except Pyro.errors.CommunicationError as error:
+                    # TODO: send alert
+                    logger.debug('Heartbeat error: ' + str(error))
+                    logger.error('Heartbeat from {} lost'.format(host))
+
+            time.sleep(1)
+
+    @Pyro.expose
+    def clus_res_online(self, resource_name, system_name):
+        """Online a resource in the cluster"""
+        if self.attr_value('NodeName') == system_name:
+            # TODO: check if online on other node first
+            self.res_online(resource_name)
+        else:
+            self.remote_systems[system_name].clus_res_online(resource_name, system_name)
+
+    @Pyro.expose
+    def clus_res_offline(self, resource_name, system_name):
+        """Offline a resource in the cluster"""
+        if system_name == self.node_name:
+            self.res_offline(resource_name)
+        else:
+            self.remote_systems[system_name].clus_res_offline(resource_name, system_name)
+
+    @Pyro.expose
+    def clus_res_add(self, resource_name, group_name, remote=False):
+        """Add a resource to the cluster"""
+        self.res_add(resource_name, group_name)
+        if not remote:
+            for node in self.remote_systems:
+                self.remote_systems[node].clus_res_add(resource_name, group_name, remote=True)
+
+    @Pyro.expose
+    def clus_res_delete(self, resource_name, remote=False):
+        """Delete a resource from the cluster"""
+        self.res_delete(resource_name)
+        if not remote:
+            for node in self.remote_systems:
+                self.remote_systems[node].clus_res_delete(resource_name, remote=True)
+
+    @Pyro.expose
+    def clus_res_state(self, resource_args):
+        """Get states of a resource on the cluster"""
+        # TODO: get states from other nodes
+        return self.res_state(resource_args)
+
+    @Pyro.expose
+    def clus_res_state_many(self, resource_list, include_node=False, remote=False):
+        resource_states = []
+        resource_states += self.res_state_many(resource_list, include_node=include_node)
+        if not remote:
+            for node in self.remote_systems:
+                resource_states += self.remote_systems[node].clus_res_state_many(resource_list,
+                                                                                 include_node=include_node,
+                                                                                 remote=True)
+        return resource_states
+
+    @Pyro.expose
+    def clus_res_link(self, parent_name, resource_name, remote=False):
+        """Add a resource dependency on the cluster"""
+        self.res_link(parent_name, resource_name)
+        if not remote:
+            for node in self.remote_systems:
+                self.remote_systems[node].clus_res_link(parent_name, resource_name, remote=True)
+
+    @Pyro.expose
+    def clus_res_unlink(self, parent_name, resource_name, remote=False):
+        """Remove a resource dependency on the cluster"""
+        self.res_unlink(parent_name, resource_name)
+        if not remote:
+            for node in self.remote_systems:
+                self.remote_systems[node].clus_res_unlink(parent_name, resource_name, remote=True)
+
+    @Pyro.expose
+    def clus_res_clear(self, resource_name, remote=False):
+        self.res_clear(resource_name)
+        if not remote:
+            for node in self.remote_systems:
+                self.remote_systems[node].clus_res_clear(resource_name, remote=True)
+
+    @Pyro.expose
+    def clus_res_probe(self, resource_name):
+        return self.res_probe(resource_name)
+
+    @Pyro.expose
+    def clus_res_dep(self, resource_args):
+        return self.res_dep(resource_args)
+
+    @Pyro.expose
+    def clus_res_list(self):
+        return self.res_list()
+
+    @Pyro.expose
+    def clus_res_value(self, resource_name, attr_name):
+        return self.res_value(resource_name, attr_name)
+
+    @Pyro.expose
+    def clus_res_modify(self, resource_name, attr_name, value, remote=False):
+        """Modify a resource attribute on the cluster"""
+        self.res_modify(resource_name, attr_name, value)
+        if not remote:
+            for node in self.remote_systems:
+                self.remote_systems[node].clus_res_modify(resource_name, attr_name, value, remote=True)
+
+    @Pyro.expose
+    def clus_res_attr(self, resource_name):
+        return self.res_attr(resource_name)
+
+    @Pyro.expose
+    def clus_grp_online(self, group_name, system_name):
+        """Online group for a given system node"""
+        if self.attr_value('NodeName') == system_name:
+            # TODO: check if online on other node first
+            self.grp_online(group_name)
+        else:
+            self.remote_systems[system_name].clus_grp_online(group_name, system_name)
+
+    @Pyro.expose
+    def clus_grp_offline(self, group_name, system_name):
+        """Offline group for a given system node"""
+        if self.attr_value('NodeName') == system_name:
+            self.grp_offline(group_name)
+        else:
+            self.remote_systems[system_name].clus_grp_offline(group_name, system_name)
+
+    @Pyro.expose
+    def clus_grp_state(self, group_name):
+        return self.grp_state(group_name)
+
+    @Pyro.expose
+    def clus_grp_state_many(self, group_list, include_node=False, remote=False):
+        """Provide states for given group names for all nodes in cluster"""
+        group_states = []
+        group_states += self.grp_state_many(group_list, include_node=include_node)
+        if not remote:
+            for node in self.remote_systems:
+                group_states += self.remote_systems[node].clus_grp_state_many(group_list, include_node=include_node,
+                                                                              remote=True)
+        return group_states
+
+    @Pyro.expose
+    def clus_grp_add(self, group_name, remote=False):
+        """Add a group to the cluster"""
+        self.grp_add(group_name)
+        if not remote:
+            for node in self.remote_systems:
+                self.remote_systems[node].clus_grp_add(group_name, remote=True)
+
+    @Pyro.expose
+    def clus_grp_delete(self, group_name, remote=False):
+        """Remove a group from the cluster"""
+        self.grp_delete(group_name)
+        if not remote:
+            for node in self.remote_systems:
+                self.remote_systems[node].clus_grp_delete(group_name, remote=True)
+
+    @Pyro.expose
+    def clus_grp_enable(self, group_name, remote=False):
+        """Enable a group on the cluster"""
+        self.grp_enable(group_name)
+        if not remote:
+            for node in self.remote_systems:
+                self.remote_systems[node].clus_grp_enable(group_name, remote=True)
+
+    @Pyro.expose
+    def clus_grp_disable(self, group_name, remote=False):
+        """Disable a group on the cluster"""
+        self.grp_disable(group_name)
+        if not remote:
+            for node in self.remote_systems:
+                self.remote_systems[node].clus_grp_disable(group_name, remote=True)
+
+    @Pyro.expose
+    def clus_grp_enable_resources(self, group_name, remote=False):
+        """Enable a group resources on a cluster"""
+        self.grp_enable_resources(group_name)
+        if not remote:
+            for node in self.remote_systems:
+                self.remote_systems[node].clus_grp_enable_resources(group_name, remote=True)
+
+    @Pyro.expose
+    def clus_grp_disable_resources(self, group_name, remote=False):
+        """Disable a group resources on a cluster"""
+        self.grp_disable_resources(group_name)
+        if not remote:
+            for node in self.remote_systems:
+                self.remote_systems[node].clus_grp_disable_resources(group_name, remote=True)
+
+    @Pyro.expose
+    def clus_grp_flush(self, group_name, system_name):
+        """Flush a group on the cluster"""
+        if system_name == self.node_name:
+            self.grp_flush(group_name)
+        else:
+            self.remote_systems[system_name].clus_grp_flush(group_name, system_name)
+
+    @Pyro.expose
+    def clus_grp_clear(self, group_name, system_name):
+        """Clear a group on the cluster"""
+        if system_name == self.node_name:
+            self.grp_clear(group_name)
+        else:
+            self.remote_systems[system_name].clus_grp_clear(group_name, system_name)
+
+    @Pyro.expose
+    def clus_grp_resources(self, group_name):
+        """List a group resources on the cluster"""
+        return self.grp_resources(group_name)
+
+    @Pyro.expose
+    def clus_grp_list(self):
+        """List groups on the cluster"""
+        return self.grp_list()
+
+    @Pyro.expose
+    def clus_grp_value(self, group_name, attr_name):
+        """Get a value from a group on the cluster"""
+        return self.grp_value(group_name, attr_name)
+
+    @Pyro.expose
+    def clus_grp_modify(self, group_name, attr_name, value, remote=False):
+        """Modify a group attribute value on the cluster"""
+        self.grp_modify(group_name, attr_name, value)
+        if not remote:
+            for node in self.remote_systems:
+                self.remote_systems[node].clus_grp_modify(group_name, attr_name, value, remote=True)
+
+    @Pyro.expose
+    def clus_grp_attr(self, group_name):
+        """Get group attribute values from the cluster"""
+        return self.grp_attr(group_name)
 
     def set_attr(self, attr, value):
         super(NodeSystem, self).set_attr(attr, value)
@@ -37,14 +307,17 @@ class NodeSystem(AttributeObject):
         elif attr == "NodeName":
             self.node_name = value
 
+    @Pyro.expose
     def node_attr(self):
         """Return a list of node attributes"""
         return self.attr_list()
 
+    @Pyro.expose
     def node_value(self, attr_name):
         """Return node attribute"""
         return self.attr_value(attr_name)
 
+    @Pyro.expose
     def node_modify(self, attr_name, value):
         """Modify a node attribute"""
         try:
@@ -475,8 +748,13 @@ class NodeSystem(AttributeObject):
         else:
             logger.info('No configuration data found')
 
+        # Register remote nodes from config
+        for host in self.attr_value('NodeList'):
+            self.register_node(host)
+
         self.start_threads()
         self.grp_online_auto()
+
         logger.info('Server startup complete')
 
     def run(self):

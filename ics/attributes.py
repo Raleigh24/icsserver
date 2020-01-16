@@ -37,7 +37,6 @@ class AttributeObject(object):  # Inherits from object to enabling super() in py
         else:
             previous_value = self._attr[attr]
         self._attr[attr] = value
-        # update cluster
         logger.info('{}({}) attribute {} changed from {} to {}'.format(self.__class__.__name__, self.name, attr,
                                                                        previous_value, value))
 
@@ -167,6 +166,11 @@ system_attributes = {
         "default": "",
         "type": "string",
         "description": "The name of the node"
+    },
+    "NodeList": {
+        "default": [],
+        "type": "list",
+        "description": ""
     },
     "GroupLimit": {
         "default": "200",

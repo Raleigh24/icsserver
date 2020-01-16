@@ -27,7 +27,7 @@ except IOError as e:
     print('ERROR: Unable to create log file: {}'.format(e))
     sys.exit(1)
 
-from cluster import Cluster  # Not sure why this needs to be here
+from system import NodeSystem  # Not sure why this needs to be here
 
 # Setup logging information
 logger = logging.getLogger(__name__)
@@ -55,7 +55,7 @@ logger.info('ICS Version: ' + ICS_VERSION)
 logger.info('Python version: ' + sys.version.replace('\n', ''))
 logger.info('Logging level: ' + logging.getLevelName(logger.getEffectiveLevel()))
 
-system = Cluster()
+system = NodeSystem()
 
 logging.getLogger("Pyro4").setLevel(logging.INFO)
 logging.getLogger("Pyro4.core").setLevel(logging.INFO)
