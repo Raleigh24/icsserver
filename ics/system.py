@@ -743,7 +743,7 @@ class NodeSystem(AttributeObject):
             try:
                 self.load_config(data)
             except Exception as e:
-                logging.critical('Error reading config data: {}'.format(str(e)))
+                logger.critical('Error reading config data: {}'.format(str(e)))
                 sys.exit(1)  # TODO: better system handling
         else:
             logger.info('No configuration data found')
@@ -767,7 +767,7 @@ class NodeSystem(AttributeObject):
         #     time.sleep(5)
 
     def shutdown(self):
-        logging.info('Server shutting down...')
+        logger.info('Server shutting down...')
         write_config(ICS_CONF_FILE, self.config_data())
-        logging.info('Server shutdown complete')
-        logging.shutdown()
+        logger.info('Server shutdown complete')
+        logger.shutdown()

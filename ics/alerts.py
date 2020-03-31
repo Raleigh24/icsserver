@@ -113,7 +113,7 @@ class AlertHandler:
             self.alert_level = get_level_name(level)
         except KeyError:
             raise ICSError('Invalid alert level')
-        logging.info("Alert level changed from {} to {}".format(previous_level, get_level_name(self.alert_level)))
+        logger.info("Alert level changed from {} to {}".format(previous_level, get_level_name(self.alert_level)))
 
     def add_recipient(self, recipient):
         logger.info('Adding mail recipient {}'.format(recipient))
