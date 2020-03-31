@@ -210,7 +210,11 @@ class Resource(AttributeObject):
     def flush(self):
         self.propagate = False
         if self.cmd_process is not None:
-            self.cmd_process.kill()
+            try:
+                self.cmd_process.kill()
+            except OSError as e:
+                logger.error('Unable to kill process for resource ' + self.name)
+                return
         self._reset_cmd()
         if self.state is ResourceStates.STARTING:
             self.change_state(ResourceStates.OFFLINE)
