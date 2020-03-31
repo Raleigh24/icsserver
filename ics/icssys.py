@@ -12,13 +12,14 @@ setup_signal_handler()
 description_text = 'Manage ICS system'
 epilog_text = ''
 parser = argparse.ArgumentParser(description=description_text, allow_abbrev=False)
-parser.add_argument('-add', nargs=1, help='add a node to cluster')
-parser.add_argument('-delete', nargs=1, help='delete a node from the cluster')
-parser.add_argument('-loglevel', nargs=1, metavar='<level>', help='Set system log level')
-parser.add_argument('-attr', action='store_true', help='list node attributes')
-parser.add_argument('-value', nargs=1, metavar='<attr>', help='print resource  attribute value')
-parser.add_argument('-modify', nargs=argparse.REMAINDER, metavar=('<res>', '<attr>', '<value>'),
-                    help='modify resource attribute')
+group = parser.add_mutually_exclusive_group()
+group.add_argument('-add', nargs=1, help='add a node to cluster')
+group.add_argument('-delete', nargs=1, help='delete a node from the cluster')
+group.add_argument('-loglevel', nargs=1, metavar='<level>', help='Set system log level')
+group.add_argument('-attr', action='store_true', help='list node attributes')
+group.add_argument('-value', nargs=1, metavar='<attr>', help='print resource  attribute value')
+group.add_argument('-modify', nargs=argparse.REMAINDER, metavar=('<res>', '<attr>', '<value>'),
+                   help='modify resource attribute')
 args = parser.parse_args()
 
 if len(sys.argv) <= 1:

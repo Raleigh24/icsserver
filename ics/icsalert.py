@@ -11,10 +11,11 @@ setup_signal_handler()
 description_text = 'Manage ICS alerts'
 epilog_text = ''
 parser = argparse.ArgumentParser(description=description_text, allow_abbrev=False)
-parser.add_argument('-level', nargs=1, metavar='<level>', help='Set system log level')
-#parser.add_argument('-test', action='store_true', help='') TODO: add test option and functionality
-parser.add_argument('-add', nargs=1, help='add mail recipient')
-parser.add_argument('-remove', nargs=1, help='remove mail recipient')
+group = parser.add_mutually_exclusive_group()
+group.add_argument('-level', nargs=1, metavar='<level>', help='Set system log level')
+#group.add_argument('-test', action='store_true', help='') TODO: add test option and functionality
+group.add_argument('-add', nargs=1, help='add mail recipient')
+group.add_argument('-remove', nargs=1, help='remove mail recipient')
 args = parser.parse_args()
 
 if len(sys.argv) <= 1:
