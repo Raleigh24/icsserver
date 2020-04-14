@@ -83,12 +83,15 @@ elif args.disableresources is not None:
 
 elif args.state is not None:
     group_list = args.state  # List of provided group names
-    if len(group_list) == 1:
+    if len(group_list) == 0:
+        results = remote_execute(cluster.clus_grp_state_all)
+        print_table(results)
+    elif len(group_list) == 1:
         group_name = group_list[0]
         group_state = remote_execute(cluster.clus_grp_state, group_name)
         print(group_state)
     else:
-        results = remote_execute(cluster.clus_grp_state_many, group_list, include_node=True)
+        results = remote_execute(cluster.clus_grp_state_all, group_names=group_list)
         print_table(results)
 
 elif args.clear is not None:
