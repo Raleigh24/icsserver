@@ -73,5 +73,6 @@ Pyro.Daemon.serveSimple(
     },
     port=9090,
     host=socket.gethostname(),
-    ns=False)
+    ns=False,
+    verbose=False)
 
