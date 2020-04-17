@@ -1,45 +1,18 @@
 import argparse
-import os
-import signal
+import socket
 
-import utils
+import Pyro4 as Pyro
 
+from utils import setup_signal_handler
+from utils import remote_execute
 
-def stop_server():
-    pass
+setup_signal_handler()
+description_text = 'Stop ICS server'
+epilog_text = ''
+parser = argparse.ArgumentParser(description=description_text)
+parser.add_argument('-force', action='store_true', help="Force server to stop running")
+args = parser.parse_args()
 
-
-if __name__ == '__main__':
-    utils.setup_signal_handler()
-    description_text = 'Stop ICS server'
-    epilog_text = ''
-    parser = argparse.ArgumentParser(description=description_text)
-    parser.add_argument('-force', action='store_true', help="")
-    args = parser.parse_args()
-
-    if utils.check_running():
-        pid = int(utils.get_ics_pid())
-    else:
-        print('ERROR: Found no server running')
-        exit(1)
-
-    if args.force is True:
-        try:
-            os.kill(pid, signal.SIGKILL)
-        except OSError as e:
-            print('ERROR: Unable to stop server')
-            print('Reason: {}'.format(e))
-            exit(1)
-    else:
-        try:
-            os.kill(pid, signal.SIGTERM)
-        except OSError as e:
-            print('ERROR: Unable to stop server')
-            print('Reason: {}'.format(e))
-        stop_server()
-
-
-
-
-
-
+uri = 'PYRO:sub_server_control@' + socket.gethostname() + ':9091'
+cluster = Pyro.Proxy(uri)
+remote_execute(cluster.stop, args.force)

@@ -18,7 +18,6 @@ ICS_VAR = os.getenv('ICS_VAR', DEFAULT_ICS_VAR)
 ICS_UDS = os.getenv('ICS_UDS', DEFAULT_ICS_UDS)
 
 ICS_CONF_FILE = ICS_CONF + '/main.cf'
-ICS_PID_FILE = ICS_VAR + '/icsserver.pid'
 ICS_UDS_FILE = ICS_UDS + '/uds_socket'
 ICS_ALERT_LOG = ICS_LOG + '/alerts.log'
 ICS_RES_LOG = ICS_LOG + '/resource.log'

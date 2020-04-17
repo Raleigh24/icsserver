@@ -1,34 +1,17 @@
 import argparse
-import subprocess
-import sys
+import socket
 
-import utils
-from environment import ICS_HOME
-from environment import ICS_VERSION
+import Pyro4 as Pyro
 
+from utils import setup_signal_handler
+from utils import remote_execute
 
-def start_server():
-    """Start server by creating new process"""
-    python_bin = sys.executable
-    cmd = [python_bin, ICS_HOME + '/ics/icsserver.py']
-    pid = subprocess.Popen(cmd).pid
-    utils.create_pid_file(pid)
+setup_signal_handler()
+description_text = 'Start ICS server'
+epilog_text = ''
+parser = argparse.ArgumentParser(description=description_text)
+args = parser.parse_args()
 
-
-if __name__ == '__main__':
-    utils.setup_signal_handler()
-    description_text = 'Start ICS server'
-    epilog_text = ''
-    parser = argparse.ArgumentParser(description=description_text)
-    parser.add_argument('-v', '--version', action='store_true', help='')
-    parser.add_argument('--onenode', action='store_true', help='start ICS as a single node cluster')
-    args = parser.parse_args()
-
-    if args.version is True:
-        print('Version: ' + ICS_VERSION)
-    else:
-        if utils.check_running():
-            print('ERROR: Server is already running')
-            sys.exit(1)
-        else:
-            start_server()
+uri = 'PYRO:sub_server_control@' + socket.gethostname() + ':9091'
+cluster = Pyro.Proxy(uri)
+remote_execute(cluster.start)
