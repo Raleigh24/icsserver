@@ -12,6 +12,7 @@ from alerts import AlertHandler
 from environment import ICS_VERSION
 from environment import ICS_HOME
 from environment import ICS_LOG
+from environment import ICS_ALERT_PORT
 
 if not os.path.isdir(ICS_LOG):
     try:
@@ -57,7 +58,7 @@ Pyro.Daemon.serveSimple(
     {
         alert_handler: 'alert_handler'
     },
-    port=9092,
+    port=ICS_ALERT_PORT,
     host=socket.gethostname(),
     ns=False,
     verbose=False)

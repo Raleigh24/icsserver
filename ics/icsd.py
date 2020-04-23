@@ -9,6 +9,7 @@ import utils
 from environment import ICS_HOME
 from environment import ICS_LOG
 from environment import ICS_VERSION
+from environment import ICS_DAEMON_PORT
 from server_control import SubServerControl
 
 if not os.path.isdir(ICS_LOG):
@@ -49,7 +50,7 @@ Pyro.Daemon.serveSimple(
     {
         sub_server_control: 'sub_server_control'
     },
-    port=9091,
+    port=ICS_DAEMON_PORT,
     host=socket.gethostname(),
     ns=False,
     verbose=False)

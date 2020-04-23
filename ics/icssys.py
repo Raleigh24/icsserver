@@ -4,6 +4,7 @@ import socket
 
 import Pyro4 as Pyro
 
+from environment import ICS_ENGINE_PORT
 from tabular import print_table
 from utils import setup_signal_handler
 from utils import remote_execute
@@ -26,7 +27,7 @@ if len(sys.argv) <= 1:
     parser.print_help()
     sys.exit(1)
 
-uri = 'PYRO:system@' + socket.gethostname() + ':9090'
+uri = 'PYRO:system@' + socket.gethostname() + ':' + str(ICS_ENGINE_PORT)
 cluster = Pyro.Proxy(uri)
 
 if args.add is not None:

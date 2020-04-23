@@ -3,6 +3,7 @@ import socket
 
 import Pyro4 as Pyro
 
+from environment import ICS_DAEMON_PORT
 from utils import setup_signal_handler
 from utils import remote_execute
 
@@ -13,6 +14,6 @@ parser = argparse.ArgumentParser(description=description_text)
 parser.add_argument('-force', action='store_true', help="Force server to stop running")
 args = parser.parse_args()
 
-uri = 'PYRO:sub_server_control@' + socket.gethostname() + ':9091'
+uri = 'PYRO:sub_server_control@' + socket.gethostname() + ':' + str(ICS_DAEMON_PORT)
 cluster = Pyro.Proxy(uri)
 remote_execute(cluster.stop, args.force)

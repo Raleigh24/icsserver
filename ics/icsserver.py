@@ -11,6 +11,7 @@ from system import NodeSystem
 from environment import ICS_VERSION
 from environment import ICS_HOME
 from environment import ICS_LOG
+from environment import ICS_ENGINE_PORT
 
 if not os.path.isdir(ICS_LOG):
     try:
@@ -71,7 +72,7 @@ Pyro.Daemon.serveSimple(
     {
         system: 'system'
     },
-    port=9090,
+    port=ICS_ENGINE_PORT,
     host=socket.gethostname(),
     ns=False,
     verbose=False)
