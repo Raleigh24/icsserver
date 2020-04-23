@@ -83,23 +83,23 @@ def log_alert(alert):
 class AlertClient:
 
     def __init__(self):
-        self.alert_server_uri = 'PYRO:system@' + socket.gethostname() + ':9092'
-        self.conn = Pyro.Proxy(self.alert_server_uri)
+        self.alert_server_uri = 'PYRO:alert_handler@' + socket.gethostname() + ':9092'
+        self.alert_server = Pyro.Proxy(self.alert_server_uri)
 
     def critical(self, resource, msg):
         logger.debug('Resource({}) Alert generated: {} '.format(resource.name, msg))
         alert = Alert(resource, CRITICAL, msg)
-        self.conn.add_alert(alert)
+        self.alert_server.add_alert(alert)
 
     def error(self, resource, msg):
         logger.debug('Resource({}) Alert generated: {} '.format(resource.name, msg))
         alert = Alert(resource, ERROR, msg)
-        self.conn.add_alert(alert)
+        self.alert_server.add_alert(alert)
 
     def warning(self, resource, msg):
         logger.debug('Resource({}) Alert generated: {} '.format(resource.name, msg))
         alert = Alert(resource, WARNING, msg)
-        self.conn.add_alert(alert)
+        self.alert_server.add_alert(alert)
 
 
 class AlertHandler:
@@ -135,6 +135,7 @@ class AlertHandler:
     def set_recipients(self, recipients):
         self.recipients = recipients
 
+    @Pyro.expose
     def add_alert(self, alert):
         logger.info('Alert generated.............')
         # TODO format message
