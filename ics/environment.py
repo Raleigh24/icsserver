@@ -1,6 +1,6 @@
 import os
 
-ICS_VERSION = '1.3.0'
+ICS_VERSION = '2.0.0'
 
 # Default environment settings
 DEFAULT_ICS_HOME = '/opt/ICS'
