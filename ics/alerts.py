@@ -1,6 +1,7 @@
 import logging
 import socket
 from datetime import datetime
+from collections import namedtuple
 try:
     import queue
 except ImportError:
@@ -33,36 +34,14 @@ _level_names = {
     'NOTSET': NOTSET
 }
 
+Alert = namedtuple('Alert', 'resource group node time level msg')
+
 alert_html_template_file = ICS_HOME + '/etc/alert.html'
 
 
 def get_level_name(level):
     """Return the string representation of an alert level"""
     return _level_names[level]
-
-
-class Alert:
-    def __init__(self, resource, level, msg):
-        self.time = datetime.now()
-        self.time_fmt = self.time.strftime("%m/%d/%Y %H:%M:%S")
-        self.system_name = ICS_CLUSTER_NAME
-        self.host_name = HOSTNAME
-        self.resource_name = resource.name
-        self.group_name = resource.attr_value('Group')
-        self.level = level
-        self.levelname = get_level_name(level)
-        self.msg = msg
-
-    def __str__(self):
-        return ' '.join([self.time_fmt, self.levelname, ICS_CLUSTER_NAME, self.group_name, self.resource_name, self.msg])
-
-    def html(self):
-        with open(alert_html_template_file, 'r') as FILE:
-            alert_html_template = FILE.read()
-
-        return alert_html_template.format(message=self.msg, system_name=ICS_CLUSTER_NAME, host_name=HOSTNAME,
-                                          group_name=self.group_name, resource_name=self.resource_name,
-                                          event_time=self.time_fmt)
 
 
 def load_html_template(filename):
@@ -72,12 +51,26 @@ def load_html_template(filename):
 
 def render_template(alert, template):
     return template.format(message=alert.msg, system_name=ICS_CLUSTER_NAME, host_name=HOSTNAME,
-                           group_name=alert.group_name, resource_name=alert.resource_name, event_time=alert.time_fmt)
+                           group_name=alert.group, resource_name=alert.resource, event_time=alert.time)
 
 
 def log_alert(alert):
-    with open(ICS_ALERT_LOG, 'a+') as FILE:
-        FILE.write(str(alert) + '\n')
+    with open(ICS_ALERT_LOG, 'a+') as alert_log_file:
+        alert_log = ' '.join([alert.time, alert.level, ICS_CLUSTER_NAME, alert.group, alert.resource, alert.msg])
+        alert_log_file.write(alert_log + '\n')
+
+
+def create_alert(resource, msg, level):
+    now = datetime.now().strftime("%m/%d/%Y %H:%M:%S")
+    alert = Alert(
+        resource=resource.name,
+        group=resource.attr_value('Group'),
+        node=HOSTNAME,
+        time=now,
+        level=level,
+        msg=msg,
+    )
+    return alert
 
 
 class AlertClient:
@@ -88,17 +81,17 @@ class AlertClient:
 
     def critical(self, resource, msg):
         logger.debug('Resource({}) Alert generated: {} '.format(resource.name, msg))
-        alert = Alert(resource, CRITICAL, msg)
+        alert = create_alert(resource, msg, CRITICAL)
         self.alert_server.add_alert(alert)
 
     def error(self, resource, msg):
         logger.debug('Resource({}) Alert generated: {} '.format(resource.name, msg))
-        alert = Alert(resource, ERROR, msg)
+        alert = create_alert(resource, msg, ERROR)
         self.alert_server.add_alert(alert)
 
     def warning(self, resource, msg):
         logger.debug('Resource({}) Alert generated: {} '.format(resource.name, msg))
-        alert = Alert(resource, WARNING, msg)
+        alert = create_alert(resource, msg, WARNING)
         self.alert_server.add_alert(alert)
 
 
