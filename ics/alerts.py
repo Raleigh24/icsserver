@@ -1,16 +1,18 @@
 import logging
+import socket
 from datetime import datetime
 try:
     import queue
 except ImportError:
     import Queue as queue  # Python2 version
 
+import Pyro4 as Pyro
+
 import mail
 from environment import HOSTNAME, ICS_HOME, ICS_CLUSTER_NAME, ICS_ALERT_LOG
 from ics_exceptions import ICSError
 
 logger = logging.getLogger(__name__)
-alert_queue = queue.Queue()
 
 CRITICAL = 40
 ERROR = 30
@@ -78,28 +80,32 @@ def log_alert(alert):
         FILE.write(str(alert) + '\n')
 
 
-def critical(resource, msg):
-    alert = Alert(resource, CRITICAL, msg)
-    alert_queue.put(alert)
-    logger.debug('Resource({}) Alert generated: {} '.format(resource.name, msg))
+class AlertClient:
 
+    def __init__(self):
+        self.alert_server_uri = 'PYRO:system@' + socket.gethostname() + ':9092'
+        self.conn = Pyro.Proxy(self.alert_server_uri)
 
-def error(resource, msg):
-    alert = Alert(resource, ERROR, msg)
-    alert_queue.put(alert)
-    logger.debug('Resource({}) Alert generated: {} '.format(resource.name, msg))
+    def critical(self, resource, msg):
+        logger.debug('Resource({}) Alert generated: {} '.format(resource.name, msg))
+        alert = Alert(resource, CRITICAL, msg)
+        self.conn.add_alert(alert)
 
+    def error(self, resource, msg):
+        logger.debug('Resource({}) Alert generated: {} '.format(resource.name, msg))
+        alert = Alert(resource, ERROR, msg)
+        self.conn.add_alert(alert)
 
-def warning(resource, msg):
-    alert = Alert(resource, WARNING, msg)
-    alert_queue.put(alert)
-    logger.debug('Resource({}) Alert generated: {} '.format(resource.name, msg))
+    def warning(self, resource, msg):
+        logger.debug('Resource({}) Alert generated: {} '.format(resource.name, msg))
+        alert = Alert(resource, WARNING, msg)
+        self.conn.add_alert(alert)
 
 
 class AlertHandler:
 
     def __init__(self, cluster_name="", node_name=""):
-        self.daemon = True
+        self.alert_queue = queue.Queue()
         self.alert_level = NOTSET
         self.recipients = []
         self.html_template = load_html_template(alert_html_template_file)
@@ -129,6 +135,11 @@ class AlertHandler:
     def set_recipients(self, recipients):
         self.recipients = recipients
 
+    def add_alert(self, alert):
+        logger.info('Alert generated.............')
+        # TODO format message
+        self.alert_queue.put(alert)
+
     def mail_alert(self, alert, template):
         if not self.recipients:
             logger.warning('Alert recipient list is empty, no alerts sent')
@@ -145,10 +156,10 @@ class AlertHandler:
 
     def run(self):
         while True:
-            queue_size = alert_queue.qsize()
+            queue_size = self.alert_queue.qsize()
             if queue_size > 0:
                 logger.debug('Remaining events in alert queue ({})'.format(queue_size))
-            alert = alert_queue.get()
+            alert = self.alert_queue.get()
             if alert.level >= self.alert_level:
                 log_alert(alert)
                 self.mail_alert(alert, self.html_template)

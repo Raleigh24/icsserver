@@ -14,7 +14,8 @@ logger = logging.getLogger(__name__)
 python_bin = sys.executable
 
 server_bin_map = {
-    'icsserver': ICS_HOME + '/ics/icsserver.py'
+    'icsserver': ICS_HOME + '/ics/icsserver.py',
+    'icsalert_server': ICS_HOME + '/ics/icsalert_server.py'
 }
 
 

@@ -4,12 +4,14 @@ try:
 except ImportError:
     import Queue as queue  # Python2 version
 
-import alerts
+from alerts import AlertClient
 from states import ResourceStates, ONLINE_STATES, OFFLINE_STATES
 
 logger = logging.getLogger(__name__)
 
 event_queue = queue.Queue()
+
+alert = AlertClient()
 
 
 def trigger_event(event):
@@ -32,7 +34,7 @@ def event_handler():
             event.run()
         except Exception:
             logger.exception('Event {} encountered an error:'.format(str(event)))
-            alerts.error(event.resource.name, "Error occurred while processing event. Please check logs.")
+            alert.error(event.resource.name, "Error occurred while processing event. Please check logs.")
             continue
 
         del event
@@ -131,7 +133,7 @@ class ResourceOnlineEvent(ResourceStateEvent):
     def run(self):
         if self.last_state in OFFLINE_STATES:
             logger.warning('Resource({}) came online unexpectedly'.format(self.resource.name))
-            alerts.warning(self.resource, 'Resource came online by itself')
+            alert.warning(self.resource, 'Resource came online by itself')
         elif self.resource.propagate:
             self.resource.propagate = False  # Resource has successfully propagated from children
             for child in self.resource.children:
@@ -158,11 +160,11 @@ class ResourceStartingEvent(ResourceStateEvent):
 class ResourceFaultedEvent(ResourceStateEvent):
     def run(self):
         self.resource.flush()
-        alerts.error(self.resource, 'Resource faulted')
+        alert.error(self.resource, 'Resource faulted')
         # TODO: propagate any offline
 
 
 class ResourceUnknownEvent(ResourceStateEvent):
     def run(self):
         if self.last_state is not ResourceStates.UNKNOWN:
-            alerts.warning(self.resource, 'Resource in unknown state')
+            alert.warning(self.resource, 'Resource in unknown state')

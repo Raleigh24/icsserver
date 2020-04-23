@@ -4,13 +4,15 @@ import subprocess
 import time
 
 import events
-import alerts
+from alerts import AlertClient
 from attributes import AttributeObject, resource_attributes, group_attributes
 
 from environment import ICS_RES_LOG
 from states import ResourceStates, GroupStates, ONLINE_STATES
 
 logger = logging.getLogger(__name__)
+
+alert = AlertClient()
 
 
 class Resource(AttributeObject):
@@ -159,7 +161,7 @@ class Resource(AttributeObject):
                 return True
             elif int(time.time()) >= self.cmd_end_time:
                 logger.warning('Resource({}) timeout occurred while attempting to {}'.format(self.name, self.cmd_type))
-                alerts.warning(self, 'Resource {} timeout'.format(self.cmd_type))
+                alert.warning(self, 'Resource {} timeout'.format(self.cmd_type))
                 self.cmd_process.kill()
                 # TODO: add some action here
             else:
