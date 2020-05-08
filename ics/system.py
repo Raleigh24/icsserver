@@ -11,7 +11,9 @@ import Pyro4 as Pyro
 from alerts import AlertHandler
 from attributes import AttributeObject, system_attributes
 from events import event_handler
-from environment import ICS_CONF, ICS_CONF_FILE
+from environment import ICS_CONF
+from environment import ICS_CONF_FILE
+from environment import ICS_ENGINE_PORT
 from ics_exceptions import ICSError
 from resource import Resource, Group
 from states import ResourceStates, TRANSITION_STATES
@@ -44,7 +46,7 @@ class NodeSystem(AttributeObject):
 
     def register_node(self, host):
         logger.info('Registering node ' + str(host))
-        uri = 'PYRO:system@' + str(host) + ':9090'
+        uri = 'PYRO:system@' + str(host) + ':' + str(ICS_ENGINE_PORT)
         self.remote_nodes[host] = Pyro.Proxy(uri)
 
     @Pyro.expose
