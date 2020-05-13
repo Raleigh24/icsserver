@@ -68,6 +68,8 @@ system.startup()
 #system.cluster_connect()
 #system.run()  # Run forever
 
+logger.info("Starting Pyro on port " + str(ICS_ENGINE_PORT))
+
 Pyro.Daemon.serveSimple(
     {
         system: 'system'

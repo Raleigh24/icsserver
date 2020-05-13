@@ -46,6 +46,8 @@ utils.setup_signal_handler()
 
 sub_server_control = SubServerControl()
 
+logger.info("Starting Pyro on port " + str(ICS_DAEMON_PORT))
+
 Pyro.Daemon.serveSimple(
     {
         sub_server_control: 'sub_server_control'

@@ -54,6 +54,8 @@ thread_alert_handler = threading.Thread(name='alert handler', target=alert_handl
 thread_alert_handler.daemon = True
 thread_alert_handler.start()
 
+logger.info("Starting Pyro on port " + str(ICS_ALERT_PORT))
+
 Pyro.Daemon.serveSimple(
     {
         alert_handler: 'alert_handler'
