@@ -6,6 +6,19 @@ logger = logging.getLogger(__name__)
 
 
 class AttributeObject(object):  # Inherits from object to enabling super() in python2.7
+    """Base class for for objects with attributes.
+
+    Class Attributes:
+        update_flag (bool): Global flag that shows when a attribute has changed for any instance.
+
+    Attributes:
+        name (str): Object name.
+        default_attr (dict): Dictionary of default attribute values.
+
+    """
+
+    update_flag = False
+
     def __init__(self):
         self.name = None
         self._attr = {}
@@ -37,6 +50,7 @@ class AttributeObject(object):  # Inherits from object to enabling super() in py
         else:
             previous_value = self._attr[attr]
         self._attr[attr] = value
+        AttributeObject.update_flag = True
         logger.info('{}({}) attribute {} changed from {} to {}'.format(self.__class__.__name__, self.name, attr,
                                                                        previous_value, value))
 

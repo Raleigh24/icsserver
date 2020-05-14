@@ -4,7 +4,8 @@ import socket
 import sys
 import threading
 import time
-from operator import itemgetter
+from datetime import datetime
+from shutil import copyfile
 
 import Pyro4 as Pyro
 
@@ -759,14 +760,19 @@ class NodeSystem(AttributeObject):
     def backup_config(self):
         while True:
             interval = int(self.attr_value('BackupInterval'))
-            if interval != 0:
+
+            if AttributeObject.update_flag:
+                AttributeObject.update_flag = False
                 logger.debug('Creating backup of config file')
                 if os.path.isfile(ICS_CONF_FILE):
                     os.rename(ICS_CONF_FILE, ICS_CONF_FILE + '.autobackup')
                 write_config(ICS_CONF_FILE, self.config_data())
-                time.sleep(interval * 60)
-            else:
-                time.sleep(60)
+
+                backup_file = '.' + ICS_CONF_FILE + datetime.now().strftime('%y%m%d_%H%M%S')
+                logger.info('Creating backup config ' + backup_file)
+                copyfile(ICS_CONF_FILE, backup_file)
+
+            time.sleep(interval * 60)
 
     def startup(self):
         logger.info('Server starting up...')
