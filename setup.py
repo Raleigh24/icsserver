@@ -1,4 +1,4 @@
-import setuptools
+from setuptools import setup, find_packages
 
 
 def readme():
@@ -6,7 +6,7 @@ def readme():
         return f.read()
 
 
-setuptools.setup(
+setup(
     name='ICS',
     version='2.0.0.dev1',
     description='Intelsat Cluster Server',
@@ -14,7 +14,7 @@ setuptools.setup(
     author='Raleigh Waters',
     author_email='Raleigh.Waters@intelsat.com',
     python_requires='>=3.0',
-    packages=setuptools.find_packages(),
+    packages=find_packages(),
     classifiers=[
         'Programming Language :: Python :: 3',
         'Operating System :: POSIX :: Linux',
@@ -24,7 +24,7 @@ setuptools.setup(
     ],
     entry_points={
         'console_scripts': [
-            'icsd = ics.icsd:main'
+            'icsd = ics.icsd:main',
             'icsstart = ics.command_line:icsstart',
             'icsstop = ics.command_line:icsstop',
             'icssys = ics.command_line:icssys',
