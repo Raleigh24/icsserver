@@ -14,6 +14,16 @@ from utils import remote_execute
 epilog_text = ''
 
 
+def daemon_conn():
+    uri = 'PYRO:sub_server_control@' + socket.gethostname() + ':' + str(ICS_DAEMON_PORT)
+    return Pyro.Proxy(uri)
+
+
+def engine_conn():
+    uri = 'PYRO:system@' + socket.gethostname() + ':' + str(ICS_ENGINE_PORT)
+    return Pyro.Proxy(uri)
+
+
 def icsd():
     pass
 
@@ -23,9 +33,7 @@ def icsstart():
     description_text = 'Start ICS server'
     parser = argparse.ArgumentParser(description=description_text, epilog=epilog_text)
     args = parser.parse_args()
-
-    uri = 'PYRO:sub_server_control@' + socket.gethostname() + ':' + str(ICS_DAEMON_PORT)
-    cluster = Pyro.Proxy(uri)
+    cluster = daemon_conn()
     remote_execute(cluster.start)
 
 
@@ -35,9 +43,7 @@ def icsstop():
     parser = argparse.ArgumentParser(description=description_text, epilog=epilog_text)
     parser.add_argument('-force', action='store_true', help="Force server to stop running")
     args = parser.parse_args()
-
-    uri = 'PYRO:sub_server_control@' + socket.gethostname() + ':' + str(ICS_DAEMON_PORT)
-    cluster = Pyro.Proxy(uri)
+    cluster = daemon_conn()
     remote_execute(cluster.stop, args.force)
 
 
@@ -59,8 +65,7 @@ def icssys():
         parser.print_help()
         sys.exit(1)
 
-    uri = 'PYRO:system@' + socket.gethostname() + ':' + str(ICS_ENGINE_PORT)
-    cluster = Pyro.Proxy(uri)
+    cluster = engine_conn()
 
     if args.add is not None:
         remote_execute(cluster.add_node, args.add[0])
@@ -84,9 +89,6 @@ def icssys():
         attr_name = args.modify[0]
         value = ' '.join(args.modify[1:])
         remote_execute(cluster.node_modify, attr_name, value)
-
-
-
 
 
 def icsgrp():
@@ -123,8 +125,7 @@ def icsgrp():
         parser.print_help()
         sys.exit()
 
-    uri = 'PYRO:system@' + socket.gethostname() + ':' + str(ICS_ENGINE_PORT)
-    cluster = Pyro.Proxy(uri)
+    cluster = engine_conn()
 
     if args.online is not None:
         group_name = args.online[0]
@@ -230,10 +231,6 @@ def icsgrp():
         parser.print_help()
 
 
-
-
-
-
 def icsres():
     setup_signal_handler()
     description_text = 'Manage ICS resources'
@@ -265,8 +262,7 @@ def icsres():
         parser.print_help()
         sys.exit()
 
-    uri = 'PYRO:system@' + socket.gethostname() + ':' + str(ICS_ENGINE_PORT)
-    cluster = Pyro.Proxy(uri)
+    cluster = engine_conn()
 
     if args.online is not None:
         resource_name = args.online[0]
@@ -362,3 +358,29 @@ def icsres():
     else:
         parser.print_help()
 
+
+def icsalert():
+    setup_signal_handler()
+    description_text = 'Manage ICS alerts'
+    parser = argparse.ArgumentParser(description=description_text, epilog=epilog_text, allow_abbrev=False)
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('-level', nargs=1, metavar='<level>', help='Set system log level')
+    # group.add_argument('-test', action='store_true', help='') TODO: add test option and functionality
+    group.add_argument('-add', nargs=1, help='add mail recipient')
+    group.add_argument('-remove', nargs=1, help='remove mail recipient')
+    args = parser.parse_args()
+
+    if len(sys.argv) <= 1:
+        parser.print_help()
+        sys.exit(1)
+
+    cluster = engine_conn()
+
+    if args.level is not None:
+        remote_execute(cluster.set_level, args.level[0])
+    # elif args.test:
+    #    pass
+    elif args.add is not None:
+        remote_execute(cluster.add_recipient, args.add[0])
+    elif args.remove is not None:
+        remote_execute(cluster.remove_recipient, args.remove[0])
