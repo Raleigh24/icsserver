@@ -5,12 +5,12 @@ import socket
 
 import Pyro4 as Pyro
 
-import utils
-from environment import ICS_HOME
-from environment import ICS_LOG
-from environment import ICS_VERSION
-from environment import ICS_DAEMON_PORT
-from server_control import SubServerControl
+from ics import utils
+from ics.environment import ICS_HOME
+from ics.environment import ICS_LOG
+from ics.environment import ICS_VERSION
+from ics.environment import ICS_DAEMON_PORT
+from ics.server_control import SubServerControl
 
 
 def main():
