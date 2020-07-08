@@ -74,22 +74,44 @@ def create_alert(resource, msg, level):
 
 
 class AlertClient:
+    """Alert interface for creating alerts."""
 
     def __init__(self):
         self.alert_server_uri = 'PYRO:alert_handler@' + socket.gethostname() + ':9092'
         self.alert_server = Pyro.Proxy(self.alert_server_uri)
 
     def critical(self, resource, msg):
+        """Send alert with critical level.
+
+        Args:
+            resource (obj): Resource object.
+            msg (str): Alert message.
+
+        """
         logger.debug('Resource({}) Alert generated: {} '.format(resource.name, msg))
         alert = create_alert(resource, msg, CRITICAL)
         self.alert_server.add_alert(alert)
 
     def error(self, resource, msg):
+        """Send alert with error level.
+
+        Args:
+            resource (obj): Resource object.
+            msg (str): Alert message.
+
+        """
         logger.debug('Resource({}) Alert generated: {} '.format(resource.name, msg))
         alert = create_alert(resource, msg, ERROR)
         self.alert_server.add_alert(alert)
 
     def warning(self, resource, msg):
+        """Send alert with warning level.
+
+        Args:
+            resource (obj): Resource object
+            msg (str): Alert message.
+
+        """
         logger.debug('Resource({}) Alert generated: {} '.format(resource.name, msg))
         alert = create_alert(resource, msg, WARNING)
         self.alert_server.add_alert(alert)
