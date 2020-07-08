@@ -7,11 +7,26 @@ import Pyro4 as Pyro
 
 from environment import ICS_ENGINE_PORT
 from environment import ICS_DAEMON_PORT
+from ics_exceptions import ICSError
 from tabular import print_table
 from utils import setup_signal_handler
-from utils import remote_execute
 
 epilog_text = ''
+
+
+def remote_execute(func, *func_args, **func_kwargs):
+    """Wrapper for running commands remotely"""
+    try:
+        return func(*func_args, **func_kwargs)
+    except ICSError as error:
+        print('ERROR: ' + str(error))
+        sys.exit(1)
+    except Pyro.errors.CommunicationError as error:
+        print('ERROR: Unable to connect to ICS server')
+        print('ERROR: ' + str(error))
+    except Exception:
+        print('Pyro traceback:')
+        print("".join(Pyro.util.getPyroTraceback()))
 
 
 def daemon_conn():

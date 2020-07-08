@@ -147,16 +147,4 @@ def set_log_level(level):
     logging.critical('Log level set: ' + level)
 
 
-def remote_execute(func, *func_args, **func_kwargs):
-    """Wrapper for running commands remotely"""
-    try:
-        return func(*func_args, **func_kwargs)
-    except ICSError as error:
-        print('ERROR: ' + str(error))
-        sys.exit(1)
-    except Pyro.errors.CommunicationError as error:
-        print('ERROR: Unable to connect to ICS server')
-        print('ERROR: ' + str(error))
-    except Exception:
-        print('Pyro traceback:')
-        print("".join(Pyro.util.getPyroTraceback()))
+
