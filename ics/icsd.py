@@ -12,47 +12,53 @@ from environment import ICS_VERSION
 from environment import ICS_DAEMON_PORT
 from server_control import SubServerControl
 
-if not os.path.isdir(ICS_LOG):
+
+def main():
+    if not os.path.isdir(ICS_LOG):
+        try:
+            os.makedirs(ICS_LOG)
+        except OSError as e:
+            print('ERROR: Unable to create log directory: {}'.format(e))
+            print('Exiting...')
+            sys.exit(1)
+
+    logging.logFilename = ICS_LOG + '/icsd.log'
+    if os.getenv('ICS_CONSOLE_LOG') is not None:
+        log_config = ICS_HOME + '/etc/logging_console.conf'
+    else:
+        log_config = ICS_HOME + '/etc/logging.conf'
+
     try:
-        os.makedirs(ICS_LOG)
-    except OSError as e:
-        print('ERROR: Unable to create log directory: {}'.format(e))
-        print('Exiting...')
+        logging.config.fileConfig(log_config)
+    except IOError as e:
+        print('ERROR: Unable to create log file: {}'.format(e))
         sys.exit(1)
 
-logging.logFilename = ICS_LOG + '/icsd.log'
-if os.getenv('ICS_CONSOLE_LOG') is not None:
-    log_config = ICS_HOME + '/etc/logging_console.conf'
-else:
-    log_config = ICS_HOME + '/etc/logging.conf'
+    logger = logging.getLogger('main')
+    logger.info('Starting ICS daemon...')
+    logger.info('ICS Version: ' + ICS_VERSION)
+    logger.info('Python version: ' + sys.version.replace('\n', ''))
+    logger.info('Logging level: ' + logging.getLevelName(logger.getEffectiveLevel()))
 
-try:
-    logging.config.fileConfig(log_config)
-except IOError as e:
-    print('ERROR: Unable to create log file: {}'.format(e))
-    sys.exit(1)
+    # Setup Pyro logging
+    logging.getLogger("Pyro4").setLevel(logging.INFO)
+    logging.getLogger("Pyro4.core").setLevel(logging.INFO)
 
-logger = logging.getLogger('main')
-logger.info('Starting ICS daemon...')
-logger.info('ICS Version: ' + ICS_VERSION)
-logger.info('Python version: ' + sys.version.replace('\n', ''))
-logger.info('Logging level: ' + logging.getLevelName(logger.getEffectiveLevel()))
+    utils.setup_signal_handler()
 
-# Setup Pyro logging
-logging.getLogger("Pyro4").setLevel(logging.INFO)
-logging.getLogger("Pyro4.core").setLevel(logging.INFO)
+    sub_server_control = SubServerControl()
 
-utils.setup_signal_handler()
+    logger.info("Starting Pyro on port " + str(ICS_DAEMON_PORT))
 
-sub_server_control = SubServerControl()
+    Pyro.Daemon.serveSimple(
+        {
+            sub_server_control: 'sub_server_control'
+        },
+        port=ICS_DAEMON_PORT,
+        host=socket.gethostname(),
+        ns=False,
+        verbose=False)
 
-logger.info("Starting Pyro on port " + str(ICS_DAEMON_PORT))
 
-Pyro.Daemon.serveSimple(
-    {
-        sub_server_control: 'sub_server_control'
-    },
-    port=ICS_DAEMON_PORT,
-    host=socket.gethostname(),
-    ns=False,
-    verbose=False)
+if __name__ == '__main__':
+    main()

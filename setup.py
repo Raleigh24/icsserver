@@ -24,6 +24,7 @@ setuptools.setup(
     ],
     entry_points={
         'console_scripts': [
+            'icsd = ics.icsd:main'
             'icsstart = ics.command_line:icsstart',
             'icsstop = ics.command_line:icsstop',
             'icssys = ics.command_line:icssys',
