@@ -5,11 +5,11 @@ import time
 
 import Pyro4 as Pyro
 
-from environment import ICS_ENGINE_PORT
-from environment import ICS_DAEMON_PORT
+from ics.environment import ICS_ENGINE_PORT
+from ics.environment import ICS_DAEMON_PORT
 from ics_exceptions import ICSError
-from tabular import print_table
-from utils import setup_signal_handler
+from ics.tabular import print_table
+from ics.utils import setup_signal_handler
 
 epilog_text = ''
 

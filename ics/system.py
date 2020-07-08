@@ -9,16 +9,16 @@ from shutil import copyfile
 
 import Pyro4 as Pyro
 
-from alerts import AlertHandler
-from attributes import AttributeObject, system_attributes
-from events import event_handler
-from environment import ICS_CONF
-from environment import ICS_CONF_FILE
-from environment import ICS_ENGINE_PORT
-from ics_exceptions import ICSError
-from resource import Resource, Group
-from states import ResourceStates, TRANSITION_STATES
-from utils import set_log_level, read_config, write_config
+from ics.alerts import AlertHandler
+from ics.attributes import AttributeObject, system_attributes
+from ics.events import event_handler
+from ics.environment import ICS_CONF
+from ics.environment import ICS_CONF_FILE
+from ics.environment import ICS_ENGINE_PORT
+from ics.ics_exceptions import ICSError
+from ics.resource import Resource, Group
+from ics.states import ResourceStates, TRANSITION_STATES
+from ics.utils import set_log_level, read_config, write_config
 
 logger = logging.getLogger(__name__)
 

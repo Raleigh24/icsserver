@@ -4,8 +4,8 @@ try:
 except ImportError:
     import Queue as queue  # Python2 version
 
-from alerts import AlertClient
-from states import ResourceStates, ONLINE_STATES, OFFLINE_STATES
+from ics.alerts import AlertClient
+from ics.states import ResourceStates, ONLINE_STATES, OFFLINE_STATES
 
 logger = logging.getLogger(__name__)
 

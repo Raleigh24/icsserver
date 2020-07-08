@@ -1,6 +1,6 @@
 import logging
 
-from ics_exceptions import ICSError
+from ics.ics_exceptions import ICSError
 
 logger = logging.getLogger(__name__)
 

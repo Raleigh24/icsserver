@@ -6,8 +6,8 @@ import signal
 
 import Pyro4 as Pyro
 
-import utils
-from environment import ICS_HOME
+from ics import utils
+from ics.environment import ICS_HOME
 
 logger = logging.getLogger(__name__)
 

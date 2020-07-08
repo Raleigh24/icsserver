@@ -9,9 +9,9 @@ except ImportError:
 
 import Pyro4 as Pyro
 
-import mail
-from environment import HOSTNAME, ICS_HOME, ICS_CLUSTER_NAME, ICS_ALERT_LOG
-from ics_exceptions import ICSError
+from ics import mail
+from ics.environment import HOSTNAME, ICS_HOME, ICS_CLUSTER_NAME, ICS_ALERT_LOG
+from ics.ics_exceptions import ICSError
 
 logger = logging.getLogger(__name__)
 

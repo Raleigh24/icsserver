@@ -2,15 +2,15 @@ import json
 import os
 import logging
 
-from environment import ICS_CONF
-from environment import ICS_CONF_FILE
+from ics.environment import ICS_CONF
+from ics.environment import ICS_CONF_FILE
 
-from resource import groups
-from resource import res_add
-from resource import grp_add
-from resource import res_link
-from resource import get_resource
-from attributes import resource_attributes
+from ics.resource import groups
+from ics.resource import res_add
+from ics.resource import grp_add
+from ics.resource import res_link
+from ics.resource import get_resource
+from ics.attributes import resource_attributes
 
 logger = logging.getLogger(__name__)
 

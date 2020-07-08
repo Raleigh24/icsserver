@@ -8,11 +8,11 @@ import threading
 
 import Pyro4 as Pyro
 
-from alerts import AlertHandler
-from environment import ICS_VERSION
-from environment import ICS_HOME
-from environment import ICS_LOG
-from environment import ICS_ALERT_PORT
+from ics.alerts import AlertHandler
+from ics.environment import ICS_VERSION
+from ics.environment import ICS_HOME
+from ics.environment import ICS_LOG
+from ics.environment import ICS_ALERT_PORT
 
 if not os.path.isdir(ICS_LOG):
     try:
