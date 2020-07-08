@@ -11,7 +11,7 @@ import Pyro4 as Pyro
 
 from ics import mail
 from ics.environment import HOSTNAME, ICS_HOME, ICS_CLUSTER_NAME, ICS_ALERT_LOG
-from ics.ics_exceptions import ICSError
+from ics.errors import ICSError
 
 logger = logging.getLogger(__name__)
 

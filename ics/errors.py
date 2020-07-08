@@ -1,3 +1,7 @@
+"""
+Definition of ICS exceptions and exception utilites
+"""
+
 from Pyro4.util import SerializerBase
 
 

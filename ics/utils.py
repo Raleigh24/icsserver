@@ -8,7 +8,7 @@ import subprocess
 import Pyro4 as Pyro
 
 from ics.environment import ICS_VAR
-from ics.ics_exceptions import ICSError
+from ics.errors import ICSError
 
 logger = logging.getLogger(__name__)
 

@@ -15,7 +15,7 @@ from ics.events import event_handler
 from ics.environment import ICS_CONF
 from ics.environment import ICS_CONF_FILE
 from ics.environment import ICS_ENGINE_PORT
-from ics.ics_exceptions import ICSError
+from ics.errors import ICSError
 from ics.resource import Resource, Group
 from ics.states import ResourceStates, TRANSITION_STATES
 from ics.utils import set_log_level, read_config, write_config
