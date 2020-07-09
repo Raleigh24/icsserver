@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 export ICS_HOME=${ICS_HOME:-/opt/ICS}
-. ${ICS_HOME}/test/test_setup.sh
+source ${ICS_HOME}/test/test_setup.sh
 
 cmd=${1}
 resource=${2}
@@ -23,8 +23,7 @@ get_resource_state()
 {
     resource_name=$1
     state=$(cat ${RES_FILES}/${resource_name})
-    #echo $state
-    if [ "${state}" -eq "1" ]; then
+    if [[ "${state}" -eq "1" ]]; then
         exit 110
     else
         exit 100

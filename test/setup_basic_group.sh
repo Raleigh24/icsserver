@@ -1,12 +1,17 @@
-#! /bin/bash
+#!/usr/bin/env bash
 
 export ICS_HOME=${ICS_HOME:-/opt/ICS}
-source ${ICS_HOME}/test/test_setup.sh
+source ${ICS_HOME}/test/test_common.sh
+
+max_letter=$1
+if [[ -n ${max_letter} ]]; then
+    max_letter=a
+fi
 
 grp_res_count=7  # Amount of resources per group
 resource_id=$(seq -w 1 1 ${grp_res_count})
 
-for letter in {a..a}; do
+for letter in {a..${max_letter}}; do
 	group_name=group-${letter}
 	echo "Creating group ${group_name}"
 	${ICSGRP} -add ${group_name}

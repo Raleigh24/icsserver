@@ -1,9 +1,7 @@
 #!/usr/bin/env bash
 
 export ICS_HOME=${ICS_HOME:-/opt/ICS}
-source ${ICS_HOME}/test/test_setup.sh
-ICSRES=${ICS_HOME}/bin/icsres
-ICSGRP=${ICS_HOME}/bin/icsgrp
+source ${ICS_HOME}/test/test_common.sh
 
 resource_list=$(${ICSRES} -list)
 for resource in ${resource_list}; do

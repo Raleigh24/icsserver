@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 export ICS_HOME=${ICS_HOME:-/opt/ICS}
-source ${ICS_HOME}/test/test_setup.sh
+source ${ICS_HOME}/test/test_common.sh
 
 ################################################################################
 # Test Case 1 - Basic online and offline
@@ -17,7 +17,6 @@ test_case_1()
     ${ICSGRP} -wait group-a ONLINE 120 || { echo "FAIL"; return; }
     ${ICSGRP} -offline group-a
     ${ICSGRP} -wait group-a OFFLINE 120 || { echo "FAIL"; return; }
-
 
     test "$(${ICSGRP} -state group-a)" == "OFFLINE" || { echo "FAIL"; return; }
     echo "PASS"
@@ -184,7 +183,9 @@ test_case_8()
     echo "PASS"
 }
 
-
+################################################################################
+# Main
+################################################################################
 test_case=$1
 
 case ${test_case} in
@@ -205,8 +206,7 @@ case ${test_case} in
         test_case_6
         test_case_7
         test_case_8
-        ${ICSSTOP}  # Stop server after tests complete
-
+        ics_reset  # Reset server after tests complete
     ;;
 esac
 

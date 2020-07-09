@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 export ICS_HOME=${ICS_HOME:-/opt/ICS}
-source ${ICS_HOME}/test/test_setup.sh
+source ${ICS_HOME}/test/test_common.sh
 
 group_name=group-a
 echo "Creating group ${group_name}"
