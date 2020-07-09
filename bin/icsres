@@ -1,5 +1,0 @@
-#!/usr/bin/env bash
-
-export ICS_HOME=${ICS_HOME:-/opt/ICS}
-source ${ICS_HOME}/etc/setup.sh
-${python_bin} ${ICS_HOME}/ics/icsres.py $@
