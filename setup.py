@@ -13,7 +13,7 @@ setup(
     long_description=readme(),
     author='Raleigh Waters',
     author_email='Raleigh.Waters@intelsat.com',
-    python_requires='>=3.0',
+    python_requires='>=3.5',
     packages=find_packages(),
     classifiers=[
         'Programming Language :: Python :: 3',
@@ -22,6 +22,10 @@ setup(
     install_requires=[
         'Pyro4'
     ],
+    install_package_data=True,
+    package_data={
+        "": ['templates/*.html', '*.conf']
+    },
     entry_points={
         'console_scripts': [
             'icsd = ics.icsd:main',
