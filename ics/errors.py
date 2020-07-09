@@ -16,4 +16,4 @@ def exception_convert(classname, serialized):
     return obj
 
 
-SerializerBase.register_dict_to_class("ics_exceptions.ICSError", exception_convert)
+SerializerBase.register_dict_to_class("ics.errors.ICSError", exception_convert)
