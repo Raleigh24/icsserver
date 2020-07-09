@@ -36,7 +36,7 @@ _level_names = {
 }
 
 Alert = namedtuple('Alert', 'resource group node time level msg')
-alert_html_template_file = os.path.dirname(__file__) + '/template/alert.html'
+alert_html_template_file = os.path.dirname(__file__) + '/templates/alert.html'
 
 
 def get_level_name(level):
