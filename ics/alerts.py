@@ -1,5 +1,6 @@
 import logging
 import socket
+import os
 from datetime import datetime
 from collections import namedtuple
 try:
@@ -10,7 +11,7 @@ except ImportError:
 import Pyro4 as Pyro
 
 from ics import mail
-from ics.environment import HOSTNAME, ICS_HOME, ICS_CLUSTER_NAME, ICS_ALERT_LOG
+from ics.environment import HOSTNAME, ICS_CLUSTER_NAME, ICS_ALERT_LOG
 from ics.errors import ICSError
 
 logger = logging.getLogger(__name__)
@@ -35,8 +36,7 @@ _level_names = {
 }
 
 Alert = namedtuple('Alert', 'resource group node time level msg')
-
-alert_html_template_file = ICS_HOME + '/etc/alert.html'
+alert_html_template_file = os.path.dirname(__file__) + '/template/alert.html'
 
 
 def get_level_name(level):

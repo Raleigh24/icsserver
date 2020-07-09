@@ -10,7 +10,6 @@ import Pyro4 as Pyro
 
 from ics.alerts import AlertHandler
 from ics.environment import ICS_VERSION
-from ics.environment import ICS_HOME
 from ics.environment import ICS_LOG
 from ics.environment import ICS_ALERT_PORT
 
@@ -25,9 +24,9 @@ if not os.path.isdir(ICS_LOG):
 # TODO: Check if file path exists
 logging.logFilename = ICS_LOG + '/icsserver_alert.log'
 if os.getenv('ICS_CONSOLE_LOG') is not None:
-    log_config = ICS_HOME + '/etc/logging_console.conf'
+    log_config = os.path.dirname(__file__) + '/logging_console.conf'
 else:
-    log_config = ICS_HOME + '/etc/logging.conf'
+    log_config = os.path.dirname(__file__) + '/logging.conf'
 
 try:
     logging.config.fileConfig(log_config)

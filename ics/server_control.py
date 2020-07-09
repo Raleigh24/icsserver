@@ -7,15 +7,14 @@ import signal
 import Pyro4 as Pyro
 
 from ics import utils
-from ics.environment import ICS_HOME
 
 logger = logging.getLogger(__name__)
 
 python_bin = sys.executable
 
 server_bin_map = {
-    'icsserver': ICS_HOME + '/ics/icsserver.py',
-    'icsalert_server': ICS_HOME + '/ics/icsalert_server.py'
+    'icsserver': os.path.dirname(__file__) + '/icsserver.py',
+    'icsalert_server': os.path.dirname(__file__) + '/icsalert_server.py'
 }
 
 

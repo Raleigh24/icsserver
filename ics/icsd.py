@@ -6,7 +6,6 @@ import socket
 import Pyro4 as Pyro
 
 from ics import utils
-from ics.environment import ICS_HOME
 from ics.environment import ICS_LOG
 from ics.environment import ICS_VERSION
 from ics.environment import ICS_DAEMON_PORT
@@ -24,9 +23,9 @@ def main():
 
     logging.logFilename = ICS_LOG + '/icsd.log'
     if os.getenv('ICS_CONSOLE_LOG') is not None:
-        log_config = ICS_HOME + '/etc/logging_console.conf'
+        log_config = os.path.dirname(__file__) + '/logging_console.conf'
     else:
-        log_config = ICS_HOME + '/etc/logging.conf'
+        log_config = os.path.dirname(__file__) + '/logging.conf'
 
     try:
         logging.config.fileConfig(log_config)
