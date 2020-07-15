@@ -28,7 +28,7 @@ else:
     log_config = os.path.dirname(__file__) + '/logging.conf'
 
 try:
-    logging.config.fileConfig(log_config)
+    logging.config.fileConfig(log_config, disable_existing_loggers=False)
 except IOError as e:
     print('ERROR: Unable to create log file: {}'.format(e))
     sys.exit(1)
