@@ -39,6 +39,7 @@ logger.info('Starting ICS server...')
 logger.info('ICS Version: ' + ICS_VERSION)
 logger.info('Python version: ' + sys.version.replace('\n', ''))
 logger.info('Logging level: ' + logging.getLevelName(logger.getEffectiveLevel()))
+logger.info('Logging config:' + log_config)
 
 # Setup Pyro logging
 logging.getLogger("Pyro4").setLevel(logging.INFO)
