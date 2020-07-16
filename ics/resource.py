@@ -16,7 +16,7 @@ alert = AlertClient()
 
 class Resource(AttributeObject):
 
-    def __init__(self, name, group_name, init_state=ResourceStates.OFFLINE):
+    def __init__(self, name, group_name, init_state=ResourceStates.UNKNOWN):
         super(Resource, self).__init__()
         self.init_attr(resource_attributes)
         self.name = name
@@ -127,7 +127,7 @@ class Resource(AttributeObject):
         if cur_time - self.last_poll >= poll_interval and not self.poll_running:
             self.poll_running = True
             logger.debug('Resource({}) ready for interval monitoring poll'.format(self.name))
-            events.trigger_event(events.PollRunEvent(self))
+            self.probe()
 
     def _reset_cmd(self):
         self.cmd_process = None
@@ -223,7 +223,8 @@ class Resource(AttributeObject):
             self.change_state(ResourceStates.ONLINE)
 
     def probe(self):
-        """Manually trigger resource poll"""
+        """Generate a resource poll"""
+        self.poll_running = True
         events.trigger_event(events.PollRunEvent(self))
 
     def start(self):

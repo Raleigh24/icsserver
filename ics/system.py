@@ -36,6 +36,7 @@ class NodeSystem(AttributeObject):
         self.alert_handler = AlertHandler(cluster_name=self.cluster_name, node_name=self.node_name)
         self.remote_nodes = {}  # Remote systems
         self.node_name = ""
+        self.poll_enabled = False
 
     @Pyro.expose
     def ping(self, host=None):
@@ -658,30 +659,64 @@ class NodeSystem(AttributeObject):
                 elif resource.state in TRANSITION_STATES:
                     continue
                 else:
-                    resource.update_poll()
+                    if self.poll_enabled:
+                        resource.update_poll()
             time.sleep(1)
 
-    def start_threads(self):
-        # Start event handler thread
+    def poll_count(self):
+        """Return amount of resources currently being polled"""
+        count = 0
+        for resource in self.resources.values():
+            if resource.poll_running:
+                count += 1
+        return count
+
+    def startup_poll(self):
+        """Poll all resources"""
+        logger.info('Polling resources to determine initial state...')
+        resource_count = len(self.resources)
+        polled_resources = 0
+        for resource in self.resources.values():
+            while True:
+                count = self.poll_count()
+                if count < 30:
+                    resource.probe()
+                    polled_resources += 1
+                    logger.info('Remaining resources to be polled {}/{}'.format(str(resource_count - polled_resources),
+                                                                                str(resource_count)))
+                    break
+                else:
+                    time.sleep(0.1)
+
+        # Wait for all polls to finish
+        while self.poll_count() != 0:
+            time.sleep(1)
+
+        logger.info('Startup polling complete')
+
+    def start_event_handler(self):
+        """Start event handler thread"""
         logger.info('Starting event handler...')
         thread_event_handler = threading.Thread(name='event handler', target=event_handler)
         thread_event_handler.daemon = True
         thread_event_handler.start()
         self.threads.append(thread_event_handler)
 
+    def start_poll_updater(self):
+        """Start poll updater thread"""
+        logger.info('Starting poll updater...')
+        thread_poll_updater = threading.Thread(name='poll updater', target=self.poll_updater)
+        thread_poll_updater.daemon = True
+        thread_poll_updater.start()
+        self.threads.append(thread_poll_updater)
+
+    def start_threads(self):
         # Start alert handler thread
         logger.info('Starting alert handler...')
         thread_alert_handler = threading.Thread(name='alert handler', target=self.alert_handler.run)
         thread_alert_handler.daemon = True
         thread_alert_handler.start()
         self.threads.append(thread_alert_handler)
-
-        # Start poll updater thread
-        logger.info('Starting poll updater...')
-        thread_poll_updater = threading.Thread(name='poll updater', target=self.poll_updater)
-        thread_poll_updater.daemon = True
-        thread_poll_updater.start()
-        self.threads.append(thread_poll_updater)
 
         # Start config backup
         logger.info('Starting auto backups...')
@@ -742,7 +777,7 @@ class NodeSystem(AttributeObject):
             resource_data = data['resources']
             for resource_name in resource_data.keys():
                 group_name = resource_data[resource_name]['attributes']['Group']
-                self.res_add(resource_name, group_name, init_state=ResourceStates.OFFLINE)
+                self.res_add(resource_name, group_name, init_state=ResourceStates.UNKNOWN)
                 resource = self.get_resource(resource_name)
                 for attr_name in resource_data[resource_name]['attributes']:
                     resource.set_attr(attr_name, str(resource_data[resource_name]['attributes'][attr_name]))
@@ -768,7 +803,7 @@ class NodeSystem(AttributeObject):
                     os.rename(ICS_CONF_FILE, ICS_CONF_FILE + '.autobackup')
                 write_config(ICS_CONF_FILE, self.config_data())
 
-                backup_file = '.' + ICS_CONF_FILE + datetime.now().strftime('%y%m%d_%H%M%S')
+                backup_file = ICS_CONF_FILE + '.' + datetime.now().strftime('%y%m%d_%H%M%S')
                 logger.info('Creating backup config ' + backup_file)
                 copyfile(ICS_CONF_FILE, backup_file)
 
@@ -797,6 +832,10 @@ class NodeSystem(AttributeObject):
         for host in self.attr_value('NodeList'):
             self.register_node(host)
 
+        self.start_event_handler()
+        self.start_poll_updater()
+        self.startup_poll()
+        self.poll_enabled = True
         self.start_threads()
         self.grp_online_auto()
 
