@@ -31,7 +31,12 @@ class AttributeObject(object):  # Inherits from object to enabling super() in py
             self._attr[attribute] = default_attributes[attribute]['default']
 
     def modified_attributes(self):
-        """Return dictionary of modified attributes (non-default)"""
+        """Return dictionary of modified attributes (non-default).
+
+        Returns:
+            dict: attribute values that have changed from their default values.
+
+        """
         # TODO: ChainMap in python 3
         data = {}
         for attribute in self._attr:
@@ -41,7 +46,16 @@ class AttributeObject(object):  # Inherits from object to enabling super() in py
         return data
 
     def set_attr(self, attr, value):
-        """Set attribute value"""
+        """Set attribute value.
+
+        Args:
+            attr (str): Attribute name.
+            value (str): Value to set attribute.
+
+        Raises:
+            ICSError: When given attribute does not exist.
+
+        """
         if attr not in self._attr:
             raise ICSError('{}({}) Attribute {} does not exist'.format(self.__class__.__name__, self.name, attr))
 
@@ -55,14 +69,30 @@ class AttributeObject(object):  # Inherits from object to enabling super() in py
                                                                        previous_value, value))
 
     def attr_value(self, attr):
-        """Return value of attribute"""
+        """Retrieve value of attribute.
+
+        Args:
+            attr (str): Attribute value name.
+
+        Returns:
+            str: Attribute value.
+
+        Raises:
+            ICS_Error: When given attribute doesn't exist.
+
+        """
         if attr not in self._attr:
             raise ICSError('{}({}) Attribute {} does not exist'.format(self.__class__.__name__, self.name, attr))
         else:
             return self._attr[attr]
 
     def attr_list(self):
-        """Return a list of attributes and their values"""
+        """Return a list of attributes and their values.
+
+        Returns:
+            list: Attributes in list format.
+
+        """
         attr_list = []
         for attr in self._attr:
             attr_list.append((attr, self._attr[attr]))
