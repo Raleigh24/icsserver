@@ -853,5 +853,6 @@ class NodeSystem(AttributeObject):
     def shutdown(self):
         logger.info('Server shutting down...')
         write_config(ICS_CONF_FILE, self.config_data())
+        self.poll_enabled = False
         logger.info('Server shutdown complete')
         logger.shutdown()
