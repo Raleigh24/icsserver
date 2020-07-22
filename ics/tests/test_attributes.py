@@ -33,8 +33,8 @@ class TestAttributeObject(TestCase):
         self.assertEqual(modified_attr, {})
         self.attribute_object.set_attr('attr2', 'true')
         modified_attr = self.attribute_object.modified_attributes()
-        correct_modifed_attr = {'attr2': 'true'}
-        self.assertEqual(modified_attr, correct_modifed_attr)
+        correct_modified_attr = {'attr2': 'true'}
+        self.assertEqual(modified_attr, correct_modified_attr)
 
     def test_set_attr(self):
         self.attribute_object.set_attr('attr2', 'true')
@@ -52,4 +52,3 @@ class TestAttributeObject(TestCase):
         self.assertEqual(self.attribute_object.attr_list(), test_attributes_list)
         self.attribute_object.set_attr('attr2', 'true')
         self.assertNotEqual(self.attribute_object.attr_list(), test_attributes_list)
-
