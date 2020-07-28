@@ -413,15 +413,28 @@ class NodeSystem(AttributeObject):
             raise ICSError('Resource {} does not exist'.format(resource_name))
 
     def res_online(self, resource_name):
-        """Interface for bringing resource online"""
+        """Interface for bringing resource online.
+
+        Args:
+            resource_name (str): Resource name.
+
+        Raises:
+            ICSError: When resource has attribute MonitorOnly is enabled.
+
+        """
         resource = self.get_resource(resource_name)
         if resource.attr_value('MonitorOnly') == 'true':
-            raise ICSError('Unable to online resource, MonitoryOnly mode enabled')
+            raise ICSError('Unable to online resource, MonitorOnly mode enabled')
         if resource.state is not ResourceStates.ONLINE:
             resource.change_state(ResourceStates.STARTING)
 
     def res_offline(self, resource_name):
-        """Interface for bringing resource offline"""
+        """Interface for bringing resource offline.
+
+        Args:
+            resource_name (str): Resource name.
+
+        """
         resource = self.get_resource(resource_name)
         if resource.attr_value('MonitorOnly') == 'true':
             raise ICSError('Unable to offline resource, MonitoryOnly mode enabled')
@@ -572,12 +585,31 @@ class NodeSystem(AttributeObject):
         return list(self.resources.keys())
 
     def res_value(self, resource_name, attr_name):
-        """Interface for getting attribute value for resource"""
+        """Interface for getting attribute value for resource.
+
+        Args:
+            resource_name (str): Resource name.
+            attr_name (str): Resource attribute name.
+
+        Returns:
+            str: Resource attribute value.
+
+        """
         resource = self.get_resource(resource_name)
         return resource.attr_value(attr_name)
 
     def res_modify(self, resource_name, attr_name, value):
-        """Interface for modifying attribute for resource"""
+        """Interface for modifying attribute for resource.
+
+        Args:
+            resource_name (str): Resource name.
+            attr_name (str): Resource attribute name.
+            value (str): Resource attribute name.
+
+        Returns:
+            bool: True if attribute exists, false is not.
+
+        """
         resource = self.get_resource(resource_name)
         try:
             resource.set_attr(attr_name, value)
@@ -586,12 +618,31 @@ class NodeSystem(AttributeObject):
         return True
 
     def res_attr(self, resource_name):
-        """Interface for getting resource attributes"""
+        """Interface for getting resource attributes.
+
+        Args:
+            resource_name (str): Resource name.
+
+        Returns:
+            list: List of tuples with attribute name and value
+
+        """
         resource = self.get_resource(resource_name)
         return resource.attr_list()
 
     def get_group(self, group_name):
-        """Get group object from groups list"""
+        """Get group object from groups list.
+
+        Args:
+            group_name (str): Name of group
+
+        Returns:
+            obj: Group object.
+
+        Raises:
+            ICSError: When group does not exist.
+
+        """
         if group_name in self.groups.keys():
             group = self.groups[group_name]
             return group
@@ -599,19 +650,29 @@ class NodeSystem(AttributeObject):
             raise ICSError('Group {} does not exist'.format(group_name))
 
     def grp_online(self, group_name):
-        """Interface for bringing a group online"""
+        """Interface for bringing a group online.
+
+        Args:
+            group_name (str): Group name.
+
+        """
         logger.info('Group({}) bringing online'.format(group_name))
         group = self.get_group(group_name)
         group.start()
 
     def grp_online_auto(self):
-        """Start all groups with the attribute AutoStart set to true"""
+        """Start all groups with the attribute AutoStart set to true."""
         for group in self.groups.values():
             if group.attr_value('AutoStart') == 'true':
                 group.start()
 
     def grp_offline(self, group_name):
-        """Interface for bringing a group offline"""
+        """Interface for bringing a group offline.
+
+        Args:
+            group_name (str): Group name.
+
+        """
         logger.info('Group({}) bringing offline'.format(group_name))
         group = self.get_group(group_name)
         group.stop()
@@ -623,13 +684,23 @@ class NodeSystem(AttributeObject):
             group_name (str): Name of group.
 
         Returns:
-            object: Group state object.
+            str: Group state.
+
         """
         group = self.get_group(group_name)
         return group.state().upper()
 
     def grp_add(self, group_name):
-        """Interface for adding a new group"""
+        """Interface for adding a new group.
+
+        Args:
+            group_name (str): Group name.
+
+        Raises:
+            ICSError: When group already exist.
+            ICSError: When max group count has been reached.
+
+        """
         logger.info('Adding new group {}'.format(group_name))
         if group_name in self.groups.keys():
             ICSError('Group {} already exists'.format(group_name))
@@ -641,7 +712,12 @@ class NodeSystem(AttributeObject):
             #return group
 
     def grp_delete(self, group_name):
-        """Interface for deleting an existing group"""
+        """Interface for deleting an existing group.
+
+        Args:
+            group_name (str): Group name.
+
+        """
         logger.info('Deleting group {}'.format(group_name))
         group = self.get_group(group_name)
         if not group.members:
