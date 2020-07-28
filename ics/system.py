@@ -47,13 +47,24 @@ class NodeSystem(AttributeObject):
         return True
 
     def register_node(self, host):
+        """Register a host and generate its URI.
+
+        Args:
+            host (str): Hostname of node to add.
+
+        """
         logger.info('Registering node ' + str(host))
         uri = 'PYRO:system@' + str(host) + ':' + str(ICS_ENGINE_PORT)
         self.remote_nodes[host] = Pyro.Proxy(uri)
 
     @Pyro.expose
     def add_node(self, host):
-        """Add a node to the cluster"""
+        """Add a node to the cluster.
+
+        Args:
+            host (str): Hostname of node to add.
+
+        """
         logger.info('Adding node {}'.format(host))
         self.register_node(host)
 
@@ -63,7 +74,12 @@ class NodeSystem(AttributeObject):
 
     @Pyro.expose
     def delete_node(self, host):
-        """Delete a node from the cluster"""
+        """Delete a node from the cluster.
+
+        Args:
+            host (str): Hostname of node to add.
+
+        """
         logger.info('Deleting node {}'.format(host))
         del self.remote_nodes[host]
         self.set_attr('NodeList', self.attr_value('NodeList').remove(host))
@@ -378,7 +394,18 @@ class NodeSystem(AttributeObject):
         return True
 
     def get_resource(self, resource_name):
-        """Get resource object from resources list"""
+        """Get resource object from resources list.
+
+        Args:
+            resource_name (str): Name of resource.
+
+        Returns:
+            obj: Resource object.
+
+        Raises:
+            ICSError: When resource does not exist.
+
+        """
         if resource_name in self.resources.keys():
             resource = self.resources[resource_name]
             return resource
@@ -402,7 +429,19 @@ class NodeSystem(AttributeObject):
             resource.change_state(ResourceStates.STOPPING)
 
     def res_add(self, resource_name, group_name, init_state=ResourceStates.OFFLINE):
-        """Interface for adding new resource"""
+        """Interface for adding new resource.
+
+        Args:
+            resource_name (str): Name of new resource.
+            group_name (str): Name of existing group.
+            init_state (obj, opt): Initial state of resource.
+
+        Raises:
+            ICSError: When resource already exists.
+            ICSError: When group doesn't exists.
+            ICSError: When max resource count is reached.
+
+        """
         logger.info('Adding new resource {}'.format(resource_name))
         if resource_name in self.resources.keys():
             raise ICSError('Resource {} already exists'.format(resource_name))
@@ -418,7 +457,15 @@ class NodeSystem(AttributeObject):
             #return resource
 
     def res_delete(self, resource_name):
-        """Interface for deleting existing resource"""
+        """Interface for deleting existing resource.
+
+        Args:
+            resource_name (str): Resource name.
+
+        Raises:
+            ICSError: If resource does not exist.
+
+        """
         resource = self.get_resource(resource_name)
 
         for parent in resource.parents:
@@ -433,12 +480,29 @@ class NodeSystem(AttributeObject):
         logger.info('Resource({}) resource deleted'.format(resource_name))
 
     def res_state(self, resource_name):
-        """Return state for a given resource"""
+        """Return state for a given resource.
+
+        Args:
+            resource_name (str): Resource name.
+
+        Returns:
+            str: String representation of resource state in all upper case.
+
+        """
         resource = self.get_resource(resource_name)
         return resource.state.upper()
 
     def res_state_many(self, resource_list, include_node=False):
-        """Return states for a given list of resources"""
+        """Return states for a given list of resource.
+
+        Args:
+            resource_list (list): List of resource names.
+            include_node: Include node name in output.
+
+        Returns:
+            list: resource names with resource states.
+
+        """
         resource_states = []
         if resource_list:
             for resource_name in resource_list:
@@ -505,7 +569,7 @@ class NodeSystem(AttributeObject):
 
     def res_list(self):
         """Interface for listing all resources"""
-        return self.resources.keys()
+        return list(self.resources.keys())
 
     def res_value(self, resource_name, attr_name):
         """Interface for getting attribute value for resource"""
