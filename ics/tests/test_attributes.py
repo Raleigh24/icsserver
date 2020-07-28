@@ -1,6 +1,6 @@
-from unittest import TestCase
+import unittest
 
-from attributes import AttributeObject
+from ics.attributes import AttributeObject
 import ics.errors
 
 test_attributes = {
@@ -22,7 +22,7 @@ test_attributes = {
 }
 
 
-class TestAttributeObject(TestCase):
+class TestAttributeObject(unittest.TestCase):
 
     def setUp(self) -> None:
         self.attribute_object = AttributeObject()
@@ -52,3 +52,7 @@ class TestAttributeObject(TestCase):
         self.assertEqual(self.attribute_object.attr_list(), test_attributes_list)
         self.attribute_object.set_attr('attr2', 'true')
         self.assertNotEqual(self.attribute_object.attr_list(), test_attributes_list)
+
+
+if __name__ == "__main__":
+    unittest.main()
