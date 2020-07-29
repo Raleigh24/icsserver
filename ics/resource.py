@@ -81,7 +81,12 @@ class Resource(AttributeObject):
         self.parents.remove(resource)
 
     def dependencies(self):
-        """Return a list of dependencies"""
+        """Return a list of dependencies.
+
+        Returns:
+            list: List of resource names that are dependencies of this resource.
+
+        """
         deps_list = []
         for parent in self.parents:
             deps_list.append(parent.name)
