@@ -624,7 +624,7 @@ class NodeSystem(AttributeObject):
             resource_name (str): Resource name.
 
         Returns:
-            list: List of tuples with attribute name and value
+            list: List of tuples with attribute name and value.
 
         """
         resource = self.get_resource(resource_name)
@@ -727,7 +727,12 @@ class NodeSystem(AttributeObject):
             pass  # delete object?
 
     def grp_enable(self, group_name):
-        """Interface to enable a group"""
+        """Interface to enable a group.
+
+        Args:
+            group_name (str): Group name.
+
+        """
         group = self.get_group(group_name)
         group.set_attr('Enabled', 'true')
 
@@ -737,17 +742,32 @@ class NodeSystem(AttributeObject):
         group.set_attr('Enabled', 'false')
 
     def grp_enable_resources(self, group_name):
-        """Interface to enable a group resources """
+        """Interface to enable a group resources.
+
+        Args:
+            group_name (str): Group name.
+
+        """
         group = self.get_group(group_name)
         group.enable_resources()
 
     def grp_disable_resources(self, group_name):
-        """Interface to disable a group resources"""
+        """Interface to disable a group resources.
+
+        Args:
+            group_name (str): Group name.
+
+        """
         group = self.get_group(group_name)
         group.disable_resources()
 
     def grp_flush(self, group_name):
-        """Interface for flushing a group"""
+        """Interface for flushing a group.
+
+        Args:
+            group_name (str): Group name.
+
+        """
         group = self.get_group(group_name)
         group.flush()
 
@@ -757,7 +777,15 @@ class NodeSystem(AttributeObject):
         group.clear()
 
     def grp_resources(self, group_name):
-        """Interface for getting members of a group"""
+        """Interface for getting members of a group.
+
+        Args:
+            group_name (str): Group name.
+
+        Returns:
+            list: Resource name list of given group.
+
+        """
         group = self.get_group(group_name)
         resource_names = []
         for member in group.members:
@@ -765,11 +793,19 @@ class NodeSystem(AttributeObject):
         return resource_names
 
     def grp_list(self):
-        """Interface for listing all existing group names"""
-        return self.groups.keys()
+        """Interface for listing all existing group names."""
+        return list(self.groups.keys())
 
     def grp_value(self, group_name, attr_name):
-        """Return an attribute for a given group and attribute"""
+        """Return an attribute for a given group and attribute.
+
+        Args:
+            group_name (str): Group name.
+            attr_name (str): Attribute name.
+
+        Returns:
+            str: Group attribute value.
+        """
         group = self.get_group(group_name)
         return group.attr[attr_name]
 
@@ -783,7 +819,15 @@ class NodeSystem(AttributeObject):
         return True
 
     def grp_attr(self, group_name):
-        """Return a list of attributes for a given group"""
+        """Return a list of attributes for a given group.
+
+        Args:
+            group_name (str): Group name.
+
+        Returns:
+            list: List of tuples with attribute name and value.
+
+        """
         group = self.get_group(group_name)
         return group.attr_list()
 
