@@ -82,7 +82,9 @@ class NodeSystem(AttributeObject):
         """
         logger.info('Deleting node {}'.format(host))
         del self.remote_nodes[host]
-        self.set_attr('NodeList', self.attr_value('NodeList').remove(host))
+        node_list = self.attr_value('NodeList')
+        node_list.remove(host)
+        self.set_attr('NodeList', node_list)
 
     def heartbeat(self):
         while True:
