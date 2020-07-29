@@ -738,8 +738,8 @@ class NodeSystem(AttributeObject):
 
         """
         logger.info('Adding new group {}'.format(group_name))
-        if group_name in self.groups.keys():
-            ICSError('Group {} already exists'.format(group_name))
+        if group_name in self.grp_list():
+            raise ICSError('Group {} already exists'.format(group_name))
         elif len(self.groups) >= int(self.attr_value('GroupLimit')):
             raise ICSError('Max group count reached, unable to add new group')
         else:
