@@ -568,7 +568,7 @@ class NodeSystem(AttributeObject):
         """
         resource = self.get_resource(resource_name)
         parent_resource = self.get_resource(resource_dependency)
-        resource.remove_parent(resource_dependency)
+        resource.remove_parent(parent_resource)
         parent_resource.remove_child(resource)
 
     def res_dep(self, resource_names):
