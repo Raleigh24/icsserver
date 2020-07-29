@@ -571,17 +571,25 @@ class NodeSystem(AttributeObject):
         resource.remove_parent(resource_dependency)
         parent_resource.remove_child(resource)
 
-    def res_dep(self, resource_args):
-        """Interface for getting resource dependencies."""
+    def res_dep(self, resource_names):
+        """Interface for getting resource dependencies.
+
+        Args:
+            resource_names (list): List of resource names to retrieve dependencies.
+
+        Returns:
+            list: List of lists with group name, resource name and dependency name
+
+        """
         dep_list = []
-        if len(resource_args) == 0:
+        if len(resource_names) == 0:
             for resource in self.resources.values():
                 resource_group_name = resource.attr_value('Group')
                 for parent in resource.parents:
                     row = [resource_group_name, parent.name, resource.name]
                     dep_list.append(row)
         else:
-            for resource_name in resource_args:
+            for resource_name in resource_names:
                 resource = self.get_resource(resource_name)
                 resource_group_name = resource.attr_value('Group')
                 for parent in resource.parents:
@@ -603,10 +611,13 @@ class NodeSystem(AttributeObject):
         resource = self.get_resource(resource_name)
         resource.probe()
 
-
-
     def res_list(self):
-        """Interface for listing all resources"""
+        """Interface for listing all resources.
+
+        Returns:
+            list: List of all resources within node.
+
+        """
         return list(self.resources.keys())
 
     def res_value(self, resource_name, attr_name):
