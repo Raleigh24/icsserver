@@ -843,7 +843,7 @@ class NodeSystem(AttributeObject):
             str: Group attribute value.
         """
         group = self.get_group(group_name)
-        return group.attr[attr_name]
+        return group.attr_value(attr_name)
 
     def grp_modify(self, group_name, attr_name, value):
         """Modify an attribute for a given group"""
