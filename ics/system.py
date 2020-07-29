@@ -147,20 +147,20 @@ class NodeSystem(AttributeObject):
         return resource_states
 
     @Pyro.expose
-    def clus_res_link(self, parent_name, resource_name, remote=False):
+    def clus_res_link(self, resource_name, resource_dependency, remote=False):
         """Add a resource dependency on the cluster"""
-        self.res_link(parent_name, resource_name)
+        self.res_link(resource_name, resource_dependency)
         if not remote:
             for node in self.remote_nodes:
-                self.remote_nodes[node].clus_res_link(parent_name, resource_name, remote=True)
+                self.remote_nodes[node].clus_res_link(resource_name, resource_dependency, remote=True)
 
     @Pyro.expose
-    def clus_res_unlink(self, parent_name, resource_name, remote=False):
+    def clus_res_unlink(self, resource_name, resource_dependency, remote=False):
         """Remove a resource dependency on the cluster"""
-        self.res_unlink(parent_name, resource_name)
+        self.res_unlink(resource_name, resource_dependency)
         if not remote:
             for node in self.remote_nodes:
-                self.remote_nodes[node].clus_res_unlink(parent_name, resource_name, remote=True)
+                self.remote_nodes[node].clus_res_unlink(resource_name, resource_dependency, remote=True)
 
     @Pyro.expose
     def clus_res_clear(self, resource_name, remote=False):
@@ -381,7 +381,15 @@ class NodeSystem(AttributeObject):
 
     @Pyro.expose
     def node_value(self, attr_name):
-        """Return node attribute"""
+        """Return node attribute.
+
+        Args:
+            attr_name (str): Attribute name.
+
+        Returns:
+            str: Node attribute value.
+
+        """
         return self.attr_value(attr_name)
 
     @Pyro.expose
@@ -531,35 +539,40 @@ class NodeSystem(AttributeObject):
 
         return resource_states
 
-    def res_link(self, parent_name, resource_name):
-        """Interface to link two resources"""
+    def res_link(self, resource_name, resource_dependency):
+        """Interface to add a dependency to a resource.
+
+        Args:
+            resource_name (str): Resource name.
+            resource_dependency (str): Resource to be added as a dependency to resource_name.
+
+        Raises:
+            ICSError: When resources given are not in the same group.
+
+        """
         resource = self.get_resource(resource_name)
-        parent_resource = self.get_resource(parent_name)
+        parent_resource = self.get_resource(resource_dependency)
         if resource.attr_value('Group') != parent_resource.attr_value('Group'):
             raise ICSError('Unable to add link, resources not in same group')
         resource.add_parent(parent_resource)
         parent_resource.add_child(resource)
-        logger.info('Resource({}) created dependency on {}'.format(resource_name, parent_name))
+        logger.info('Resource({}) created dependency on {}'.format(resource_name, resource_dependency))
 
-    def res_unlink(self, parent_name, resource_name):
-        """Interface to unlink two resources"""
+    def res_unlink(self,  resource_name, resource_dependency):
+        """Interface to remove a dependency from a resource.
+
+        Args:
+            resource_name (str): Resource name.
+            resource_dependency (str): Resource to be removed as a dependency from resource_name.
+
+        """
         resource = self.get_resource(resource_name)
-        parent_resource = self.get_resource(parent_name)
-        resource.remove_parent(parent_name)
+        parent_resource = self.get_resource(resource_dependency)
+        resource.remove_parent(resource_dependency)
         parent_resource.remove_child(resource)
 
-    def res_clear(self, resource_name):
-        """Interface for clearing resource in a faulted state"""
-        resource = self.get_resource(resource_name)
-        resource.clear()
-
-    def res_probe(self, resource_name):
-        """Interface for manually triggering a poll"""
-        resource = self.get_resource(resource_name)
-        resource.probe()
-
     def res_dep(self, resource_args):
-        """Interface for getting resource dependencies"""
+        """Interface for getting resource dependencies."""
         dep_list = []
         if len(resource_args) == 0:
             for resource in self.resources.values():
@@ -579,6 +592,18 @@ class NodeSystem(AttributeObject):
                     dep_list.append(row)
 
         return dep_list
+
+    def res_clear(self, resource_name):
+        """Interface for clearing resource in a faulted state"""
+        resource = self.get_resource(resource_name)
+        resource.clear()
+
+    def res_probe(self, resource_name):
+        """Interface for manually triggering a poll"""
+        resource = self.get_resource(resource_name)
+        resource.probe()
+
+
 
     def res_list(self):
         """Interface for listing all resources"""

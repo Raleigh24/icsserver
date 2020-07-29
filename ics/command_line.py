@@ -256,9 +256,9 @@ def icsres():
     group.add_argument('-add', nargs=2, metavar=('<res>', '<group>'), help='add new resource')
     group.add_argument('-delete', nargs=1, metavar='<res>', help='delete existing resource')
     group.add_argument('-state', nargs='*', metavar='<res>', help='print current state of resource')
-    group.add_argument('-link', nargs=2, metavar=('<parent>', '<child>'),
+    group.add_argument('-link', nargs=2, metavar=('<res>', '<dependency>'),
                        help='create dependency link between two resources')
-    group.add_argument('-unlink', nargs=2, metavar=('<parent>', '<child>'),
+    group.add_argument('-unlink', nargs=2, metavar=('<res>', '<dependency>'),
                        help='remove dependency link between two resources')
     group.add_argument('-clear', nargs=1, metavar='<res>', help='remove fault status')
     group.add_argument('-probe', nargs=1, metavar='<res>', help='probe a resource')
@@ -310,14 +310,14 @@ def icsres():
             print_table(results)
 
     elif args.link is not None:
-        parent_name = args.link[0]
-        child_name = args.link[1]
-        remote_execute(cluster.clus_res_link, parent_name, child_name)
+        resource_name = args.link[0]
+        dependency_name = args.link[1]
+        remote_execute(cluster.clus_res_link, resource_name, dependency_name)
 
     elif args.unlink is not None:
-        parent_name = args.unlink[0]
-        child_name = args.unlink[1]
-        remote_execute(cluster.clus_res_unlink, parent_name, child_name)
+        resource_name = args.unlink[0]
+        dependency_name = args.unlink[1]
+        remote_execute(cluster.clus_res_unlink, resource_name, dependency_name)
 
     elif args.clear is not None:
         resource_name = args.clear[0]
