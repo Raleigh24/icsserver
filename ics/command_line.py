@@ -329,7 +329,7 @@ def icsres():
 
     elif args.dep is not None:
         results = remote_execute(cluster.clus_res_dep, args.dep)
-        header = ['Group', 'Parent', 'Child']
+        header = ['Group', 'Resource', 'Dependency']
         print_table(results, header=header, col_sort=0)
 
     elif args.list is True:

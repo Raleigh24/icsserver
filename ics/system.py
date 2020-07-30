@@ -100,7 +100,13 @@ class NodeSystem(AttributeObject):
 
     @Pyro.expose
     def clus_res_online(self, resource_name, system_name):
-        """Online a resource in the cluster"""
+        """Online a resource in the cluster.
+
+        Args:
+            resource_name (str): Resource name.
+            system_name (str): System name.
+
+        """
         if self.attr_value('NodeName') == system_name:
             # TODO: check if online on other node first
             self.res_online(resource_name)
@@ -588,14 +594,14 @@ class NodeSystem(AttributeObject):
             for resource in self.resources.values():
                 resource_group_name = resource.attr_value('Group')
                 for parent in resource.parents:
-                    row = [resource_group_name, parent.name, resource.name]
+                    row = [resource_group_name, resource.name, parent.name]
                     dep_list.append(row)
         else:
             for resource_name in resource_names:
                 resource = self.get_resource(resource_name)
                 resource_group_name = resource.attr_value('Group')
                 for parent in resource.parents:
-                    row = [resource_group_name, parent.name, resource.name]
+                    row = [resource_group_name, resource.name, parent.name]
                     dep_list.append(row)
                 for child in resource.children:
                     row = [resource_group_name, resource.name, child.name]
@@ -1009,7 +1015,7 @@ class NodeSystem(AttributeObject):
             # are created first when establishing links
             for resource_name in resource_data.keys():
                 for dep_name in resource_data[resource_name]['dependencies']:
-                    self.res_link(dep_name, resource_name)
+                    self.res_link(resource_name, dep_name)
         except (TypeError, KeyError) as error:
             logging.error('Error occurred while loading config: {}:{}'.format(error.__class__.__name__, str(error)))
             raise
