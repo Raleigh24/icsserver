@@ -6,7 +6,7 @@ def readme():
         return f.read()
 
 
-ics_version = open('version.txt').read().strip()
+ics_version = open('ics/version.txt').read().strip()
 
 setup(
     name='ICS',
