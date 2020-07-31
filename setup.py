@@ -6,9 +6,11 @@ def readme():
         return f.read()
 
 
+ics_version = open('version.txt').read().strip()
+
 setup(
     name='ICS',
-    version='2.0.0.dev1',
+    version=ics_version,
     description='Intelsat Cluster Server',
     long_description=readme(),
     author='Raleigh Waters',
