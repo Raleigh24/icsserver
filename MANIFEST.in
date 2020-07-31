@@ -1,1 +1,3 @@
 include README.rst
+include ics/templates/*.html
+include ics/version.txt
