@@ -8,7 +8,6 @@ import socket
 import Pyro4 as Pyro
 
 from system import NodeSystem
-from environment import ICS_VERSION
 from environment import ICS_LOG
 from environment import ICS_ENGINE_PORT
 

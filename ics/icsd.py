@@ -7,7 +7,6 @@ import Pyro4 as Pyro
 
 from ics import utils
 from ics.environment import ICS_LOG
-from ics.environment import ICS_VERSION
 from ics.environment import ICS_DAEMON_PORT
 from ics.server_control import SubServerControl
 

@@ -9,7 +9,6 @@ import threading
 import Pyro4 as Pyro
 
 from ics.alerts import AlertHandler
-from ics.environment import ICS_VERSION
 from ics.environment import ICS_LOG
 from ics.environment import ICS_ALERT_PORT
 

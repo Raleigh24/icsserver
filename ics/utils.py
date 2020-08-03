@@ -147,4 +147,11 @@ def set_log_level(level):
     logging.critical('Log level set: ' + level)
 
 
+def ics_version():
+    """Retrieve ICS version from version file"""
+    try:
+        version = open('ics/version.txt').read().strip()
+    except Exception as e:
+        raise ICSError('Unable to read version from version file: ' + str(e))
 
+    return version

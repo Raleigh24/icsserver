@@ -1,7 +1,5 @@
 import os
 
-ICS_VERSION = '2.0.0'
-
 # Default environment settings
 DEFAULT_ICS_LOG = '/var/opt/ics/log'
 DEFAULT_ICS_CONF = '/var/opt/ics/config'
