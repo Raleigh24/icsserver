@@ -260,6 +260,7 @@ class Resource(AttributeObject):
         cmd = self.attr_value('MonitorProgram').split()
         if not cmd:
             logger.error('Resource({}) unable to monitor, attribute MonitorProgram not set'.format(self.name))
+            self.poll_running = False
             self.flush()
             return
         monitor_timeout = int(self.attr_value('MonitorTimeout'))
