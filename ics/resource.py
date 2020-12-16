@@ -8,6 +8,7 @@ from ics.alerts import AlertClient
 from ics.attributes import AttributeObject, resource_attributes, group_attributes
 from ics.environment import ICS_RES_LOG
 from ics.states import ResourceStates, GroupStates, ONLINE_STATES
+from ics.utils import resource_log_name
 
 logger = logging.getLogger(__name__)
 
@@ -144,9 +145,10 @@ class Resource(AttributeObject):
         """Run an resource command"""
         try:
             logger.debug('Resource({}) running command: {}'.format(self.name, ' '.join(cmd)))
+            resource_log = resource_log_name()
             self.cmd_process = subprocess.Popen(cmd,
-                                                stdout=open(ICS_RES_LOG, 'a'),
-                                                stderr=open(ICS_RES_LOG, 'a'),
+                                                stdout=open(resource_log, 'a'),
+                                                stderr=open(resource_log, 'a'),
                                                 close_fds=True)
             self.cmd_end_time = int(time.time()) + timeout
             self.cmd_type = cmd_type

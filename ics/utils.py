@@ -4,10 +4,13 @@ import json
 import logging
 import sys
 import subprocess
+from datetime import datetime
 
 import Pyro4 as Pyro
 
 from ics.environment import ICS_VAR
+from ics.environment import ICS_RES_LOG
+from ics.environment import ICS_ALERT_LOG
 from ics.errors import ICSError
 
 logger = logging.getLogger(__name__)
@@ -155,3 +158,11 @@ def ics_version():
         raise ICSError('Unable to read version from version file: ' + str(e))
 
     return version
+
+
+def resource_log_name():
+    return ICS_RES_LOG + '.' + datetime.now().strftime('%Y-%m-%d_%H')
+
+
+def alert_log_name():
+    return ICS_ALERT_LOG + '.' + datetime.now().strftime('%Y-%m-%d_%H')

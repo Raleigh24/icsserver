@@ -13,6 +13,7 @@ import Pyro4 as Pyro
 from ics import mail
 from ics.environment import HOSTNAME, ICS_CLUSTER_NAME, ICS_ALERT_LOG
 from ics.errors import ICSError
+from ics.utils import alert_log_name
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +56,7 @@ def render_template(alert, template):
 
 
 def log_alert(alert):
-    with open(ICS_ALERT_LOG, 'a+') as alert_log_file:
+    with open(alert_log_name(), 'a+') as alert_log_file:
         alert_log = ' '.join([alert.time, alert.level, ICS_CLUSTER_NAME, alert.group, alert.resource, alert.msg])
         alert_log_file.write(alert_log + '\n')
 
