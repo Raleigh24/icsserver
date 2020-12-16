@@ -7,6 +7,7 @@ import socket
 
 import Pyro4 as Pyro
 
+from ics import utils
 from system import NodeSystem
 from environment import ICS_LOG
 from environment import ICS_ENGINE_PORT
@@ -35,7 +36,7 @@ except IOError as e:
 # Setup logging information
 logger = logging.getLogger('main')
 logger.info('Starting ICS server...')
-logger.info('ICS Version: ' + ICS_VERSION)
+logger.info('ICS Version: ' + utils.ics_version())
 logger.info('Python version: ' + sys.version.replace('\n', ''))
 logger.info('Logging level: ' + logging.getLevelName(logger.getEffectiveLevel()))
 logger.info('Logging config:' + log_config)

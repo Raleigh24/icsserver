@@ -10,7 +10,6 @@ from ics.environment import ICS_LOG
 from ics.environment import ICS_DAEMON_PORT
 from ics.server_control import SubServerControl
 
-
 def main():
     if not os.path.isdir(ICS_LOG):
         try:
@@ -34,7 +33,7 @@ def main():
 
     logger = logging.getLogger('main')
     logger.info('Starting ICS daemon...')
-    logger.info('ICS Version: ' + ICS_VERSION)
+    logger.info('ICS Version: ' + utils.ics_version())
     logger.info('Python version: ' + sys.version.replace('\n', ''))
     logger.info('Logging level: ' + logging.getLevelName(logger.getEffectiveLevel()))
 

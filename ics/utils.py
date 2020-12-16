@@ -150,7 +150,7 @@ def set_log_level(level):
 def ics_version():
     """Retrieve ICS version from version file"""
     try:
-        version = open('ics/version.txt').read().strip()
+        version = open(os.path.dirname(__file__) + '/version.txt').read().strip()
     except Exception as e:
         raise ICSError('Unable to read version from version file: ' + str(e))
 
