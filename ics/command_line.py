@@ -21,12 +21,18 @@ def remote_execute(func, *func_args, **func_kwargs):
     except ICSError as error:
         print('ERROR: ' + str(error))
         sys.exit(1)
-    except Pyro.errors.CommunicationError as error:
+    except Pyro.errors.CommunicationError as err:
         print('ERROR: Unable to connect to ICS server')
-        print('ERROR: ' + str(error))
+        print('ERROR: ' + str(err))
+        sys.exit(1)
+    except KeyError as err:
+        print('Error: Unable to connect to ' + str(err))
+        sys.exit(1)
     except Exception:
+        print("ERROR: An unknown exception occurred.")
         print('Pyro traceback:')
         print("".join(Pyro.util.getPyroTraceback()))
+        sys.exit(1)
 
 
 def daemon_conn():
