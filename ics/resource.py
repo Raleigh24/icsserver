@@ -153,12 +153,18 @@ class Resource(AttributeObject):
         except IndexError:
             logger.error('Resource({}) unable to run command, no command given'.format(self.name))
             self._reset_cmd()
+            if cmd_type == 'poll':
+                self.reset_poll_counter()
         except PermissionError:
             logger.error('Resource({}) unable to run command, permission denied.'.format(self.name))
             self._reset_cmd()
+            if cmd_type == 'poll':
+                self.reset_poll_counter()
         except Exception as e:
             logger.exception('Resource({}) command caught exception {}'.format(self.name, e))
             self._reset_cmd()
+            if cmd_type == 'poll':
+                self.reset_poll_counter()
 
     def check_cmd(self):
         """Check if resource command has finished"""
@@ -204,7 +210,7 @@ class Resource(AttributeObject):
                                'resource, return code {}'.format(self.name, self.cmd_exit_code))
                 event_class = self.poll_event_map[-1]
 
-            self.last_poll = int(time.time())
+            self.reset_poll_counter()
             self.poll_running = False
             events.trigger_event(event_class(self))
         else:
@@ -269,6 +275,9 @@ class Resource(AttributeObject):
             return
         monitor_timeout = int(self.attr_value('MonitorTimeout'))
         self._run_cmd(cmd, 'poll', timeout=monitor_timeout)
+
+    def reset_poll_counter(self):
+        self.last_poll = int(time.time())
 
 
 class Group(AttributeObject):
