@@ -137,6 +137,7 @@ class Resource(AttributeObject):
     def _reset_cmd(self):
         self.cmd_process = None
         self.cmd_type = None
+        self.poll_running = False
         self.cmd_end_time = -1
 
     def _run_cmd(self, cmd, cmd_type, timeout=None):
@@ -151,6 +152,9 @@ class Resource(AttributeObject):
             self.cmd_type = cmd_type
         except IndexError:
             logger.error('Resource({}) unable to run command, no command given'.format(self.name))
+            self._reset_cmd()
+        except PermissionError:
+            logger.error('Resource({}) unable to run command, permission denied.'.format(self.name))
             self._reset_cmd()
         except Exception as e:
             logger.exception('Resource({}) command caught exception {}'.format(self.name, e))
