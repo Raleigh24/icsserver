@@ -396,14 +396,15 @@ def icsalert():
         parser.print_help()
         sys.exit(1)
 
-    cluster = engine_conn()
-
     if args.level is not None:
+        cluster = engine_conn()
         remote_execute(cluster.set_level, args.level[0])
     elif args.test:
         alert = AlertClient()
-        alert.test("This is a test alert.")
+        remote_execute(alert.test, "This is a test alert.")
     elif args.add is not None:
+        cluster = engine_conn()
         remote_execute(cluster.add_recipient, args.add[0])
     elif args.remove is not None:
+        cluster = engine_conn()
         remote_execute(cluster.remove_recipient, args.remove[0])
