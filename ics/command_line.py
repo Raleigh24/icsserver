@@ -5,6 +5,7 @@ import time
 
 import Pyro4 as Pyro
 
+from ics.alerts import AlertClient
 from ics.environment import ICS_ENGINE_PORT
 from ics.environment import ICS_DAEMON_PORT
 from ics.errors import ICSError
@@ -386,7 +387,7 @@ def icsalert():
     parser = argparse.ArgumentParser(description=description_text, epilog=epilog_text, allow_abbrev=False)
     group = parser.add_mutually_exclusive_group()
     group.add_argument('-level', nargs=1, metavar='<level>', help='Set system log level')
-    # group.add_argument('-test', action='store_true', help='') TODO: add test option and functionality
+    group.add_argument('-test', action='store_true', help='')
     group.add_argument('-add', nargs=1, help='add mail recipient')
     group.add_argument('-remove', nargs=1, help='remove mail recipient')
     args = parser.parse_args()
@@ -399,8 +400,9 @@ def icsalert():
 
     if args.level is not None:
         remote_execute(cluster.set_level, args.level[0])
-    # elif args.test:
-    #    pass
+    elif args.test:
+        alert = AlertClient()
+        alert.test("This is a test alert.")
     elif args.add is not None:
         remote_execute(cluster.add_recipient, args.add[0])
     elif args.remove is not None:

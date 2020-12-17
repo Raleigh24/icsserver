@@ -11,6 +11,7 @@ import Pyro4 as Pyro
 from ics.alerts import AlertHandler
 from ics.environment import ICS_LOG
 from ics.environment import ICS_ALERT_PORT
+from ics.utils import ics_version
 
 if not os.path.isdir(ICS_LOG):
     try:
@@ -36,7 +37,7 @@ except IOError as e:
 # Setup logging information
 logger = logging.getLogger('main')
 logger.info('Starting ICS alert server...')
-logger.info('ICS Version: ' + ICS_VERSION)
+logger.info('ICS Version: ' + ics_version())
 logger.info('Python version: ' + sys.version.replace('\n', ''))
 logger.info('Logging level: ' + logging.getLevelName(logger.getEffectiveLevel()))
 

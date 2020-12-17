@@ -55,9 +55,13 @@ def render_template(alert, template):
                            group_name=alert.group, resource_name=alert.resource, event_time=alert.time)
 
 
+def log_alert_str(alert):
+    return ' '.join([alert.time, get_level_name(alert.level), ICS_CLUSTER_NAME, alert.group, alert.resource, '\"' + alert.msg + '\"'])
+
+
 def log_alert(alert):
     with open(alert_log_name(), 'a+') as alert_log_file:
-        alert_log = ' '.join([alert.time, alert.level, ICS_CLUSTER_NAME, alert.group, alert.resource, alert.msg])
+        alert_log = log_alert_str(alert)
         alert_log_file.write(alert_log + '\n')
 
 
@@ -66,6 +70,19 @@ def create_alert(resource, msg, level):
     alert = Alert(
         resource=resource.name,
         group=resource.attr_value('Group'),
+        node=HOSTNAME,
+        time=now,
+        level=level,
+        msg=msg,
+    )
+    return alert
+
+
+def create_test_alert(msg, level):
+    now = datetime.now().strftime("%m/%d/%Y %H:%M:%S")
+    alert = Alert(
+        resource='Test_Resource',
+        group='Test_Group',
         node=HOSTNAME,
         time=now,
         level=level,
@@ -117,6 +134,11 @@ class AlertClient:
         alert = create_alert(resource, msg, WARNING)
         self.alert_server.add_alert(alert)
 
+    def test(self, msg):
+        logger.debug('Test alert generated: {} '.format(msg))
+        alert = create_test_alert(msg, WARNING)
+        self.alert_server.add_alert(alert)
+
 
 class AlertHandler:
 
@@ -153,8 +175,8 @@ class AlertHandler:
 
     @Pyro.expose
     def add_alert(self, alert):
-        logger.info('Alert generated.............')
-        # TODO format message
+        alert = Alert(*alert)  # Re-cast tuple from pyro to named tuple
+        logger.info('Alert generated ' + log_alert_str(alert))
         self.alert_queue.put(alert)
 
     def mail_alert(self, alert, template):
@@ -173,11 +195,11 @@ class AlertHandler:
 
     def run(self):
         while True:
-            queue_size = self.alert_queue.qsize()
-            if queue_size > 0:
-                logger.debug('Remaining events in alert queue ({})'.format(queue_size))
-            alert = self.alert_queue.get()
+            alert = self.alert_queue.get() # Blocking until new alert available.
             if alert.level >= self.alert_level:
                 log_alert(alert)
                 self.mail_alert(alert, self.html_template)
             del alert
+            queue_size = self.alert_queue.qsize()
+            if queue_size > 0:
+                logger.debug('Remaining events in alert queue ({})'.format(queue_size))
