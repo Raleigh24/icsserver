@@ -14,7 +14,7 @@ setup(
     description='Intelsat Cluster Server',
     long_description=readme(),
     author='Raleigh Waters',
-    author_email='Raleigh.Waters@intelsat.com',
+    author_email='RaleighWaters@gmail.com',
     python_requires='>=3.5',
     packages=find_packages(),
     classifiers=[
@@ -26,7 +26,7 @@ setup(
     ],
     install_package_data=True,
     package_data={
-        "": ['templates/*.html', '*.conf']
+        "": ['templates/*.html', '*.conf', "version.txt"]
     },
     entry_points={
         'console_scripts': [
@@ -36,6 +36,7 @@ setup(
             'icssys = ics.command_line:icssys',
             'icsgrp = ics.command_line:icsgrp',
             'icsres = ics.command_line:icsres',
+            'icsalert = ics.command_line:icsalert',
         ]
     }
 )
