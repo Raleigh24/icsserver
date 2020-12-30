@@ -218,9 +218,9 @@ class NodeSystem(AttributeObject):
             group = self.get_group(group_name)
             if group.attr_value('Parallel') == 'false':
                 logger.debug('Looking for other online resources for group ' + str(group_name))
-                group_states = self.clus_grp_state_all(group_names=[group_name])
-                logger.debug('Found these states on remote nodes: ' + str(group_states))
-                for group_name_state, remote_node, remote_state in group_states:
+                group_remote_states = self.clus_grp_state_all(group_names=[group_name], include_local=False)
+                logger.debug('Found these states on remote nodes: ' + str(group_remote_states))
+                for group_name_state, remote_node, remote_state in group_remote_states:
                     if remote_state in ['ONLINE', 'PARTIAL', 'UNKNOWN']:
                         logger.info('Unable to bring group online, group is online on node ' + str(remote_node))
                         break
@@ -254,11 +254,12 @@ class NodeSystem(AttributeObject):
         return self.grp_state(group_name)
 
     @Pyro.expose
-    def clus_grp_state_all(self, group_names=None):
+    def clus_grp_state_all(self, group_names=None, include_local=True):
         """Get all group states from all nodes in the cluster.
 
         Args:
             group_names (list): Limit the group name list for a given list of groups.
+            include_local (bool): Toggle whether local node is included in group states.
 
         Returns:
             list: List of tuples with the format of (group name, node name, group state).
@@ -270,9 +271,13 @@ class NodeSystem(AttributeObject):
         local_node = self.attr_value('NodeName')
 
         for group_name in group_names:
-            group_states.append((group_name, local_node, self.clus_grp_state(group_name)))
+
+            if include_local:
+                group_states.append((group_name, local_node, self.clus_grp_state(group_name)))
+
             for node in self.remote_nodes:
                 state = self.remote_nodes[node].clus_grp_state(group_name)
+                logger.debug("Found group {} in state {}".format(group_name, state))
                 group_states.append((group_name, node, state))
 
         return group_states
