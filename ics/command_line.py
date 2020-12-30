@@ -6,8 +6,7 @@ import time
 import Pyro4 as Pyro
 
 from ics.alerts import AlertClient
-from ics.environment import ICS_ENGINE_PORT
-from ics.environment import ICS_DAEMON_PORT
+from ics.environment import ICS_ENGINE_PORT, ICS_DAEMON_PORT, ICS_ALERT_PORT
 from ics.errors import ICSError
 from ics.tabular import print_table
 from ics.utils import setup_signal_handler
@@ -43,6 +42,11 @@ def daemon_conn():
 
 def engine_conn():
     uri = 'PYRO:system@' + socket.gethostname() + ':' + str(ICS_ENGINE_PORT)
+    return Pyro.Proxy(uri)
+
+
+def alert_conn():
+    uri = 'PYRO:alert_handler@' + socket.gethostname() + ':' + str(ICS_ALERT_PORT)
     return Pyro.Proxy(uri)
 
 
@@ -403,8 +407,10 @@ def icsalert():
         alert = AlertClient()
         remote_execute(alert.test, "This is a test alert.")
     elif args.add is not None:
-        cluster = engine_conn()
-        remote_execute(cluster.add_recipient, args.add[0])
+        alert = alert_conn()
+        remote_execute(alert.add_recipient, args.add[0])
     elif args.remove is not None:
-        cluster = engine_conn()
-        remote_execute(cluster.remove_recipient, args.remove[0])
+        alert = alert_conn()
+        remote_execute(alert.remove_recipient, args.remove[0])
+    else:
+        parser.print_help()

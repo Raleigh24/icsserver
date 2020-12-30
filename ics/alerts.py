@@ -10,7 +10,7 @@ except ImportError:
 import Pyro4 as Pyro
 
 from ics import mail
-from ics.environment import HOSTNAME, ICS_CLUSTER_NAME
+from ics.environment import HOSTNAME, ICS_CLUSTER_NAME, ICS_ALERT_PORT
 from ics.errors import ICSError
 from ics.utils import alert_log_name
 
@@ -154,7 +154,7 @@ class AlertClient:
     """Alert interface for creating alerts."""
 
     def __init__(self):
-        self.alert_server_uri = 'PYRO:alert_handler@' + socket.gethostname() + ':9092'
+        self.alert_server_uri = 'PYRO:alert_handler@' + socket.gethostname() + ':' + str(ICS_ALERT_PORT)
         self.alert_server = Pyro.Proxy(self.alert_server_uri)
 
     def critical(self, resource, msg):
@@ -191,7 +191,7 @@ class AlertClient:
         """
         logger.debug('Resource({}) Alert generated: {} '.format(resource.name, msg))
         alert = create_alert(resource, msg, WARNING)
-        self.alert_server.add_alert(alert)
+        self.send_alert(alert)
 
     def test(self, msg):
         """Send test alert message.
