@@ -81,6 +81,7 @@ def icssys():
     group.add_argument('-add', nargs=1, help='add a node to cluster')
     group.add_argument('-delete', nargs=1, help='delete a node from the cluster')
     group.add_argument('-loglevel', nargs=1, metavar='<level>', help='Set system log level')
+    group.add_argument('-list', action='store_true', help='print list of all nodes')
     group.add_argument('-attr', action='store_true', help='list node attributes')
     group.add_argument('-value', nargs=1, metavar='<attr>', help='print resource  attribute value')
     group.add_argument('-modify', nargs=argparse.REMAINDER, metavar=('<res>', '<attr>', '<value>'),
@@ -101,6 +102,12 @@ def icssys():
 
     elif args.loglevel is not None:
         remote_execute(cluster.set_log_level, args.loglevel[0])
+
+    elif args.list:
+        result = remote_execute(cluster.node_list)
+        result.sort()
+        for node in result:
+            print(node)
 
     elif args.attr:
         result = remote_execute(cluster.node_attr)
