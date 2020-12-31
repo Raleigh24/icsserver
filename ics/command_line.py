@@ -10,6 +10,7 @@ from ics.environment import ICS_ENGINE_PORT, ICS_DAEMON_PORT, ICS_ALERT_PORT
 from ics.errors import ICSError
 from ics.tabular import print_table
 from ics.utils import setup_signal_handler
+from ics.utils import ics_version
 
 epilog_text = ''
 
@@ -86,6 +87,7 @@ def icssys():
     group.add_argument('-value', nargs=1, metavar='<attr>', help='print resource  attribute value')
     group.add_argument('-modify', nargs=argparse.REMAINDER, metavar=('<res>', '<attr>', '<value>'),
                        help='modify resource attribute')
+    group.add_argument('-version', action='store_true', help='print ICS version')
     args = parser.parse_args()
 
     if len(sys.argv) <= 1:
@@ -128,6 +130,12 @@ def icssys():
             value = ' '.join(args.modify[1:])
 
         remote_execute(cluster.node_modify, attr_name, value)
+
+    elif args.version:
+        print(ics_version())
+
+    else:
+        parser.print_help()
 
 
 def icsgrp():
