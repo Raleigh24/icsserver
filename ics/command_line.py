@@ -112,8 +112,14 @@ def icssys():
         print(result)
 
     elif args.modify is not None:
-        attr_name = args.modify[0]
-        value = ' '.join(args.modify[1:])
+        if len(args.modify) < 2:
+            parser.print_usage()
+            print('error: argument -modify: expected 2 arguments')
+            sys.exit(1)
+        else:
+            attr_name = args.modify[0]
+            value = ' '.join(args.modify[1:])
+
         remote_execute(cluster.node_modify, attr_name, value)
 
 
