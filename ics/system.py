@@ -86,6 +86,13 @@ class NodeSystem(AttributeObject):
         node_list.remove(host)
         self.set_attr('NodeList', node_list)
 
+    @Pyro.expose
+    def node_list(self):
+        """Get node list."""
+        nodes = [self.attr_value('NodeName')]
+        nodes += self.attr_value('NodeList')
+        return nodes
+
     def heartbeat(self):
         while True:
             for host in self.remote_nodes:
