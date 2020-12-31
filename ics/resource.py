@@ -157,13 +157,13 @@ class Resource(AttributeObject):
             self._reset_cmd()
             if cmd_type == 'poll':
                 self.reset_poll_counter()
-        except PermissionError:
-            logger.error('Resource({}) unable to run command, permission denied.'.format(self.name))
+        except (PermissionError, FileNotFoundError) as err:
+            logger.error('Resource({}) unable to execute command, {}.'.format(self.name, str(err)))
             self._reset_cmd()
             if cmd_type == 'poll':
                 self.reset_poll_counter()
-        except Exception as e:
-            logger.exception('Resource({}) command caught exception {}'.format(self.name, e))
+        except Exception as err:
+            logger.exception('Resource({}) command caught unknown exception {}'.format(self.name, err))
             self._reset_cmd()
             if cmd_type == 'poll':
                 self.reset_poll_counter()
