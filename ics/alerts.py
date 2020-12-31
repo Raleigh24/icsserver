@@ -323,7 +323,7 @@ class AlertHandler:
             except ConnectionRefusedError as err:
                 logger.error('Unable to send mail: {}'.format(err))
             except Exception as err:
-                logger.error('Unknown exception occurred: ' + str(err), exc_info=True)
+                logger.exception('Unknown exception occurred: ' + str(err))
 
     def run(self):
         """Continuously read and execute alerts from alert queue."""
@@ -334,7 +334,7 @@ class AlertHandler:
                 try:
                     self.mail_alert(alert, self.html_template)
                 except Exception as err:
-                    logger.error("Unknown exception occurred: " + str(err), exc_info=True)
+                    logger.exception("Unknown exception occurred: " + str(err))
                     continue
             del alert
             queue_size = self.alert_queue.qsize()
