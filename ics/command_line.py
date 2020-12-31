@@ -233,9 +233,15 @@ def icsgrp():
         print(result)
 
     elif args.modify is not None:
-        group_name = args.modify[0]
-        attr = args.modify[1]
-        value = ' '.join(args.modify[2:])
+        if len(args.modify) < 3:
+            parser.print_usage()
+            print('error: argument -modify: expected 3 arguments')
+            sys.exit(1)
+        else:
+            group_name = args.modify[0]
+            attr = args.modify[1]
+            value = ' '.join(args.modify[2:])
+
         remote_execute(cluster.clus_grp_modify, group_name, attr, value)
 
     elif args.wait is not None:
@@ -360,9 +366,15 @@ def icsres():
         print(result)
 
     elif args.modify is not None:
-        resource_name = args.modify[0]
-        attr = args.modify[1]
-        value = ' '.join(args.modify[2:])
+        if len(args.modify) < 3:
+            parser.print_usage()
+            print('error: argument -modify: expected 3 arguments')
+            sys.exit(1)
+        else:
+            resource_name = args.modify[0]
+            attr = args.modify[1]
+            value = ' '.join(args.modify[2:])
+
         remote_execute(cluster.clus_res_modify, resource_name, attr, value)
 
     elif args.wait is not None:
