@@ -537,18 +537,21 @@ class NodeSystem(AttributeObject):
             list: resource names with resource states.
 
         """
+        resources = []
         resource_states = []
+        node_name = self.attr_value('NodeName')
+
         if resource_list:
             for resource_name in resource_list:
-                resource = self.get_resource(resource_name)
-                resource_states.append([resource.name, resource.state.upper()])
+                resources.append(self.get_resource(resource_name))
         else:
-            for resource in self.resources.values():
-                resource_states.append([resource.name, resource.state.upper()])
+            resources = self.resources.values()
 
-        if include_node:
-            for item in resource_states:
-                item.append(self.attr_value('NodeName'))
+        for resource in resources:
+            if include_node:
+                resource_states.append([resource.name, node_name, resource.state.upper()])
+            else:
+                resource_states.append([resource.name, resource.state.upper()])
 
         return resource_states
 
