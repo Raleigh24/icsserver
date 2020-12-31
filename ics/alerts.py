@@ -251,6 +251,7 @@ class AlertHandler:
             raise ICSError('Invalid alert level')
         logger.info("Alert level changed from {} to {}".format(previous_level, get_level_name(self.alert_level)))
 
+    @Pyro.expose
     def add_recipient(self, recipient):
         """"Add alert mail recipient.
 
@@ -261,6 +262,7 @@ class AlertHandler:
         logger.info('Adding mail recipient {}'.format(recipient))
         self.recipients.append(recipient)
 
+    @Pyro.expose
     def remove_recipient(self, recipient):
         """Remove alert mail recipient.
 
@@ -312,14 +314,16 @@ class AlertHandler:
             logger.warning('Alert recipient list is empty, no alerts sent')
 
         for recipient in self.recipients:
+            logger.info('Sending alert to {}'.format(recipient))
             sender = 'ics@' + HOSTNAME
-            subject = 'ICS {} Alert - {}'.format('Warning', alert.resource_name)
+            subject = 'ICS {} Alert - {}'.format('Warning', alert.resource)
             body = alert.html(template)
-            logger.debug('Sending alert to {}'.format(recipient))
             try:
                 mail.send_html(recipient, sender, subject, body)
-            except Exception as e:
-                logger.error('Unable to send mail: {}'.format(e))
+            except ConnectionRefusedError as err:
+                logger.error('Unable to send mail: {}'.format(err))
+            except Exception as err:
+                logger.error('Unknown exception occurred: ' + str(err), exc_info=True)
 
     def run(self):
         """Continuously read and execute alerts from alert queue."""
@@ -327,7 +331,11 @@ class AlertHandler:
             alert = self.alert_queue.get()  # Blocking until new alert available.
             if alert.level >= self.alert_level:
                 log_alert(alert)
-                self.mail_alert(alert, self.html_template)
+                try:
+                    self.mail_alert(alert, self.html_template)
+                except Exception as err:
+                    logger.error("Unknown exception occurred: " + str(err), exc_info=True)
+                    continue
             del alert
             queue_size = self.alert_queue.qsize()
             if queue_size > 0:
