@@ -219,6 +219,7 @@ def icsgrp():
     elif args.resources is not None:
         group_name = args.resources[0]
         result = remote_execute(cluster.clus_grp_resources, group_name)
+        result.sort()
         for group_name in result:
             print(group_name)
 
