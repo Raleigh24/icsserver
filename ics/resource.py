@@ -100,28 +100,50 @@ class Resource(AttributeObject):
         self.children.remove(resource)
 
     def parents_ready(self):
-        """Determine weather resources parents are ready by checking for specific conditions"""
-        for parent in self.parents:
-            if parent.state is ResourceStates.ONLINE:
-                return True
-            elif parent.attr_value('Enabled') == 'false':
-                return True
-            elif parent.attr_value('MonitorOnly') == 'true':
-                return True
+        """Determine weather resources parents are ready by checking for specific conditions
 
-        return False
+        Returns:
+            bool: Readiness of parent dependencies
+
+        """
+        for parent in self.parents:
+            logger.debug('Resource({}) Verifying state of {}'.format(self.name, parent.name))
+            state = parent.state
+
+            if parent.attr_value('Enabled') == 'false':
+                logger.debug('Resource({}) Found {} to be disabled, skipping'.format(self.name, parent.name))
+                continue
+            elif parent.attr_value('MonitorOnly') == 'true':
+                logger.debug('Resource({}) Found {} to be in monitory only, skipping'.format(self.name, parent.name))
+                continue
+            elif state is not ResourceStates.ONLINE:
+                logger.debug('Resource({}) Found {} in state {} not to be online unable to start yet'.format(self.name, parent.name, state))
+                return False
+
+        return True
 
     def children_ready(self):
-        """Determine weather resources children are ready by checking for specific conditions"""
-        for child in self.children:
-            if child.state is ResourceStates.OFFLINE:
-                return True
-            elif child.attr_value('Enabled') == 'false':
-                return True
-            elif child.attr_value('MonitorOnly') == 'true':
-                return True
+        """Determine weather resources children are ready by checking for specific conditions
 
-        return False
+        Returns:
+            bool: Readiness of child dependencies
+
+        """
+        for child in self.children:
+            logger.debug('Resource({}) Verifying state of {}'.format(self.name, child.name))
+            state = child.state
+
+            if child.attr_value('Enabled') == 'false':
+                logger.debug('Resource({}) Found {} to be disabled, skipping'.format(self.name, child.name))
+                continue
+            elif child.attr_value('MonitorOnly') == 'true':
+                logger.debug('Resource({}) Found {} to be in monitory only, skipping'.format(self.name, child.name))
+                continue
+            elif state is ResourceStates.OFFLINE:
+                logger.debug('Resource({}) Found {} in state {} not to be offline unable to start yet'.format(self.name, child.name, state))
+                return False
+
+        return True
 
     def update_poll(self):
         cur_time = int(time.time())
