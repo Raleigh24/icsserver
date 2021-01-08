@@ -284,7 +284,7 @@ class NodeSystem(AttributeObject):
 
             for node in self.remote_nodes:
                 state = self.remote_nodes[node].clus_grp_state(group_name)
-                logger.debug("Found group {} in state {}".format(group_name, state))
+                logger.debug("Found group {} in state {} on node {}".format(group_name, state, node))
                 group_states.append((group_name, node, state))
 
         return group_states
@@ -588,11 +588,18 @@ class NodeSystem(AttributeObject):
             resource_name (str): Resource name.
             resource_dependency (str): Resource to be removed as a dependency from resource_name.
 
+        Raises:
+            ICSError: When resource link does not exist.
+
         """
         resource = self.get_resource(resource_name)
         parent_resource = self.get_resource(resource_dependency)
-        resource.remove_parent(parent_resource)
+        try:
+            resource.remove_parent(parent_resource)
+        except ValueError as err:
+            raise ICSError('Unable to remove link, link does not exist.')
         parent_resource.remove_child(resource)
+        logger.info('Resource({}) removed dependency on {}'.format(resource_name, resource_dependency))
 
     def res_dep(self, resource_names):
         """Interface for getting resource dependencies.
