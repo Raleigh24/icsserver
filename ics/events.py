@@ -109,7 +109,7 @@ class ResourceOfflineEvent(ResourceStateEvent):
         elif self.resource.propagate:
             self.resource.propagate = False  # Resource has successfully propagated from parent
             for parent in self.resource.parents:
-                if parent.children_ready():
+                if parent.offline_ready():
                     logger.info('Resource({}) propagating offline to {} '.format(self.resource.name, parent.name))
                     parent.propagate = True
                     if parent.state is ResourceStates.ONLINE:
@@ -137,7 +137,7 @@ class ResourceOnlineEvent(ResourceStateEvent):
         elif self.resource.propagate:
             self.resource.propagate = False  # Resource has successfully propagated from children
             for child in self.resource.children:
-                if child.parents_ready():
+                if child.online_ready():
                     logger.info('Resource({}) propagating online to {} '.format(self.resource.name, child.name))
                     child.propagate = True
                     if child.state in ResourceStates.OFFLINE:

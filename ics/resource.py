@@ -99,7 +99,7 @@ class Resource(AttributeObject):
     def remove_child(self, resource):
         self.children.remove(resource)
 
-    def parents_ready(self):
+    def online_ready(self):
         """Determine weather resources parents are ready by checking for specific conditions
 
         Returns:
@@ -122,7 +122,7 @@ class Resource(AttributeObject):
 
         return True
 
-    def children_ready(self):
+    def offline_ready(self):
         """Determine weather resources children are ready by checking for specific conditions
 
         Returns:
@@ -139,7 +139,7 @@ class Resource(AttributeObject):
             elif child.attr_value('MonitorOnly') == 'true':
                 logger.debug('Resource({}) Found {} to be in monitory only, skipping'.format(self.name, child.name))
                 continue
-            elif state is ResourceStates.OFFLINE:
+            elif state is not ResourceStates.OFFLINE:
                 logger.debug('Resource({}) Found {} in state {} not to be offline unable to start yet'.format(self.name, child.name, state))
                 return False
 
