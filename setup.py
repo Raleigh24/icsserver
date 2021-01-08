@@ -11,7 +11,7 @@ ics_version = open('ics/version.txt').read().strip()
 setup(
     name='ICS',
     version=ics_version,
-    description='Intelsat Cluster Server',
+    description='Intelligent Cluster Server',
     long_description=readme(),
     author='Raleigh Waters',
     author_email='RaleighWaters@gmail.com',
