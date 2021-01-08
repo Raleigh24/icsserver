@@ -116,6 +116,8 @@ class Alert:
         self.msg = msg
         if time is None:
             self.time = datetime.now().strftime("%m/%d/%Y %H:%M:%S")
+        else:
+            self.time = time
 
     def __str__(self):
         return ' '.join([self.time, get_level_name(self.level), ICS_CLUSTER_NAME, self.group, self.resource,
