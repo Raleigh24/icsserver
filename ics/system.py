@@ -24,6 +24,20 @@ logger = logging.getLogger(__name__)
 
 
 class NodeSystem(AttributeObject):
+    """
+
+    Attributes:
+        node_name (str): Node name.
+        cluster_name (str): Cluster name.
+        resources (dict): Dictionary or resource objects.
+        groups (dict): Dictionary of group objects.
+        threads (list): List of started thread references.
+        alert_handler (obj): Alert handler object.
+        remote_nodes (dict): Dictionary or remote node Pyro connections.
+        poll_enabled (bool): Flag signifying when polling is enabled.
+        config_update (bool): Flag signifying when there is an update to save in the config.
+
+    """
 
     def __init__(self):
         super(NodeSystem, self).__init__()
@@ -35,8 +49,8 @@ class NodeSystem(AttributeObject):
         self.threads = []
         self.alert_handler = AlertHandler(cluster_name=self.cluster_name, node_name=self.node_name)
         self.remote_nodes = {}  # Remote systems
-        self.node_name = ""
         self.poll_enabled = False
+        self.config_update = False
 
     @Pyro.expose
     def ping(self, host=None):
@@ -497,6 +511,8 @@ class NodeSystem(AttributeObject):
             group.add_resource(resource)
             #return resource
 
+        self.config_update = True
+
     def res_delete(self, resource_name):
         """Interface for deleting existing resource.
 
@@ -518,6 +534,7 @@ class NodeSystem(AttributeObject):
         group = self.get_group(resource.attr_value('Group'))
         group.delete_resource(resource)
         del self.resources[resource_name]
+        self.config_update = True
         logger.info('Resource({}) resource deleted'.format(resource_name))
 
     def res_state(self, resource_name):
@@ -580,6 +597,7 @@ class NodeSystem(AttributeObject):
         resource.add_parent(parent_resource)
         parent_resource.add_child(resource)
         logger.info('Resource({}) created dependency on {}'.format(resource_name, resource_dependency))
+        self.config_update = True
 
     def res_unlink(self,  resource_name, resource_dependency):
         """Interface to remove a dependency from a resource.
@@ -600,6 +618,7 @@ class NodeSystem(AttributeObject):
             raise ICSError('Unable to remove link, link does not exist.')
         parent_resource.remove_child(resource)
         logger.info('Resource({}) removed dependency on {}'.format(resource_name, resource_dependency))
+        self.config_update = True
 
     def res_dep(self, resource_names):
         """Interface for getting resource dependencies.
@@ -777,6 +796,8 @@ class NodeSystem(AttributeObject):
             self.groups[group_name] = group
             #return group
 
+        self.config_update = True
+
     def grp_delete(self, group_name):
         """Interface for deleting an existing group.
 
@@ -791,6 +812,8 @@ class NodeSystem(AttributeObject):
         else:
             logger.error('Unable to delete group ({}), group still contains resources'.format(group_name))
             pass  # delete object?
+
+        self.config_update = True
 
     def grp_enable(self, group_name):
         """Interface to enable a group.
@@ -1046,8 +1069,9 @@ class NodeSystem(AttributeObject):
         while True:
             interval = int(self.attr_value('BackupInterval'))
 
-            if AttributeObject.update_flag:
+            if any([AttributeObject.update_flag, self.config_update]):
                 AttributeObject.update_flag = False
+                self.config_update = False
                 logger.debug('Creating backup of config file')
                 if os.path.isfile(ICS_CONF_FILE):
                     os.rename(ICS_CONF_FILE, ICS_CONF_FILE + '.autobackup')
