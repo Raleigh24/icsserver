@@ -108,13 +108,14 @@ def create_test_alert(msg, level):
 class Alert:
     """Alert object."""
 
-    def __init__(self, resource, group, level, msg, node=HOSTNAME, time=datetime.now().strftime("%m/%d/%Y %H:%M:%S")):
+    def __init__(self, resource, group, level, msg, node=HOSTNAME, time=None):
         self.resource = resource
         self.group = group
         self.node = node
-        self.time = time
         self.level = level
         self.msg = msg
+        if time is None:
+            self.time = datetime.now().strftime("%m/%d/%Y %H:%M:%S")
 
     def __str__(self):
         return ' '.join([self.time, get_level_name(self.level), ICS_CLUSTER_NAME, self.group, self.resource,
