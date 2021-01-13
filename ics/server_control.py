@@ -1,8 +1,8 @@
 import logging
-import subprocess
-import sys
 import os
 import signal
+import subprocess
+import sys
 
 import Pyro4 as Pyro
 

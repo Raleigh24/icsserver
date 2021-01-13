@@ -1,16 +1,14 @@
-import logging
 import logging.config
-import signal
-import sys
 import os
 import socket
+import sys
 import threading
 
 import Pyro4 as Pyro
 
 from ics.alerts import AlertHandler
-from ics.environment import ICS_LOG
 from ics.environment import ICS_ALERT_PORT
+from ics.environment import ICS_LOG
 from ics.utils import ics_version
 
 if not os.path.isdir(ICS_LOG):

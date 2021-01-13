@@ -1,16 +1,13 @@
 import json
-import os
 import logging
+import os
 
 from ics.environment import ICS_CONF
 from ics.environment import ICS_CONF_FILE
-
-from ics.resource import groups
-from ics.resource import res_add
-from ics.resource import grp_add
-from ics.resource import res_link
 from ics.resource import get_resource
-from ics.attributes import resource_attributes
+from ics.resource import grp_add
+from ics.resource import res_add
+from ics.resource import res_link
 
 logger = logging.getLogger(__name__)
 

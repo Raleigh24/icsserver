@@ -1,6 +1,6 @@
 import argparse
-import sys
 import socket
+import sys
 import time
 
 import Pyro4 as Pyro
@@ -9,8 +9,8 @@ from ics.alerts import AlertClient
 from ics.environment import ICS_ENGINE_PORT, ICS_DAEMON_PORT, ICS_ALERT_PORT
 from ics.errors import ICSError
 from ics.tabular import print_table
-from ics.utils import setup_signal_handler
 from ics.utils import ics_version
+from ics.utils import setup_signal_handler
 
 epilog_text = ''
 

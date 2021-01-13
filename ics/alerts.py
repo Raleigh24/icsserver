@@ -1,7 +1,8 @@
 import logging
-import socket
 import os
+import socket
 from datetime import datetime
+
 try:
     import queue
 except ImportError:

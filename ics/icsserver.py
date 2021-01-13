@@ -1,16 +1,16 @@
 import logging
 import logging.config
-import signal
-import sys
 import os
+import signal
 import socket
+import sys
 
 import Pyro4 as Pyro
 
+from environment import ICS_ENGINE_PORT
+from environment import ICS_LOG
 from ics import utils
 from system import NodeSystem
-from environment import ICS_LOG
-from environment import ICS_ENGINE_PORT
 
 if not os.path.isdir(ICS_LOG):
     try:

@@ -1,16 +1,13 @@
-import os
-import signal
 import json
 import logging
-import sys
+import os
+import signal
 import subprocess
 from datetime import datetime
 
-import Pyro4 as Pyro
-
-from ics.environment import ICS_VAR
-from ics.environment import ICS_RES_LOG
 from ics.environment import ICS_ALERT_LOG
+from ics.environment import ICS_RES_LOG
+from ics.environment import ICS_VAR
 from ics.errors import ICSError
 
 logger = logging.getLogger(__name__)

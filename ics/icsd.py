@@ -1,14 +1,15 @@
 import logging.config
-import sys
 import os
 import socket
+import sys
 
 import Pyro4 as Pyro
 
 from ics import utils
-from ics.environment import ICS_LOG
 from ics.environment import ICS_DAEMON_PORT
+from ics.environment import ICS_LOG
 from ics.server_control import SubServerControl
+
 
 def main():
     if not os.path.isdir(ICS_LOG):

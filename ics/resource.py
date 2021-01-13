@@ -6,7 +6,6 @@ import time
 from ics import events
 from ics.alerts import AlertClient
 from ics.attributes import AttributeObject, resource_attributes, group_attributes
-from ics.environment import ICS_RES_LOG
 from ics.states import ResourceStates, GroupStates, ONLINE_STATES
 from ics.utils import resource_log_name
 
