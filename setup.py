@@ -15,11 +15,14 @@ setup(
     long_description=readme(),
     author='Raleigh Waters',
     author_email='RaleighWaters@gmail.com',
+    license='GPLv3+',
     python_requires='>=3.5',
     packages=find_packages(),
     classifiers=[
         'Programming Language :: Python :: 3',
         'Operating System :: POSIX :: Linux',
+        'Natural Language :: English',
+        'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)'
     ],
     install_requires=[
         'Pyro4'
