@@ -25,7 +25,12 @@ class AttributeObject(object):  # Inherits from object to enabling super() in py
         self.default_attr = None
 
     def init_attr(self, default_attributes):
-        """Initialize attributes with defaults"""
+        """Initialize attributes with defaults.
+
+        Args:
+            default_attributes (dict): Dictionary of default attributes and values.
+
+        """
         self.default_attr = default_attributes
         for attribute in default_attributes:
             self._attr[attribute] = default_attributes[attribute]['default']

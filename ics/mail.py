@@ -4,6 +4,15 @@ from email.mime.text import MIMEText
 
 
 def send_html(recipient, sender, subject, html):
+    """Send HTML mail.
+
+    Args:
+        recipient (str): Recipient address.
+        sender (str): Sender address.
+        subject (str): Mail subject.
+        html (str): Raw HTML to be sent.
+
+    """
     msg = MIMEMultipart('alternative')
     msg['Subject'] = subject
     msg['From'] = sender

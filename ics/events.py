@@ -15,7 +15,12 @@ alert = AlertClient()
 
 
 def trigger_event(event):
-    """Add event to event queue"""
+    """Add event to event queue.
+
+    Args:
+        event (obj): Event like object.
+
+    """
     logger.debug('Resource({}) event triggered {}'.format(event.resource.name, event))
     event_queue.put(event)
 

@@ -78,7 +78,13 @@ def check_running(server):
 
 
 def create_pid_file(filename, pid):
-    """Write new PID to PID file"""
+    """Write new PID to PID file.
+
+    Args:
+        filename (str): PID file name.
+        pid (int): Process PID.
+
+    """
     try:
         with open(filename, 'w') as f:
             f.write(str(pid))
@@ -87,7 +93,7 @@ def create_pid_file(filename, pid):
 
 
 def cli_signal_handler(signal_code, frame):
-    """Signal handler for command line interface commands"""
+    """Signal handler for command line interface commands."""
     if signal_code is signal.SIGINT:
         print('Exiting...')
         exit(1)
@@ -103,7 +109,15 @@ def setup_signal_handler():
 
 
 def read_config(filename):
-    """Read configuration file"""
+    """Read configuration file.
+
+    Args:
+        filename (str): Configuration filename.
+
+    Returns:
+        dict: Configuration data.
+
+    """
     logger.info('Reading configuration file...')
     try:
         with open(filename, 'r') as f:
@@ -118,7 +132,13 @@ def read_config(filename):
 
 
 def write_config(filename, data):
-    """Write configuration to file"""
+    """Write configuration to file.
+
+    Args:
+        filename (str): Configuration filename.
+        data (dict): Configuration data.
+
+    """
     try:
         with open(filename, 'w') as file:
             json.dump(data, file, indent=4, sort_keys=True)
@@ -128,6 +148,15 @@ def write_config(filename, data):
 
 
 def set_log_level(level):
+    """Set log level.
+
+    Args:
+        level (str): Logging level.
+
+    Raises:
+        ICSError: Invalid logging level is given.
+
+    """
     root_logger = logging.getLogger()
     level_map = {
         'CRITICAL': logging.CRITICAL,
@@ -158,8 +187,10 @@ def ics_version():
 
 
 def resource_log_name():
+    """Resource log file name."""
     return ICS_RES_LOG + '.' + datetime.now().strftime('%Y-%m-%d_%H')
 
 
 def alert_log_name():
+    """Alert log file name."""
     return ICS_ALERT_LOG + '.' + datetime.now().strftime('%Y-%m-%d_%H')

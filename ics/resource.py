@@ -43,7 +43,16 @@ class Resource(AttributeObject):
     }
 
     def change_state(self, new_state, force=False):
-        """Change state of resource and add event to queue"""
+        """Change state of resource and add event to queue.
+
+        Args:
+            new_state (str): New resource state.
+            force (bool, opt): Force state change.
+
+        Returns:
+            bool: Returns stressfulness ot state change.
+
+        """
         cur_state = self.state
         if not force:
             if new_state is cur_state:
@@ -75,9 +84,21 @@ class Resource(AttributeObject):
         events.trigger_event(event_class(self, cur_state))
 
     def add_parent(self, resource):
+        """Add parent dependency link to resource.
+
+        Args:
+            resource (obj): Parent resource object.
+
+        """
         self.parents.append(resource)
 
     def remove_parent(self, resource):
+        """Remove parent dependency link to resource.
+
+        Args:
+            resource (obj): Parent resource object.
+
+        """
         self.parents.remove(resource)
 
     def dependencies(self):
@@ -93,9 +114,21 @@ class Resource(AttributeObject):
         return deps_list
 
     def add_child(self, resource):
+        """Add child dependency link to resource.
+
+        Args:
+            resource (obj): Child resource object.
+
+        """
         self.children.append(resource)
 
     def remove_child(self, resource):
+        """Remove child dependency link to resource.
+
+        Args:
+            resource (obj): Child resource object.
+
+        """
         self.children.remove(resource)
 
     def online_ready(self):
@@ -145,6 +178,7 @@ class Resource(AttributeObject):
         return True
 
     def update_poll(self):
+        """Update resource poll timer."""
         cur_time = int(time.time())
         if self.state in ONLINE_STATES:
             poll_interval = int(self.attr_value('MonitorInterval'))
@@ -157,13 +191,21 @@ class Resource(AttributeObject):
             self.probe()
 
     def _reset_cmd(self):
+        """Reset executed command attributes."""
         self.cmd_process = None
         self.cmd_type = None
         self.poll_running = False
         self.cmd_end_time = -1
 
     def _run_cmd(self, cmd, cmd_type, timeout=None):
-        """Run an resource command"""
+        """Run an resource command.
+
+        Args:
+            cmd (list): Command line command for resource.
+            cmd_type (str): Command type.
+            timeout (int, opt): Command execute timeout.
+
+        """
         try:
             logger.debug('Resource({}) running command: {}'.format(self.name, ' '.join(cmd)))
             resource_log = resource_log_name()
@@ -190,7 +232,12 @@ class Resource(AttributeObject):
                 self.reset_poll_counter()
 
     def check_cmd(self):
-        """Check if resource command has finished"""
+        """Check if resource command has finished.
+
+        Returns:
+            bool: Stressfulness of command execution.
+
+        """
         if self.cmd_process is not None:
             if self.cmd_process.poll() is not None:
                 logger.debug('Resource({}) {} command returned'.format(self.name, self.cmd_type))
@@ -242,11 +289,13 @@ class Resource(AttributeObject):
         self._reset_cmd()
 
     def clear(self):
+        """Clear faulted resource state."""
         self.fault_count = 0  # reset fault count
         if self.state is ResourceStates.FAULTED:
             self.change_state(ResourceStates.OFFLINE)
 
     def flush(self):
+        """Flush resource out of transitions states."""
         self.propagate = False
         if self.cmd_process is not None:
             try:
@@ -261,12 +310,12 @@ class Resource(AttributeObject):
             self.change_state(ResourceStates.ONLINE)
 
     def probe(self):
-        """Generate a resource poll"""
+        """Generate a resource poll."""
         self.poll_running = True
         events.trigger_event(events.PollRunEvent(self))
 
     def start(self):
-        """Run command to start resource"""
+        """Run command to start resource."""
         logger.info('Resource({}) running command to start resource'.format(self.name))
         cmd = self.attr_value('StartProgram').split()
         if not cmd:
@@ -277,7 +326,7 @@ class Resource(AttributeObject):
         self._run_cmd(cmd, 'start', timeout=online_timeout)
 
     def stop(self):
-        """Run command to stop resource"""
+        """Run command to stop resource."""
         logger.info('Resource({}) running command to stop resource'.format(self.name))
         cmd = self.attr_value('StopProgram').split()
         if not cmd:
@@ -288,7 +337,7 @@ class Resource(AttributeObject):
         self._run_cmd(cmd, 'stop', timeout=offline_timeout)
 
     def poll(self):
-        """Run command to poll resource"""
+        """Run command to poll resource."""
         logger.debug('Resource({}) running command to poll resource'.format(self.name))
         cmd = self.attr_value('MonitorProgram').split()
         if not cmd:
@@ -300,6 +349,7 @@ class Resource(AttributeObject):
         self._run_cmd(cmd, 'poll', timeout=monitor_timeout)
 
     def reset_poll_counter(self):
+        """Reset poll timer counter."""
         self.last_poll = int(time.time())
 
 
@@ -312,7 +362,12 @@ class Group(AttributeObject):
         self.members = []  # TODO: rename member for group class?
 
     def state(self):
-        """Get state of group by checking state of member resources"""
+        """Get state of group by checking state of member resources.
+
+        Returns:
+            str: Group state.
+
+        """
         if not self.members:
             return GroupStates.UNKNOWN  # A group with no resources has an unknown state
 
@@ -343,20 +398,35 @@ class Group(AttributeObject):
                 return GroupStates.UNKNOWN
 
     def add_resource(self, resource):
+        """Add group resource.
+
+        Args:
+            resource (obj): Resource object to add to group.
+
+        """
         self.members.append(resource)
 
     def delete_resource(self, resource):
+        """Delete group resources.
+
+        Args:
+            resource (obj): Resource object to remove from group.
+
+        """
         self.members.remove(resource)
 
     def enable_resources(self):
+        """Enable group resources."""
         for member in self.members:
             member.set_attr('Enabled', 'true')
 
     def disable_resources(self):
+        """Disable group resources."""
         for member in self.members:
             member.set_attr('Enabled', 'false')
 
     def start(self):
+        """Start group resources."""
         if self.attr_value('Enabled') == 'false':
             logger.info('Unable to start, group is not enabled')
             return
@@ -375,6 +445,7 @@ class Group(AttributeObject):
                     resource.change_state(ResourceStates.ONLINE, force=True)
 
     def stop(self):
+        """Stop group resources."""
         if self.attr_value('Enabled') == 'false':
             logger.info('Unable to start, group is not enabled')
             return
@@ -393,9 +464,11 @@ class Group(AttributeObject):
                     resource.change_state(ResourceStates.OFFLINE, force=True)
 
     def flush(self):
+        """Flush group resources in transition states."""
         for resource in self.members:
             resource.flush()
 
     def clear(self):
+        """Clear group resource faults."""
         for resource in self.members:
             resource.clear()
