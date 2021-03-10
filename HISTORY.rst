@@ -4,6 +4,30 @@ Release History
 ---------------
 
 
+2.0.0 (2021-03-10)
+++++++++++++++++++
+
+**New Features**
+
+- Added node clustering using Pyro
+- Added daemon process to control start/stop of icsserver
+- Separated out alerts management to separate process
+
+**Improvements**
+
+- Added ability to be packaged and installed using pip
+- Added -version option to icssys
+- Added -list option to icssys
+- Improved logging control
+- Resource logs are rotated
+
+**Miscellaneous**
+
+- Added GNU General Public License v3.0 licence
+- Added unit testing
+- Added test alerts
+
+
 1.3.0 (2019-02-20)
 ++++++++++++++++++
 
@@ -29,10 +53,6 @@ Release History
 - Added attribute option to icssys command
 - Added enabledresources to icsgrp command
 - Added disableresources to icsgrp command
-
-**Improvements**
-
--
 
 **Bugfixes**
 
