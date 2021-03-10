@@ -273,7 +273,7 @@ class TestNodeSystem(unittest.TestCase):
         resource_list = ['proc_a1', 'proc_a2']
         group_name = 'group_a'
         resource_states = [['proc_a1', 'OFFLINE'], ['proc_a2', 'OFFLINE']]
-        resource_states_node = [['proc_a1', 'OFFLINE', 'node_1'], ['proc_a2', 'OFFLINE', 'node_1']]
+        resource_states_node = [['proc_a1', 'node_1', 'OFFLINE'], ['proc_a2', 'node_1', 'OFFLINE']]
         self.system.set_attr('NodeName', 'node_1')
         self.system.grp_add(group_name)
         for resource_name in resource_list:
