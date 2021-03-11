@@ -1,7 +1,7 @@
 import unittest
 
-from ics.attributes import AttributeObject
 import ics.errors
+from ics.attributes import AttributeObject
 
 test_attributes = {
     "attr1": {
@@ -19,6 +19,11 @@ test_attributes = {
         "type": "string",
         "description": ""
     },
+    "attr4": {
+        "default": [],
+        "type": "list",
+        "description": ""
+    }
 }
 
 
@@ -48,10 +53,27 @@ class TestAttributeObject(unittest.TestCase):
             self.attribute_object.attr_value('attr99')
 
     def test_attr_list(self):
-        test_attributes_list = [('attr1', 'none'), ('attr2', 'false'), ('attr3', '')]
+        test_attributes_list = [('attr1', 'none'), ('attr2', 'false'), ('attr3', ''), ('attr4', [])]
         self.assertEqual(self.attribute_object.attr_list(), test_attributes_list)
         self.attribute_object.set_attr('attr2', 'true')
         self.assertNotEqual(self.attribute_object.attr_list(), test_attributes_list)
+
+    def test_attr_append_value(self):
+        with self.assertRaises(ics.errors.ICSError):
+            self.attribute_object.attr_append_value('attr1', 'value1')
+        self.attribute_object.attr_append_value('attr4', 'value1')
+        self.attribute_object.attr_append_value('attr4', 'value2')
+        print(test_attributes)
+        self.assertEqual(self.attribute_object.attr_value('attr4'), ['value1', 'value2'])
+
+    def test_attr_remove_value(self):
+        with self.assertRaises(ics.errors.ICSError):
+            self.attribute_object.attr_remove_value('attr1', 'value1')
+        self.attribute_object.attr_append_value('attr4', 'value1')
+        self.attribute_object.attr_append_value('attr4', 'value2')
+        print(self.attribute_object.attr_value('attr4'))
+        self.attribute_object.attr_remove_value('attr4', 'value2')
+        self.assertEqual(self.attribute_object.attr_value('attr4'), ['value1'])
 
 
 if __name__ == "__main__":
