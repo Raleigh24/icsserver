@@ -1,4 +1,5 @@
 import logging
+from copy import deepcopy
 
 from ics.errors import ICSError
 
@@ -33,7 +34,12 @@ class AttributeObject(object):  # Inherits from object to enabling super() in py
         """
         self.default_attr = default_attributes
         for attribute in default_attributes:
-            self._attr[attribute] = default_attributes[attribute]['default']
+            default_value = default_attributes[attribute]['default']
+            if isinstance(default_value, list):
+                # Perform deep copy as to not reference the default instance
+                self._attr[attribute] = deepcopy(default_value)
+            else:
+                self._attr[attribute] = default_value
 
     def modified_attributes(self):
         """Return dictionary of modified attributes (non-default).
@@ -73,6 +79,44 @@ class AttributeObject(object):  # Inherits from object to enabling super() in py
         logger.info('{}({}) attribute {} changed from {} to {}'.format(self.__class__.__name__, self.name, attr,
                                                                        previous_value, value))
 
+    def attr_append_value(self, attr, value):
+        """Append item to list type attribute.
+
+        Args:
+            attr (str): Attribute value name.
+            value (str): Value to set attribute
+
+        Raises:
+            ICSError: When given attribute is not valid or of list type.
+
+        """
+        if attr not in self._attr:
+            raise ICSError('{}({}) Attribute {} does not exist'.format(self.__class__.__name__, self.name, attr))
+
+        if self.default_attr[attr]['type'] != 'list':
+            raise ICSError(('{}({}) Attribute {} is not of type \'list\''.format(self.__class__.__name__, self.name, attr)))
+
+        self._attr[attr].append(value)
+
+    def attr_remove_value(self, attr, value):
+        """Remove item from list type attribute.
+
+        Args:
+            attr (str): Attribute value name.
+            value (str): Value to set attribute
+
+        Raises:
+            ICSError: When given attribute is not valid or of list type.
+
+        """
+        if attr not in self._attr:
+            raise ICSError('{}({}) Attribute {} does not exist'.format(self.__class__.__name__, self.name, attr))
+
+        if self.default_attr[attr]['type'] != 'list':
+            raise ICSError(('{}({}) Attribute {} is not of type \'list\''.format(self.__class__.__name__, self.name, attr)))
+
+        self._attr[attr].remove(value)
+
     def attr_value(self, attr):
         """Retrieve value of attribute.
 
@@ -80,7 +124,7 @@ class AttributeObject(object):  # Inherits from object to enabling super() in py
             attr (str): Attribute value name.
 
         Returns:
-            str: Attribute value.
+            obj: Attribute value.
 
         Raises:
             ICS_Error: When given attribute doesn't exist.
@@ -187,6 +231,11 @@ resource_attributes = {
 }
 
 group_attributes = {
+    "System List": {
+        "default": [],
+        "type": "list",
+        "description": "",
+    },
     "Enabled": {
         "default": "false",
         "type": "boolean",
