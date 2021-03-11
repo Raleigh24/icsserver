@@ -1,10 +1,10 @@
 import logging
+import operator
 import os
 import socket
 import sys
 import threading
 import time
-import operator
 from datetime import datetime
 from shutil import copyfile
 
@@ -91,10 +91,7 @@ class NodeSystem(AttributeObject):
         """
         logger.info('Adding node {}'.format(host))
         self.register_node(host)
-
-        current = list(self.attr_value('NodeList'))
-        current.append(host)
-        self.set_attr('NodeList', current)
+        self.attr_append_value('NodeList', host)
 
     @Pyro.expose
     def delete_node(self, host):
@@ -105,10 +102,9 @@ class NodeSystem(AttributeObject):
 
         """
         logger.info('Deleting node {}'.format(host))
+        #TODO: Check if host is current host
         del self.remote_nodes[host]
-        node_list = self.attr_value('NodeList')
-        node_list.remove(host)
-        self.set_attr('NodeList', node_list)
+        self.attr_remove_value('NodeList', host)
 
     @Pyro.expose
     def node_list(self):
