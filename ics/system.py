@@ -6,6 +6,7 @@ import sys
 import threading
 import time
 from datetime import datetime
+from random import choice
 from shutil import copyfile
 
 import Pyro4 as Pyro
@@ -355,9 +356,17 @@ class NodeSystem(AttributeObject):
         """
         if node is None:
             current_load = self.clus_load()
-            online_node = min(current_load.items(), key=operator.itemgetter(1))[0]
+            if len(set(current_load.values())) == 1:
+                logger.debug("Found even load on all nodes")
+                online_node = choice(list(current_load.keys()))
+                logger.debug('Randomly choosing node ' + str(online_node))
+            else:
+                online_node = min(current_load.items(), key=operator.itemgetter(1))[0]
+                logger.debug('Found minimum load node: ' + str(online_node))
         else:
             online_node = node
+
+        logger.debug('Attempting online group {} on node {} '.format(group_name, online_node))
 
         if self.attr_value('NodeName') == online_node:
             group = self.get_group(group_name)
