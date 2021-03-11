@@ -436,6 +436,18 @@ class TestNodeSystem(unittest.TestCase):
         self.setup_simple_group()
         self.assertIsInstance(self.system.grp_attr('group_a'), list)
 
+    def test_load_default(self):
+        self.setup_simple_group()
+        self.assertEqual(self.system.load(), 0)
+
+    def test_load(self):
+        self.setup_simple_group()
+        resource = self.system.get_resource('proc_a1')
+        resource.state = ics.states.ResourceStates.ONLINE
+        resource = self.system.get_resource('proc_a2')
+        resource.state = ics.states.ResourceStates.ONLINE
+        self.assertEqual(self.system.load(), 2)
+
     @unittest.skip
     def test_poll_updater(self):
         self.fail()
