@@ -178,6 +178,11 @@ resource_attributes = {
         "type": "int",
         "description": "Maximum time (in seconds) within which the monitor\
                         function must complete or else be terminated"
+    },
+    "Load": {
+        "default": "1",
+        "type": "integer",
+        "description": ""
     }
 }
 

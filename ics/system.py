@@ -4,6 +4,7 @@ import socket
 import sys
 import threading
 import time
+import operator
 from datetime import datetime
 from shutil import copyfile
 
@@ -17,7 +18,7 @@ from ics.environment import ICS_ENGINE_PORT
 from ics.errors import ICSError
 from ics.events import event_handler
 from ics.resource import Resource, Group
-from ics.states import ResourceStates, TRANSITION_STATES
+from ics.states import ResourceStates, TRANSITION_STATES, ONLINE_STATES
 from ics.utils import read_config, write_config
 
 logger = logging.getLogger(__name__)
@@ -348,15 +349,21 @@ class NodeSystem(AttributeObject):
         return self.res_attr(resource_name)
 
     @Pyro.expose
-    def clus_grp_online(self, group_name, node_name):
+    def clus_grp_online(self, group_name, node=None):
         """Online group for a given system node.
 
         Args:
             group_name (str): Group name to online.
-            node_name (str): Node name of where to online the group.
+            node (str, opt): Node name of where to online the group.
 
         """
-        if self.attr_value('NodeName') == node_name:
+        if node is None:
+            current_load = self.clus_load()
+            online_node = min(current_load.items(), key=operator.itemgetter(1))[0]
+        else:
+            online_node = node
+
+        if self.attr_value('NodeName') == online_node:
             group = self.get_group(group_name)
             if group.attr_value('Parallel') == 'false':
                 logger.debug('Looking for other online resources for group ' + str(group_name))
@@ -372,21 +379,25 @@ class NodeSystem(AttributeObject):
             else:
                 self.grp_online(group_name)
         else:
-            self.remote_nodes[node_name].clus_grp_online(group_name, node_name)
+            self.remote_nodes[online_node].clus_grp_online(group_name, online_node)
 
     @Pyro.expose
-    def clus_grp_offline(self, group_name, system_name):
+    def clus_grp_offline(self, group_name, node=None):
         """Offline group for a given system node.
         
         Args:
             group_name (str): Group name. 
-            system_name (str): System name.
+            node (str, opt): System name.
 
         """
-        if self.attr_value('NodeName') == system_name:
+        if node is None:
+            self.grp_offline(group_name)
+            for remote_node in self.remote_nodes:
+                self.remote_nodes[remote_node].grp_offline(group_name)
+        elif self.attr_value('NodeName') == node:
             self.grp_offline(group_name)
         else:
-            self.remote_nodes[system_name].clus_grp_offline(group_name, system_name)
+            self.remote_nodes[node].grp_offline(group_name)
 
     @Pyro.expose
     def clus_grp_state(self, group_name):
@@ -984,6 +995,7 @@ class NodeSystem(AttributeObject):
             if group.attr_value('AutoStart') == 'true':
                 group.start()
 
+    @Pyro.expose
     def grp_offline(self, group_name):
         """Interface for bringing a group offline.
 
@@ -1176,6 +1188,39 @@ class NodeSystem(AttributeObject):
         """
         group = self.get_group(group_name)
         return group.attr_list()
+
+    @Pyro.expose
+    def clus_load(self):
+        """Retrieve load value from all nodes in cluster.
+
+        Returns:
+            dict: Nodes with current load value.
+
+        """
+
+        nodes_load = {self.attr_value('NodeName'):  self.load()}
+
+        for node in self.remote_nodes:
+            nodes_load[node] = self.remote_nodes[node].load()
+
+        logger.debug('Node loads: ' + str(nodes_load))
+        return nodes_load
+
+    @Pyro.expose
+    def load(self):
+        """Calculate total current resource load on node.
+
+        Returns:
+            int: total node load.
+
+        """
+        total_load = 0
+        for resource in self.resources.values():
+            if resource.state in ONLINE_STATES:
+                resource_load = int(resource.attr_value('Load'))
+                total_load += resource_load
+
+        return total_load
 
     def poll_updater(self):  # TODO: rename function
         """Continuously check for resources ready for poll"""
