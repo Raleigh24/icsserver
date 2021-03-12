@@ -7,27 +7,32 @@ class ResourceStates:
     UNKNOWN = 'unknown'  # 5
 
 
-ONLINE_STATES = (
-    ResourceStates.STARTING,
-    ResourceStates.ONLINE
-)
-
-OFFLINE_STATES = (
-    ResourceStates.OFFLINE,
-    ResourceStates.STOPPING,
-    ResourceStates.FAULTED,
-    ResourceStates.UNKNOWN
-)
-
-TRANSITION_STATES = (
-    ResourceStates.STARTING,
-    ResourceStates.STOPPING
-)
-
-
 class GroupStates:
     ONLINE = 'online'
     PARTIAL = 'partial'
     OFFLINE = 'offline'
     FAULTED = 'faulted'
     UNKNOWN = 'unknown'
+
+
+ONLINE_STATES = (
+    ResourceStates.STARTING,
+    ResourceStates.ONLINE,
+    GroupStates.ONLINE,
+    GroupStates.PARTIAL
+)
+
+OFFLINE_STATES = (
+    ResourceStates.OFFLINE,
+    ResourceStates.STOPPING,
+    ResourceStates.FAULTED,
+    ResourceStates.UNKNOWN,
+    GroupStates.OFFLINE,
+    GroupStates.FAULTED,
+    GroupStates.UNKNOWN
+)
+
+TRANSITION_STATES = (
+    ResourceStates.STARTING,
+    ResourceStates.STOPPING
+)

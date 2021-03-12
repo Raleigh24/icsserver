@@ -56,6 +56,18 @@ class AttributeObject(object):  # Inherits from object to enabling super() in py
                 data[attribute] = attribute_value
         return data
 
+    def attr_type(self, attr):
+        """Return attribute type for a given attribute.
+
+        Args:
+            attr (str): Attribute name.
+
+        Returns:
+            str: Attribute type.
+
+        """
+        return self.default_attr[attr]['type']
+
     def set_attr(self, attr, value):
         """Set attribute value.
 
@@ -69,6 +81,10 @@ class AttributeObject(object):  # Inherits from object to enabling super() in py
         """
         if attr not in self._attr:
             raise ICSError('{}({}) Attribute {} does not exist'.format(self.__class__.__name__, self.name, attr))
+
+        if self.attr_type(attr) == 'list':
+            if not isinstance(value, list):
+                raise ICSError('{}({}) Value {} is not of list type for attribute {}'.format(self.__class__.__name__, self.name, value, attr))
 
         if self._attr[attr] == "":
             previous_value = '<empty>'
@@ -90,6 +106,7 @@ class AttributeObject(object):  # Inherits from object to enabling super() in py
             ICSError: When given attribute is not valid or of list type.
 
         """
+        logger.info('{}({}) Appending {} to attribute {}'.format(self.__class__.__name__, self.name, value, attr))
         if attr not in self._attr:
             raise ICSError('{}({}) Attribute {} does not exist'.format(self.__class__.__name__, self.name, attr))
 
@@ -97,6 +114,7 @@ class AttributeObject(object):  # Inherits from object to enabling super() in py
             raise ICSError(('{}({}) Attribute {} is not of type \'list\''.format(self.__class__.__name__, self.name, attr)))
 
         self._attr[attr].append(value)
+        AttributeObject.update_flag = True
 
     def attr_remove_value(self, attr, value):
         """Remove item from list type attribute.
@@ -109,6 +127,7 @@ class AttributeObject(object):  # Inherits from object to enabling super() in py
             ICSError: When given attribute is not valid or of list type.
 
         """
+        logger.info('{}({}) Removing {} from attribute {}'.format(self.__class__.__name__, self.name, value, attr))
         if attr not in self._attr:
             raise ICSError('{}({}) Attribute {} does not exist'.format(self.__class__.__name__, self.name, attr))
 
@@ -116,6 +135,7 @@ class AttributeObject(object):  # Inherits from object to enabling super() in py
             raise ICSError(('{}({}) Attribute {} is not of type \'list\''.format(self.__class__.__name__, self.name, attr)))
 
         self._attr[attr].remove(value)
+        AttributeObject.update_flag = True
 
     def attr_value(self, attr):
         """Retrieve value of attribute.
@@ -231,7 +251,7 @@ resource_attributes = {
 }
 
 group_attributes = {
-    "System List": {
+    "SystemList": {
         "default": [],
         "type": "list",
         "description": "",

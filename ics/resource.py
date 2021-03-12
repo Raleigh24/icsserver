@@ -397,6 +397,19 @@ class Group(AttributeObject):
             else:
                 return GroupStates.UNKNOWN
 
+    def load(self):
+        """Total resource load of group.
+
+        Returns:
+            int: total resource load.
+
+        """
+        total_load = 0
+        for member in self.members:
+            total_load += int(member.attr_value('Load'))
+
+        return total_load
+
     def add_resource(self, resource):
         """Add group resource.
 

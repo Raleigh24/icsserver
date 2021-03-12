@@ -355,8 +355,12 @@ class NodeSystem(AttributeObject):
 
         """
         if node is None:
-            current_load = self.clus_load()
-            if len(set(current_load.values())) == 1:
+            current_load = self.grp_clus_load(group_name)
+            logger.debug('Valid group node loads: ' + str(current_load))
+            if len(current_load.values()) == 0:
+                logger.info('No valid system systems set for group {}'.format(group_name))
+                raise ICSError('No valid system systems set for group {}'.format(group_name))
+            elif len(set(current_load.values())) == 1:
                 logger.debug("Found even load on all nodes")
                 online_node = choice(list(current_load.keys()))
                 logger.debug('Randomly choosing node ' + str(online_node))
@@ -364,7 +368,11 @@ class NodeSystem(AttributeObject):
                 online_node = min(current_load.items(), key=operator.itemgetter(1))[0]
                 logger.debug('Found minimum load node: ' + str(online_node))
         else:
-            online_node = node
+            if node not in self.grp_value(group_name, 'SystemList'):
+                logger.info('Invalid node for {}, node {} not in system list'.format(group_name, node))
+                raise ICSError('Invalid node for {}, node {} not in system list'.format(group_name, node))
+            else:
+                online_node = node
 
         logger.debug('Attempting online group {} on node {} '.format(group_name, online_node))
 
@@ -596,7 +604,7 @@ class NodeSystem(AttributeObject):
         return self.grp_value(group_name, attr_name)
 
     @Pyro.expose
-    def clus_grp_modify(self, group_name, attr_name, value, remote=False):
+    def clus_grp_modify(self, group_name, attr_name, value, remote=False, append=False, remove=False):
         """Modify a group attribute value on the cluster.
 
         Args:
@@ -606,10 +614,10 @@ class NodeSystem(AttributeObject):
             remote (bool, opt): Local or remote execution.
 
         """
-        self.grp_modify(group_name, attr_name, value)
+        self.grp_modify(group_name, attr_name, value, append=append, remove=remove)
         if not remote:
             for node in self.remote_nodes:
-                self.remote_nodes[node].clus_grp_modify(group_name, attr_name, value, remote=True)
+                self.remote_nodes[node].clus_grp_modify(group_name, attr_name, value, remote=True, append=append, remove=remove)
 
     @Pyro.expose
     def clus_grp_attr(self, group_name):
@@ -1162,13 +1170,13 @@ class NodeSystem(AttributeObject):
         group = self.get_group(group_name)
         return group.attr_value(attr_name)
 
-    def grp_modify(self, group_name, attr_name, value):
+    def grp_modify(self, group_name, attr_name, value, append=False, remove=False):
         """Modify an attribute for a given group.
 
         Args:
             group_name (str): Group name.
             attr_name (str): Group attribute name.
-            value (str): Group attrinute value.
+            value (str): Group attribute value.
 
         Returns:
             bool: Stressfulness of attribute modification.
@@ -1176,7 +1184,15 @@ class NodeSystem(AttributeObject):
         """
         group = self.get_group(group_name)
         try:
-            group.set_attr(attr_name, value)
+            if append:
+                logger.debug('Group({}) Appending {} to attribute {} '.format(group_name, value, attr_name))
+                group.attr_append_value(attr_name, value)
+            elif remove:
+                logger.debug('Group({}) Removing {} from  attribute {}'.format(group_name, value, attr_name))
+                group.attr_remove_value(attr_name, value)
+            else:
+                logger.debug('Group({}) Modifying attribute {} to {} '.format(group_name, attr_name, value))
+                group.set_attr(attr_name, value)
         except KeyError:
             return False
         return True
@@ -1211,6 +1227,25 @@ class NodeSystem(AttributeObject):
         logger.debug('Node loads: ' + str(nodes_load))
         return nodes_load
 
+    def grp_clus_load(self, group_name):
+        """Retrieve load value from all valid nodes in the cluster for a given group.
+
+        Args:
+            group_name (str): Group name.
+
+        Returns:
+            dict: Valid group nodes with current load value.
+
+
+        """
+        group_nodes_load = {}
+        nodes_load = self.clus_load()
+
+        for node in self.grp_value(group_name, 'SystemList'):
+            group_nodes_load[node] = nodes_load[node]
+
+        return group_nodes_load
+
     @Pyro.expose
     def load(self):
         """Calculate total current resource load on node.
@@ -1220,10 +1255,9 @@ class NodeSystem(AttributeObject):
 
         """
         total_load = 0
-        for resource in self.resources.values():
-            if resource.state in ONLINE_STATES:
-                resource_load = int(resource.attr_value('Load'))
-                total_load += resource_load
+        for group in self.groups.values():
+            if group.state() in ONLINE_STATES:
+                total_load += group.load()
 
         return total_load
 
@@ -1358,7 +1392,7 @@ class NodeSystem(AttributeObject):
                 self.grp_add(group_name)
                 group = self.get_group(group_name)
                 for attr_name in group_data[group_name]['attributes']:
-                    group.set_attr(attr_name, str(group_data[group_name]['attributes'][attr_name]))
+                    group.set_attr(attr_name, group_data[group_name]['attributes'][attr_name])
 
             # Create resources from config
             resource_data = data['resources']
@@ -1367,7 +1401,7 @@ class NodeSystem(AttributeObject):
                 self.res_add(resource_name, group_name, init_state=ResourceStates.UNKNOWN)
                 resource = self.get_resource(resource_name)
                 for attr_name in resource_data[resource_name]['attributes']:
-                    resource.set_attr(attr_name, str(resource_data[resource_name]['attributes'][attr_name]))
+                    resource.set_attr(attr_name, resource_data[resource_name]['attributes'][attr_name])
 
             # Create resource dependency links
             # Note: Links need to be done in separate loop to guarantee parent resources

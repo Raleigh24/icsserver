@@ -39,7 +39,7 @@ def event_handler():
             event.run()
         except Exception:
             logger.exception('Event {} encountered an error:'.format(str(event)))
-            alert.error(event.resource.name, "Error occurred while processing event. Please check logs.")
+            alert.error(event.resource, "Error occurred while processing event. Please check logs.")
             continue
 
         del event
