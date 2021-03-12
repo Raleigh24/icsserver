@@ -190,18 +190,23 @@ class NodeSystem(AttributeObject):
                 self.remote_nodes[node].clus_res_delete(resource_name, remote=True)
 
     @Pyro.expose
-    def clus_res_state(self, resource_args):
-        """Get states of a resource on the cluster.
-        
+    def clus_res_state(self, resource_name):
+        """Return dictionary of resource states on all cluster nodes.
+
         Args:
-            resource_args (list): Resource names. 
+            resource_name (str): Resource_name
 
         Returns:
-            list: Resource states.
+            dict: Nodes with resource state
 
         """
-        # TODO: get states from other nodes
-        return self.res_state(resource_args)
+        states = {
+            self.attr_value('NodeName'): self.res_state(resource_name)
+        }
+        for node in self.remote_nodes:
+            states[node] = self.remote_nodes[node].res_state(resource_name)
+
+        return states
 
     @Pyro.expose
     def clus_res_state_many(self, resource_list, include_node=False, remote=False):
@@ -423,6 +428,13 @@ class NodeSystem(AttributeObject):
             str: Group state.
 
         """
+        states = {
+            self.attr_value('NodeName'): self.grp_state(group_name)
+        }
+
+        for node in self.remote_nodes:
+            states[node] = self.remote_nodes[node].grp_state(group_name)
+
         return self.grp_state(group_name)
 
     @Pyro.expose
@@ -448,7 +460,7 @@ class NodeSystem(AttributeObject):
                 group_states.append((group_name, local_node, self.clus_grp_state(group_name)))
 
             for node in self.remote_nodes:
-                state = self.remote_nodes[node].clus_grp_state(group_name)
+                state = self.remote_nodes[node].grp_state(group_name)
                 logger.debug("Found group {} in state {} on node {}".format(group_name, state, node))
                 group_states.append((group_name, node, state))
 
@@ -784,6 +796,7 @@ class NodeSystem(AttributeObject):
         self.config_update = True
         logger.info('Resource({}) resource deleted'.format(resource_name))
 
+    @Pyro.expose
     def res_state(self, resource_name):
         """Return state for a given resource.
 
@@ -1020,6 +1033,7 @@ class NodeSystem(AttributeObject):
         group = self.get_group(group_name)
         group.stop()
 
+    @Pyro.expose
     def grp_state(self, group_name):
         """Interface for getting state of group.
 
@@ -1346,6 +1360,36 @@ class NodeSystem(AttributeObject):
         # thread_heartbeat.daemon = True
         # thread_heartbeat.start()
         # self.threads.append(thread_heartbeat)
+
+    @Pyro.expose
+    def dump(self):
+
+        data = {
+            'data': {
+                'system': {},
+                'groups': {},
+                'resources': {},
+            }
+        }
+
+        dumped_sys_attr = ['ClusterName', 'NodeName', 'NodeList']
+        dumped_grp_attr = ['Enabled', 'SystemList', 'Parallel']
+        dumped_res_attr = ['Enabled', 'Group', 'Load']
+
+        for attr in dumped_sys_attr:
+            data['data']['system'][attr] = self.attr_value(attr)
+
+        for group_name, group in self.groups.items():
+            data['data']['groups'][group_name] = {'State': self.clus_grp_state(group_name)}
+            for attr in dumped_grp_attr:
+                data['data']['groups'][group_name][attr] = group.attr_value(attr)
+
+        for resource_name, resource in self.resources.items():
+            data['data']['resources'][resource_name] = {'State': self.clus_res_state(resource_name)}
+            for attr in dumped_res_attr:
+                data['data']['resources'][resource_name][attr] = resource.attr_value(attr)
+
+        return data
 
     def config_data(self):
         """Return system configuration data in dictionary format"""

@@ -1,4 +1,5 @@
 import argparse
+import pprint
 import socket
 import sys
 import time
@@ -142,10 +143,9 @@ def icsgrp():
     setup_signal_handler()
     description_text = 'Manage ICS service groups'
     parser = argparse.ArgumentParser(description=description_text, epilog=epilog_text, allow_abbrev=False)
-    parser.add_argument('-online', nargs=1, metavar=('<group>'), help='bring group online')
-    parser.add_argument('-offline', nargs=1, metavar=('<group>'), help='bring group offline')
-    parser.add_argument('-sys', nargs=1, metavar=('<system>'), help='online or offline system')
     group = parser.add_mutually_exclusive_group()
+    group.add_argument('-online', nargs=1, metavar='<group> [-sys <system>]', help='bring group online')
+    group.add_argument('-offline', nargs=1, metavar='<group> [-sys <system>]', help='bring group offline')
     group.add_argument('-add', nargs=1, metavar='<group>', help='add new resource')
     group.add_argument('-delete', nargs=1, metavar='<group>', help='delete existing group')
     group.add_argument('-enable', nargs=1, metavar='<group>', help='enable resources for a group')
@@ -167,6 +167,16 @@ def icsgrp():
                        help='modify resource attribute')
     group.add_argument('-wait', nargs=3, metavar=('<group>', '<state>', '<timeout>'),
                        help='wait for resource to change state')
+
+    if "-sys" in sys.argv:
+        parser.add_argument('-sys', nargs=1)
+
+    if "-append" in sys.argv:
+        parser.add_argument('-append', nargs=1)
+
+    if "-remove" in sys.argv:
+        parser.add_argument('-remove', nargs=1)
+
     args = parser.parse_args()
 
     if len(sys.argv) <= 1:
@@ -177,7 +187,7 @@ def icsgrp():
 
     if args.online is not None:
         group_name = args.online[0]
-        if args.sys is not None:
+        if hasattr(args, 'sys'):
             system_name = args.sys[0]
             remote_execute(cluster.clus_grp_online, group_name, node=system_name)
         else:
@@ -185,7 +195,7 @@ def icsgrp():
 
     elif args.offline is not None:
         group_name = args.offline[0]
-        if args.sys is not None:
+        if hasattr(args, 'sys'):
             system_name = args.sys[0]
             remote_execute(cluster.clus_grp_offline, group_name, node=system_name)
         else:
@@ -262,16 +272,28 @@ def icsgrp():
         print(result)
 
     elif args.modify is not None:
-        if len(args.modify) < 3:
-            parser.print_usage()
-            print('error: argument -modify: expected 3 arguments')
-            sys.exit(1)
-        else:
+        if len(args.modify) == 2:
+            group_name = args.modify[0]
+            attr = args.modify[1]
+            if hasattr(args, 'append'):
+                value = args.append[0]
+                remote_execute(cluster.clus_grp_modify, group_name, attr, value, append=True)
+            elif hasattr(args, 'remove'):
+                value = args.remove[0]
+                remote_execute(cluster.clus_grp_modify, group_name, attr, value, remove=True)
+            else:
+                print('error: argument -modify: expected use of -append or -remove with 2 arguments')
+                sys.exit(1)
+
+        elif len(args.modify) == 3:
             group_name = args.modify[0]
             attr = args.modify[1]
             value = ' '.join(args.modify[2:])
-
-        remote_execute(cluster.clus_grp_modify, group_name, attr, value)
+            remote_execute(cluster.clus_grp_modify, group_name, attr, value)
+        else:
+            parser.print_usage()
+            print('error: argument -modify: expected 2 or 3 arguments')
+            sys.exit(1)
 
     elif args.wait is not None:
         group_name, state_name, timeout = args.wait
@@ -455,3 +477,20 @@ def icsalert():
         remote_execute(alert.remove_recipient, args.remove[0])
     else:
         parser.print_help()
+
+
+def icsdump():
+    setup_signal_handler()
+    description_text = 'Dump system data'
+    parser = argparse.ArgumentParser(description=description_text, epilog=epilog_text, allow_abbrev=False)
+    parser.add_argument('-pretty', action='store_true', help='Print pretty')
+    args = parser.parse_args()
+
+    cluster = engine_conn()
+    data = remote_execute(cluster.dump)
+
+    if args.pretty:
+        pp = pprint.PrettyPrinter()
+        pp.pprint(data)
+    else:
+        print(data)
