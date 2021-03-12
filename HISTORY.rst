@@ -4,6 +4,16 @@ Release History
 ---------------
 
 
+2.1.0 (In Development)
+++++++++++++++++++++++
+
+**New Features**
+
+- Added ability to allow the system to decide which node to start a service group biased on a user defined system load
+- Added Load attribute to resources to allow the user to specify the amount of load a resource will put on a system
+- Added SystemList attribute to service groups to specify which nodes a service group can become online
+
+
 2.0.0 (2021-03-10)
 ++++++++++++++++++
 
