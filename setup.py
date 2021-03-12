@@ -40,6 +40,7 @@ setup(
             'icsgrp = ics.command_line:icsgrp',
             'icsres = ics.command_line:icsres',
             'icsalert = ics.command_line:icsalert',
+            'icsdump = ics.command_line:icsdump',
         ]
     }
 )
