@@ -1,5 +1,5 @@
 import argparse
-import pprint
+import json
 import socket
 import sys
 import time
@@ -490,7 +490,6 @@ def icsdump():
     data = remote_execute(cluster.dump)
 
     if args.pretty:
-        pp = pprint.PrettyPrinter()
-        pp.pprint(data)
+        print(json.dumps(data, indent=4, sort_keys=True))
     else:
-        print(data)
+        print(json.dumps(data))
