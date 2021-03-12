@@ -63,7 +63,6 @@ class TestAttributeObject(unittest.TestCase):
             self.attribute_object.attr_append_value('attr1', 'value1')
         self.attribute_object.attr_append_value('attr4', 'value1')
         self.attribute_object.attr_append_value('attr4', 'value2')
-        print(test_attributes)
         self.assertEqual(self.attribute_object.attr_value('attr4'), ['value1', 'value2'])
 
     def test_attr_remove_value(self):
@@ -71,7 +70,6 @@ class TestAttributeObject(unittest.TestCase):
             self.attribute_object.attr_remove_value('attr1', 'value1')
         self.attribute_object.attr_append_value('attr4', 'value1')
         self.attribute_object.attr_append_value('attr4', 'value2')
-        print(self.attribute_object.attr_value('attr4'))
         self.attribute_object.attr_remove_value('attr4', 'value2')
         self.assertEqual(self.attribute_object.attr_value('attr4'), ['value1'])
 
