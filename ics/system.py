@@ -769,6 +769,9 @@ class NodeSystem(AttributeObject):
         Args:
             resource_name (str): Resource name.
 
+        Raises:
+            ICSError: When resource is in monitor only mode.
+
         """
         resource = self.get_resource(resource_name)
         if resource.attr_value('MonitorOnly') == 'true':
