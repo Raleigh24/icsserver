@@ -4,6 +4,7 @@ import os
 import signal
 import subprocess
 from datetime import datetime
+from socket import gethostname
 
 from ics.environment import ICS_ALERT_LOG
 from ics.environment import ICS_RES_LOG
@@ -11,6 +12,16 @@ from ics.environment import ICS_VAR
 from ics.errors import ICSError
 
 logger = logging.getLogger(__name__)
+
+
+def hostname():
+    """Return current system hostname.
+
+    Returns:
+        str: Current system hostname.
+
+    """
+    return gethostname()
 
 
 def is_process_running(pid):
