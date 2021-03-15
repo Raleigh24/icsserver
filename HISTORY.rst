@@ -14,6 +14,10 @@ Release History
 - Added SystemList attribute to service groups to specify which nodes a service group can become online
 - Added icsdump command line tool to dump system data for external use
 
+**Miscellaneous**
+
+- Removed NodeName attribute as a user editable attribute
+- All nodes in cluster are now it NodeList attribute
 
 2.0.0 (2021-03-10)
 ++++++++++++++++++

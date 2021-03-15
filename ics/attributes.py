@@ -159,7 +159,7 @@ class AttributeObject(object):  # Inherits from object to enabling super() in py
         """Return a list of attributes and their values.
 
         Returns:
-            list: Attributes in list format.
+            list: List of attribute name, value tuples
 
         """
         attr_list = []
@@ -285,11 +285,11 @@ system_attributes = {
         "type": "string",
         "description": "The name of the cluster"
     },
-    "NodeName": {
-        "default": "",
-        "type": "string",
-        "description": "The name of the node"
-    },
+    # "NodeName": {
+    #     "default": "",
+    #     "type": "string",
+    #     "description": "The name of the node"
+    # },
     "NodeList": {
         "default": [],
         "type": "list",

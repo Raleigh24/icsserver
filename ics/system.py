@@ -71,6 +71,32 @@ class NodeSystem(AttributeObject):
             logging.debug('Received ping from ' + str(host))
         return True
 
+    def attr_value(self, attr):
+        """Retrieve value of attribute for node.
+
+        Args:
+            attr (str): Attribute name.
+
+        Returns:
+            obj: Attribute value.
+
+        """
+        if attr == 'NodeName':
+            return self.node_name
+        else:
+            return super().attr_value(attr)
+
+    def attr_list(self):
+        """Return a list of node attribute values and their values.
+
+        Returns:
+            list: List of attribute name, value tuples
+
+        """
+        node_attr_list = super().attr_list()
+        node_attr_list.append(('NodeName', self.node_name))
+        return node_attr_list
+
     def register_node(self, host):
         """Register a host and generate its URI.
 
@@ -79,6 +105,11 @@ class NodeSystem(AttributeObject):
 
         """
         logger.info('Registering node ' + str(host))
+
+        if host == self.node_name:
+            logger.error("Unable to register self ({}) as a remote node".format(self.node_name))
+            return
+
         uri = 'PYRO:system@' + str(host) + ':' + str(ICS_ENGINE_PORT)
         self.remote_nodes[host] = Pyro.Proxy(uri)
 
@@ -91,8 +122,11 @@ class NodeSystem(AttributeObject):
 
         """
         logger.info('Adding node {}'.format(host))
-        self.register_node(host)
-        self.attr_append_value('NodeList', host)
+        if host == self.node_name:
+            logger.info('Node is same as local system, skipping...')
+        else:
+            self.register_node(host)
+            self.attr_append_value('NodeList', host)
 
     @Pyro.expose
     def delete_node(self, host):
@@ -115,9 +149,7 @@ class NodeSystem(AttributeObject):
             list: Nodes withing cluster.
 
         """
-        nodes = [self.attr_value('NodeName')]
-        nodes += self.attr_value('NodeList')
-        return nodes
+        return self.attr_value('NodeList')
 
     def heartbeat(self):
         while True:
@@ -435,7 +467,7 @@ class NodeSystem(AttributeObject):
         for node in self.remote_nodes:
             states[node] = self.remote_nodes[node].grp_state(group_name)
 
-        return self.grp_state(group_name)
+        return states
 
     @Pyro.expose
     def clus_grp_state_all(self, group_names=None, include_local=True):
@@ -457,7 +489,7 @@ class NodeSystem(AttributeObject):
         for group_name in group_names:
 
             if include_local:
-                group_states.append((group_name, local_node, self.clus_grp_state(group_name)))
+                group_states.append((group_name, local_node, self.grp_state(group_name)))
 
             for node in self.remote_nodes:
                 state = self.remote_nodes[node].grp_state(group_name)
@@ -1496,9 +1528,13 @@ class NodeSystem(AttributeObject):
         else:
             logger.info('No configuration data found')
 
+        if self.node_name not in self.attr_value('NodeList'):
+            self.attr_append_value('NodeList', self.node_name)
+
         # Register remote nodes from config
         for host in self.attr_value('NodeList'):
-            self.register_node(host)
+            if host != self.node_name:
+                self.register_node(host)
 
         self.start_event_handler()
         self.start_poll_updater()

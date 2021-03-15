@@ -189,9 +189,8 @@ class TestNodeSystem(unittest.TestCase):
 
     def test_set_attr_node_name(self):
         test_node_name = 'cluster_1'
-        self.system.set_attr('NodeName', test_node_name)
-        self.assertEqual(self.system.node_name, test_node_name)
-        self.assertEqual(self.system.attr_value('NodeName'), test_node_name)
+        with self.assertRaises(ics.errors.ICSError):
+            self.system.set_attr('NodeName', test_node_name)
 
     def test_node_attr(self):
         self.assertIsInstance(self.system.node_attr(), list)
@@ -272,9 +271,9 @@ class TestNodeSystem(unittest.TestCase):
     def test_res_state_many(self):
         resource_list = ['proc_a1', 'proc_a2']
         group_name = 'group_a'
+        node_name = self.system.attr_value('NodeName')
         resource_states = [['proc_a1', 'OFFLINE'], ['proc_a2', 'OFFLINE']]
-        resource_states_node = [['proc_a1', 'node_1', 'OFFLINE'], ['proc_a2', 'node_1', 'OFFLINE']]
-        self.system.set_attr('NodeName', 'node_1')
+        resource_states_node = [['proc_a1', node_name, 'OFFLINE'], ['proc_a2', node_name, 'OFFLINE']]
         self.system.grp_add(group_name)
         for resource_name in resource_list:
             self.system.res_add(resource_name, group_name, init_state=ics.states.ResourceStates.OFFLINE)
