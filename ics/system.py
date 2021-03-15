@@ -136,7 +136,7 @@ class NodeSystem(AttributeObject):
 
         """
         logger.info('Deleting node {}'.format(host))
-        #TODO: Check if host is current host
+        # TODO: Check if host is current host
         del self.remote_nodes[host]
         self.attr_remove_value('NodeList', host)
 
@@ -655,12 +655,15 @@ class NodeSystem(AttributeObject):
             attr_name (str): Group attribute name.
             value (str): New group attribute value.
             remote (bool, opt): Local or remote execution.
+            append (bool, opt): Append item to attribute list.
+            remove (bool, opt): Remove item from attribute list.
 
         """
         self.grp_modify(group_name, attr_name, value, append=append, remove=remove)
         if not remote:
             for node in self.remote_nodes:
-                self.remote_nodes[node].clus_grp_modify(group_name, attr_name, value, remote=True, append=append, remove=remove)
+                self.remote_nodes[node].clus_grp_modify(group_name, attr_name, value, remote=True, append=append,
+                                                        remove=remove)
 
     @Pyro.expose
     def clus_grp_attr(self, group_name):
@@ -799,7 +802,6 @@ class NodeSystem(AttributeObject):
             self.resources[resource_name] = resource
             group = self.groups[group_name]
             group.add_resource(resource)
-            #return resource
 
         self.config_update = True
 
@@ -905,7 +907,7 @@ class NodeSystem(AttributeObject):
         parent_resource = self.get_resource(resource_dependency)
         try:
             resource.remove_parent(parent_resource)
-        except ValueError as err:
+        except ValueError:
             raise ICSError('Unable to remove link, link does not exist.')
         parent_resource.remove_child(resource)
         logger.info('Resource({}) removed dependency on {}'.format(resource_name, resource_dependency))
@@ -1097,7 +1099,6 @@ class NodeSystem(AttributeObject):
         else:
             group = Group(group_name)
             self.groups[group_name] = group
-            #return group
 
         self.config_update = True
 
@@ -1222,6 +1223,8 @@ class NodeSystem(AttributeObject):
             group_name (str): Group name.
             attr_name (str): Group attribute name.
             value (str): Group attribute value.
+            append (bool, opt): Append item to attribute list.
+            remove (bool, opt): Remove item from attribute list.
 
         Returns:
             bool: Stressfulness of attribute modification.

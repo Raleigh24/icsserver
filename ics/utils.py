@@ -134,7 +134,7 @@ def read_config(filename):
         with open(filename, 'r') as f:
             data = json.load(f)
         return data
-    except FileNotFoundError as error:
+    except FileNotFoundError:
         logging.info('No configuration file found')
         raise
     except (ValueError, IOError) as error:

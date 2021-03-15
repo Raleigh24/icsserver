@@ -149,7 +149,8 @@ class Resource(AttributeObject):
                 logger.debug('Resource({}) Found {} to be in monitory only, skipping'.format(self.name, parent.name))
                 continue
             elif state is not ResourceStates.ONLINE:
-                logger.debug('Resource({}) Found {} in state {} not to be online unable to start yet'.format(self.name, parent.name, state))
+                logger.debug('Resource({}) Found {} in state {} '
+                             'not to be online unable to start yet'.format(self.name, parent.name, state))
                 return False
 
         return True
@@ -172,7 +173,8 @@ class Resource(AttributeObject):
                 logger.debug('Resource({}) Found {} to be in monitory only, skipping'.format(self.name, child.name))
                 continue
             elif state is not ResourceStates.OFFLINE:
-                logger.debug('Resource({}) Found {} in state {} not to be offline unable to start yet'.format(self.name, child.name, state))
+                logger.debug('Resource({}) Found {} in state {} '
+                             'not to be offline unable to start yet'.format(self.name, child.name, state))
                 return False
 
         return True
@@ -300,7 +302,7 @@ class Resource(AttributeObject):
         if self.cmd_process is not None:
             try:
                 self.cmd_process.kill()
-            except OSError as e:
+            except OSError:
                 logger.error('Unable to kill process for resource ' + self.name)
                 return
         self._reset_cmd()

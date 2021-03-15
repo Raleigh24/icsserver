@@ -46,7 +46,7 @@ class SubServerControl:
                 pid = int(utils.get_ics_pid(server))
                 try:
                     os.kill(pid, signal.SIGKILL)
-                except OSError as e:
+                except OSError:
                     logging.error('Unable to stop server ' + server)
                     if force:
                         logging.info('Force killing server ' + server)
