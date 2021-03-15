@@ -13,6 +13,7 @@ Release History
 - Added Load attribute to resources to allow the user to specify the amount of load a resource will put on a system
 - Added SystemList attribute to service groups to specify which nodes a service group can become online
 - Added icsdump command line tool to dump system data for external use
+- Added user executed commands to logs
 
 **Miscellaneous**
 

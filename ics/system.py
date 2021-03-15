@@ -1,7 +1,6 @@
 import logging
 import operator
 import os
-import socket
 import sys
 import threading
 import time
@@ -20,7 +19,7 @@ from ics.errors import ICSError
 from ics.events import event_handler
 from ics.resource import Resource, Group
 from ics.states import ResourceStates, TRANSITION_STATES, ONLINE_STATES
-from ics.utils import read_config, write_config
+from ics.utils import read_config, write_config, hostname
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +43,7 @@ class NodeSystem(AttributeObject):
     def __init__(self):
         super(NodeSystem, self).__init__()
         self.init_attr(system_attributes)
-        self.node_name = socket.gethostname()
+        self.node_name = hostname()
         self.cluster_name = ""
         self.resources = {}
         self.groups = {}
@@ -1422,6 +1421,28 @@ class NodeSystem(AttributeObject):
                 data['data']['resources'][resource_name][attr] = resource.attr_value(attr)
 
         return data
+
+    @Pyro.expose
+    def clus_log_command(self, message):
+        """Log command onto cluster.
+
+        Args:
+            message (str): Message to log.
+
+        """
+        self.log_command(message)
+        for node in self.remote_nodes:
+            self.remote_nodes[node].log_command(message)
+
+    @Pyro.expose
+    def log_command(self, message):
+        """Log message.
+
+        Args:
+            message (str): Message to log.
+
+        """
+        logger.info('User command, ' + str(message))
 
     def config_data(self):
         """Return system configuration data in dictionary format"""

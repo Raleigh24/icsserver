@@ -3,6 +3,7 @@ import json
 import socket
 import sys
 import time
+from getpass import getuser
 
 import Pyro4 as Pyro
 
@@ -11,7 +12,7 @@ from ics.environment import ICS_ENGINE_PORT, ICS_DAEMON_PORT, ICS_ALERT_PORT
 from ics.errors import ICSError
 from ics.tabular import print_table
 from ics.utils import ics_version
-from ics.utils import setup_signal_handler
+from ics.utils import setup_signal_handler, hostname
 
 epilog_text = ''
 
@@ -50,6 +51,13 @@ def engine_conn():
 def alert_conn():
     uri = 'PYRO:alert_handler@' + socket.gethostname() + ':' + str(ICS_ALERT_PORT)
     return Pyro.Proxy(uri)
+
+
+def comamnd_log(conn, command_name):
+    command_args = sys.argv
+    command_args.pop(0)
+    message = "Host: {}, User: {}, Command: {} {}".format(hostname(), getuser(), command_name, ' '.join(command_args))
+    remote_execute(conn.clus_log_command, message)
 
 
 def icsd():
@@ -96,6 +104,7 @@ def icssys():
         sys.exit(1)
 
     cluster = engine_conn()
+    comamnd_log(cluster, 'icssys')
 
     if args.add is not None:
         remote_execute(cluster.add_node, args.add[0])
@@ -184,6 +193,7 @@ def icsgrp():
         sys.exit()
 
     cluster = engine_conn()
+    comamnd_log(cluster, 'icsgrp')
 
     if args.online is not None:
         group_name = args.online[0]
@@ -346,6 +356,7 @@ def icsres():
         sys.exit()
 
     cluster = engine_conn()
+    comamnd_log(cluster, 'icsres')
 
     if args.online is not None:
         resource_name = args.online[0]
@@ -465,6 +476,7 @@ def icsalert():
 
     if args.level is not None:
         cluster = engine_conn()
+        comamnd_log(cluster, 'icsalert')
         remote_execute(cluster.set_level, args.level[0])
     elif args.test:
         alert = AlertClient()
@@ -487,6 +499,7 @@ def icsdump():
     args = parser.parse_args()
 
     cluster = engine_conn()
+    comamnd_log(cluster, 'icsdump')
     data = remote_execute(cluster.dump)
 
     if args.pretty:
