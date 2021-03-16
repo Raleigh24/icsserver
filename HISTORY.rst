@@ -15,6 +15,10 @@ Release History
 - Added icsdump command line tool to dump system data for external use
 - Added user executed commands to logs
 
+**Improvements**
+
+- Added better support for modifying list attributes
+
 **Miscellaneous**
 
 - Removed NodeName attribute as a user editable attribute
