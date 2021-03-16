@@ -94,14 +94,20 @@ def icssys():
     group.add_argument('-list', action='store_true', help='print list of all nodes')
     group.add_argument('-attr', action='store_true', help='list node attributes')
     group.add_argument('-value', nargs=1, metavar='<attr>', help='print resource  attribute value')
-    group.add_argument('-modify', nargs=argparse.REMAINDER, metavar=('<res>', '<attr>', '<value>'),
+    group.add_argument('-modify', nargs='*', metavar=('<res>', '<attr>', '<value>'),
                        help='modify resource attribute')
     group.add_argument('-version', action='store_true', help='print ICS version')
-    args = parser.parse_args()
+    first_args = parser.parse_known_args()
+    args = first_args[0]
 
     if len(sys.argv) <= 1:
         parser.print_help()
         sys.exit(1)
+
+    secondary_parser = argparse.ArgumentParser()
+    secondary_parser.add_argument('-append', nargs=1)
+    secondary_parser.add_argument('-remove', nargs=1)
+    secondary_args = secondary_parser.parse_args(first_args[1])
 
     cluster = engine_conn()
     comamnd_log(cluster, 'icssys')
@@ -131,15 +137,25 @@ def icssys():
         print(result)
 
     elif args.modify is not None:
-        if len(args.modify) < 2:
-            parser.print_usage()
-            print('error: argument -modify: expected 2 arguments')
-            sys.exit(1)
-        else:
+        if len(args.modify) == 1:
+            attr_name = args.modify[0]
+            if secondary_args.append is not None:
+                value = secondary_args.append[0]
+                remote_execute(cluster.node_modify, attr_name, value, append=True)
+            elif secondary_args.remove is not None:
+                value = secondary_args.remove[0]
+                remote_execute(cluster.node_modify, attr_name, value, remove=True)
+            else:
+                print('error: argument -modify: expected use of -append or -remove with 1 argument')
+                sys.exit(1)
+        elif len(args.modify) == 2:
             attr_name = args.modify[0]
             value = ' '.join(args.modify[1:])
-
-        remote_execute(cluster.node_modify, attr_name, value)
+            remote_execute(cluster.node_modify, attr_name, value)
+        else:
+            parser.print_usage()
+            print('error: argument -modify: expected 1 or 2 arguments')
+            sys.exit(1)
 
     elif args.version:
         print(ics_version())

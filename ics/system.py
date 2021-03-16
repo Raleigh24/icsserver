@@ -129,19 +129,29 @@ class NodeSystem(AttributeObject):
         return self.attr_value(attr_name)
 
     @Pyro.expose
-    def node_modify(self, attr_name, value):
+    def node_modify(self, attr_name, value, append=False, remove=False):
         """Modify a node attribute.
 
         Args:
             attr_name (str): Attribute name.
             value (str): Attribute value.
+            append (bool, opt): Append item to attribute list.
+            remove (bool, opt): Remove item from attribute list.
 
         Returns:
-            bool: Stressfulness of attribute change.
+            bool: Successful of attribute change.
 
         """
         try:
-            self.set_attr(attr_name, value)
+            if append:
+                logger.debug('Node appending {} to attribute {} '.format( value, attr_name))
+                self.attr_append_value(attr_name, value)
+            elif remove:
+                logger.debug('Node removing {} from  attribute {}'.format(value, attr_name))
+                self.attr_remove_value(attr_name, value)
+            else:
+                logger.debug('Node modifying attribute {} to {} '.format(attr_name, value))
+                self.set_attr(attr_name, value)
         except KeyError:
             return False
         return True
@@ -721,7 +731,7 @@ class NodeSystem(AttributeObject):
             remove (bool, opt): Remove item from attribute list.
 
         Returns:
-            bool: Stressfulness of attribute modification.
+            bool: Successful of attribute change.
 
         """
         group = self.get_group(group_name)

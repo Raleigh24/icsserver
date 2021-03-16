@@ -111,7 +111,11 @@ class AttributeObject(object):  # Inherits from object to enabling super() in py
             raise ICSError('{}({}) Attribute {} does not exist'.format(self.__class__.__name__, self.name, attr))
 
         if self.default_attr[attr]['type'] != 'list':
-            raise ICSError(('{}({}) Attribute {} is not of type \'list\''.format(self.__class__.__name__, self.name, attr)))
+            raise ICSError(('{}({}) Attribute {} is not of type \'list\''.format(self.__class__.__name__,
+                                                                                 self.name, attr)))
+        if value in self.attr_value(attr):
+            raise ICSError('{}({}) Value {} already exists in attribute {}'.format(self.__class__.__name__,
+                                                                                   self.name, value, attr))
 
         self._attr[attr].append(value)
         AttributeObject.update_flag = True
@@ -132,9 +136,13 @@ class AttributeObject(object):  # Inherits from object to enabling super() in py
             raise ICSError('{}({}) Attribute {} does not exist'.format(self.__class__.__name__, self.name, attr))
 
         if self.default_attr[attr]['type'] != 'list':
-            raise ICSError(('{}({}) Attribute {} is not of type \'list\''.format(self.__class__.__name__, self.name, attr)))
-
-        self._attr[attr].remove(value)
+            raise ICSError(('{}({}) Attribute {} is not of type \'list\''.format(self.__class__.__name__,
+                                                                                 self.name, attr)))
+        try:
+            self._attr[attr].remove(value)
+        except ValueError:
+            raise ICSError(('{}({}) Value {} is not in attribute list {}'.format(self.__class__.__name__, self.name,
+                                                                                 value, attr)))
         AttributeObject.update_flag = True
 
     def attr_value(self, attr):
@@ -311,7 +319,7 @@ system_attributes = {
         "description": ""
     },
     "AlertRecipients": {
-        "default": "",
+        "default": [],
         "type": "list",
         "description": ""
     },
