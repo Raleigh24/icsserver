@@ -144,7 +144,7 @@ class NodeSystem(AttributeObject):
         """
         try:
             if append:
-                logger.debug('Node appending {} to attribute {} '.format( value, attr_name))
+                logger.debug('Node appending {} to attribute {} '.format(value, attr_name))
                 self.attr_append_value(attr_name, value)
             elif remove:
                 logger.debug('Node removing {} from  attribute {}'.format(value, attr_name))
