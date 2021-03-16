@@ -70,6 +70,11 @@ class NodeSystem(AttributeObject):
             logging.debug('Received ping from ' + str(host))
         return True
 
+    @Pyro.expose
+    def node_attr(self):
+        """Return a list of node attributes"""
+        return self.attr_list()
+
     def attr_value(self, attr):
         """Retrieve value of attribute for node.
 
@@ -95,6 +100,51 @@ class NodeSystem(AttributeObject):
         node_attr_list = super().attr_list()
         node_attr_list.append(('NodeName', self.node_name))
         return node_attr_list
+
+    def set_attr(self, attr, value):
+        """Set node attribute value.
+
+        Args:
+            attr (str): Attribute name.
+            value (str): Attribute value.
+
+        """
+        super(NodeSystem, self).set_attr(attr, value)
+        if attr == "ClusterName":
+            self.cluster_name = value
+        elif attr == "NodeName":
+            self.node_name = value
+
+    @Pyro.expose
+    def node_value(self, attr_name):
+        """Return node attribute.
+
+        Args:
+            attr_name (str): Attribute name.
+
+        Returns:
+            str: Node attribute value.
+
+        """
+        return self.attr_value(attr_name)
+
+    @Pyro.expose
+    def node_modify(self, attr_name, value):
+        """Modify a node attribute.
+
+        Args:
+            attr_name (str): Attribute name.
+            value (str): Attribute value.
+
+        Returns:
+            bool: Stressfulness of attribute change.
+
+        """
+        try:
+            self.set_attr(attr_name, value)
+        except KeyError:
+            return False
+        return True
 
     def register_node(self, host):
         """Register a host and generate its URI.
@@ -162,225 +212,6 @@ class NodeSystem(AttributeObject):
 
             time.sleep(1)
 
-    @Pyro.expose
-    def clus_res_online(self, resource_name, system_name):
-        """Online a resource in the cluster.
-
-        Args:
-            resource_name (str): Resource name.
-            system_name (str): System name.
-
-        """
-        if self.attr_value('NodeName') == system_name:
-            # TODO: check if online on other node first
-            self.res_online(resource_name)
-        else:
-            self.remote_nodes[system_name].clus_res_online(resource_name, system_name)
-
-    @Pyro.expose
-    def clus_res_offline(self, resource_name, system_name):
-        """Offline a resource in the cluster.
-        
-        Args:
-            resource_name (str): Resource name.
-            system_name (str): System name.
-
-        """
-        if system_name == self.node_name:
-            self.res_offline(resource_name)
-        else:
-            self.remote_nodes[system_name].clus_res_offline(resource_name, system_name)
-
-    @Pyro.expose
-    def clus_res_add(self, resource_name, group_name, remote=False):
-        """Cluster interface for adding a resource.
-        
-        Args:
-            resource_name (str): Resource name.
-            group_name (str): Resource group name. 
-            remote (bool, opt): Local or remote execution. 
-
-        """
-        self.res_add(resource_name, group_name)
-        if not remote:
-            for node in self.remote_nodes:
-                self.remote_nodes[node].clus_res_add(resource_name, group_name, remote=True)
-
-    @Pyro.expose
-    def clus_res_delete(self, resource_name, remote=False):
-        """Cluster interface for deleting resources.
-        
-        Args:
-            resource_name (str): Resource name. 
-            remote (bool, opt): Local or remote execution.
-
-        """
-        self.res_delete(resource_name)
-        if not remote:
-            for node in self.remote_nodes:
-                self.remote_nodes[node].clus_res_delete(resource_name, remote=True)
-
-    @Pyro.expose
-    def clus_res_state(self, resource_name):
-        """Return dictionary of resource states on all cluster nodes.
-
-        Args:
-            resource_name (str): Resource_name
-
-        Returns:
-            dict: Nodes with resource state
-
-        """
-        states = {
-            self.attr_value('NodeName'): self.res_state(resource_name)
-        }
-        for node in self.remote_nodes:
-            states[node] = self.remote_nodes[node].res_state(resource_name)
-
-        return states
-
-    @Pyro.expose
-    def clus_res_state_many(self, resource_list, include_node=False, remote=False):
-        """Cluster interface for setting multiple resource states.
-        
-        Args:
-            resource_list (list): List of resource names. 
-            include_node (bool, opt): Include node in states. 
-            remote (bool, opt): Local or remote execution. 
-
-        Returns:
-            list: Resource states.
-            
-        """
-        resource_states = []
-        resource_states += self.res_state_many(resource_list, include_node=include_node)
-        if not remote:
-            for node in self.remote_nodes:
-                resource_states += self.remote_nodes[node].clus_res_state_many(resource_list,
-                                                                               include_node=include_node,
-                                                                               remote=True)
-        return resource_states
-
-    @Pyro.expose
-    def clus_res_link(self, resource_name, resource_dependency, remote=False):
-        """Add a resource dependency on the cluster.
-        
-        Args:
-            resource_name (str): Resource name. 
-            resource_dependency (str) Resource dependency name.
-            remote (bool, opt): Local or remote execution.
-
-        """
-        self.res_link(resource_name, resource_dependency)
-        if not remote:
-            for node in self.remote_nodes:
-                self.remote_nodes[node].clus_res_link(resource_name, resource_dependency, remote=True)
-
-    @Pyro.expose
-    def clus_res_unlink(self, resource_name, resource_dependency, remote=False):
-        """Remove a resource dependency on the cluster.
-        
-        Args:
-            resource_name (str): Resource name. 
-            resource_dependency (str): Resource dependency name. 
-            remote (bool, opt): Local or remote execution. 
-
-        """
-        self.res_unlink(resource_name, resource_dependency)
-        if not remote:
-            for node in self.remote_nodes:
-                self.remote_nodes[node].clus_res_unlink(resource_name, resource_dependency, remote=True)
-
-    @Pyro.expose
-    def clus_res_clear(self, resource_name, remote=False):
-        """CLuster interface for clearing resource fault.
-        
-        Args:
-            resource_name (str): Resource name. 
-            remote (bool, opt): Local or remote execution.
-
-        """
-        self.res_clear(resource_name)
-        if not remote:
-            for node in self.remote_nodes:
-                self.remote_nodes[node].clus_res_clear(resource_name, remote=True)
-
-    @Pyro.expose
-    def clus_res_probe(self, resource_name):
-        """Cluster interface for probing resource.
-        
-        Args:
-            resource_name (str): Resource name.
-
-        """
-        self.res_probe(resource_name)
-
-    @Pyro.expose
-    def clus_res_dep(self, resource_args):
-        """Resource dependencies.
-
-        Args:
-            resource_args (list): List of resource names to retrieve dependencies.
-
-        Returns:
-            list: List of lists with group name, resource name and dependency name.
-
-        """
-        return self.res_dep(resource_args)
-
-    @Pyro.expose
-    def clus_res_list(self):
-        """Resource list.
-        
-        Returns:
-            list: Cluster resource names.
-
-        """
-        return self.res_list()
-
-    @Pyro.expose
-    def clus_res_value(self, resource_name, attr_name):
-        """Retrieve attribute value.
-        
-        Args:
-            resource_name (str): Resource name. 
-            attr_name (str): Attribute name. 
-
-        Returns:
-            str: Resource attribute value.
-
-        """
-        return self.res_value(resource_name, attr_name)
-
-    @Pyro.expose
-    def clus_res_modify(self, resource_name, attr_name, value, remote=False):
-        """Modify a resource attribute on the cluster.
-        
-        Args:
-            resource_name (str): Resource name. 
-            attr_name (str): Attribute name. 
-            value (str): New attribute value. 
-            remote (bool, opt): Local or remote execution.
-
-        """
-        self.res_modify(resource_name, attr_name, value)
-        if not remote:
-            for node in self.remote_nodes:
-                self.remote_nodes[node].clus_res_modify(resource_name, attr_name, value, remote=True)
-
-    @Pyro.expose
-    def clus_res_attr(self, resource_name):
-        """Retrieve resource attributes.
-        
-        Args:
-            resource_name (str): Resource attribute name. 
-
-        Returns:
-            list: Resource attribute names. 
-
-        """
-        return self.res_attr(resource_name)
-
     def group_online_select(self, group_name):
         """Select an online node for a given group biased on current load. If all node loads are even a random node
         is selected. Otherwise the node with the lowest load will get selected.
@@ -407,6 +238,25 @@ class NodeSystem(AttributeObject):
             logger.debug('Found minimum load node: ' + str(node_select))
 
         return node_select
+
+    def get_group(self, group_name):
+        """Get group object from groups list.
+
+        Args:
+            group_name (str): Name of group
+
+        Returns:
+            obj: Group object.
+
+        Raises:
+            ICSError: When group does not exist.
+
+        """
+        if group_name in self.groups.keys():
+            group = self.groups[group_name]
+            return group
+        else:
+            raise ICSError('Group {} does not exist'.format(group_name))
 
     @Pyro.expose
     def clus_grp_online(self, group_name, node=None):
@@ -446,12 +296,29 @@ class NodeSystem(AttributeObject):
         else:
             self.remote_nodes[online_node].clus_grp_online(group_name, online_node)
 
+    def grp_online(self, group_name):
+        """Interface for bringing a group online.
+
+        Args:
+            group_name (str): Group name.
+
+        """
+        logger.info('Group({}) bringing online'.format(group_name))
+        group = self.get_group(group_name)
+        group.start()
+
+    def grp_online_auto(self):
+        """Start all groups with the attribute AutoStart set to true."""
+        for group in self.groups.values():
+            if group.attr_value('AutoStart') == 'true':
+                group.start()
+
     @Pyro.expose
     def clus_grp_offline(self, group_name, node=None):
         """Offline group for a given system node.
-        
+
         Args:
-            group_name (str): Group name. 
+            group_name (str): Group name.
             node (str, opt): System name.
 
         """
@@ -463,6 +330,18 @@ class NodeSystem(AttributeObject):
             self.grp_offline(group_name)
         else:
             self.remote_nodes[node].grp_offline(group_name)
+
+    @Pyro.expose
+    def grp_offline(self, group_name):
+        """Interface for bringing a group offline.
+
+        Args:
+            group_name (str): Group name.
+
+        """
+        logger.info('Group({}) bringing offline'.format(group_name))
+        group = self.get_group(group_name)
+        group.stop()
 
     @Pyro.expose
     def clus_grp_state(self, group_name):
@@ -514,6 +393,20 @@ class NodeSystem(AttributeObject):
         return group_states
 
     @Pyro.expose
+    def grp_state(self, group_name):
+        """Interface for getting state of group.
+
+        Args:
+            group_name (str): Name of group.
+
+        Returns:
+            str: Group state.
+
+        """
+        group = self.get_group(group_name)
+        return group.state().upper()
+
+    @Pyro.expose
     def clus_grp_add(self, group_name, remote=False):
         """Add a new group.
 
@@ -527,13 +420,35 @@ class NodeSystem(AttributeObject):
             for node in self.remote_nodes:
                 self.remote_nodes[node].clus_grp_add(group_name, remote=True)
 
+    def grp_add(self, group_name):
+        """Interface for adding a new group.
+
+        Args:
+            group_name (str): Group name.
+
+        Raises:
+            ICSError: When group already exist.
+            ICSError: When max group count has been reached.
+
+        """
+        logger.info('Adding new group {}'.format(group_name))
+        if group_name in self.grp_list():
+            raise ICSError('Group {} already exists'.format(group_name))
+        elif len(self.groups) >= int(self.attr_value('GroupLimit')):
+            raise ICSError('Max group count reached, unable to add new group')
+        else:
+            group = Group(group_name)
+            self.groups[group_name] = group
+
+        self.config_update = True
+
     @Pyro.expose
     def clus_grp_delete(self, group_name, remote=False):
         """Remove a group from the cluster.
-        
+
         Args:
-            group_name (str): Group name. 
-            remote (bool, opt): Local or remote execution. 
+            group_name (str): Group name.
+            remote (bool, opt): Local or remote execution.
 
         """
         self.grp_delete(group_name)
@@ -541,12 +456,29 @@ class NodeSystem(AttributeObject):
             for node in self.remote_nodes:
                 self.remote_nodes[node].clus_grp_delete(group_name, remote=True)
 
+    def grp_delete(self, group_name):
+        """Interface for deleting an existing group.
+
+        Args:
+            group_name (str): Group name.
+
+        """
+        logger.info('Deleting group {}'.format(group_name))
+        group = self.get_group(group_name)
+        if not group.members:
+            del self.groups[group_name]
+        else:
+            logger.error('Unable to delete group ({}), group still contains resources'.format(group_name))
+            pass  # delete object?
+
+        self.config_update = True
+
     @Pyro.expose
     def clus_grp_enable(self, group_name, remote=False):
         """Enable a group on the cluster.
-        
+
         Args:
-            group_name (str): Group name. 
+            group_name (str): Group name.
             remote (bool, opt): Local or remote execution.
 
         """
@@ -554,6 +486,16 @@ class NodeSystem(AttributeObject):
         if not remote:
             for node in self.remote_nodes:
                 self.remote_nodes[node].clus_grp_enable(group_name, remote=True)
+
+    def grp_enable(self, group_name):
+        """Interface to enable a group.
+
+        Args:
+            group_name (str): Group name.
+
+        """
+        group = self.get_group(group_name)
+        group.set_attr('Enabled', 'true')
 
     @Pyro.expose
     def clus_grp_disable(self, group_name, remote=False):
@@ -569,6 +511,16 @@ class NodeSystem(AttributeObject):
             for node in self.remote_nodes:
                 self.remote_nodes[node].clus_grp_disable(group_name, remote=True)
 
+    def grp_disable(self, group_name):
+        """Interface to disable a group.
+
+        Args:
+            group_name (str): Group name.
+
+        """
+        group = self.get_group(group_name)
+        group.set_attr('Enabled', 'false')
+
     @Pyro.expose
     def clus_grp_enable_resources(self, group_name, remote=False):
         """Enable a group resources on a cluster.
@@ -582,6 +534,16 @@ class NodeSystem(AttributeObject):
         if not remote:
             for node in self.remote_nodes:
                 self.remote_nodes[node].clus_grp_enable_resources(group_name, remote=True)
+
+    def grp_enable_resources(self, group_name):
+        """Interface to enable a group resources.
+
+        Args:
+            group_name (str): Group name.
+
+        """
+        group = self.get_group(group_name)
+        group.enable_resources()
 
     @Pyro.expose
     def clus_grp_disable_resources(self, group_name, remote=False):
@@ -597,6 +559,16 @@ class NodeSystem(AttributeObject):
             for node in self.remote_nodes:
                 self.remote_nodes[node].clus_grp_disable_resources(group_name, remote=True)
 
+    def grp_disable_resources(self, group_name):
+        """Interface to disable a group resources.
+
+        Args:
+            group_name (str): Group name.
+
+        """
+        group = self.get_group(group_name)
+        group.disable_resources()
+
     @Pyro.expose
     def clus_grp_flush(self, group_name, system_name):
         """Flush a group on the cluster.
@@ -610,6 +582,16 @@ class NodeSystem(AttributeObject):
             self.grp_flush(group_name)
         else:
             self.remote_nodes[system_name].clus_grp_flush(group_name, system_name)
+
+    def grp_flush(self, group_name):
+        """Interface for flushing a group.
+
+        Args:
+            group_name (str): Group name.
+
+        """
+        group = self.get_group(group_name)
+        group.flush()
 
     @Pyro.expose
     def clus_grp_clear(self, group_name, system_name):
@@ -625,6 +607,16 @@ class NodeSystem(AttributeObject):
         else:
             self.remote_nodes[system_name].clus_grp_clear(group_name, system_name)
 
+    def grp_clear(self, group_name):
+        """Interface for clearing a group.
+
+        Args:
+            group_name (str): Group name.
+
+        """
+        group = self.get_group(group_name)
+        group.clear()
+
     @Pyro.expose
     def clus_grp_resources(self, group_name):
         """List a group resources on the cluster.
@@ -638,6 +630,22 @@ class NodeSystem(AttributeObject):
         """
         return self.grp_resources(group_name)
 
+    def grp_resources(self, group_name):
+        """Interface for getting members of a group.
+
+        Args:
+            group_name (str): Group name.
+
+        Returns:
+            list: Resource name list of given group.
+
+        """
+        group = self.get_group(group_name)
+        resource_names = []
+        for member in group.members:
+            resource_names.append(member.name)
+        return resource_names
+
     @Pyro.expose
     def clus_grp_list(self):
         """List groups on the cluster.
@@ -647,6 +655,14 @@ class NodeSystem(AttributeObject):
 
         """
         return self.grp_list()
+
+    def grp_list(self):
+        """Interface for listing all existing group names
+
+        Returns:
+            list: System group names.
+        """
+        return list(self.groups.keys())
 
     @Pyro.expose
     def clus_grp_value(self, group_name, attr_name):
@@ -661,6 +677,19 @@ class NodeSystem(AttributeObject):
 
         """
         return self.grp_value(group_name, attr_name)
+
+    def grp_value(self, group_name, attr_name):
+        """Return an attribute for a given group and attribute.
+
+        Args:
+            group_name (str): Group name.
+            attr_name (str): Attribute name.
+
+        Returns:
+            str: Group attribute value.
+        """
+        group = self.get_group(group_name)
+        return group.attr_value(attr_name)
 
     @Pyro.expose
     def clus_grp_modify(self, group_name, attr_name, value, remote=False, append=False, remove=False):
@@ -681,6 +710,35 @@ class NodeSystem(AttributeObject):
                 self.remote_nodes[node].clus_grp_modify(group_name, attr_name, value, remote=True, append=append,
                                                         remove=remove)
 
+    def grp_modify(self, group_name, attr_name, value, append=False, remove=False):
+        """Modify an attribute for a given group.
+
+        Args:
+            group_name (str): Group name.
+            attr_name (str): Group attribute name.
+            value (str): Group attribute value.
+            append (bool, opt): Append item to attribute list.
+            remove (bool, opt): Remove item from attribute list.
+
+        Returns:
+            bool: Stressfulness of attribute modification.
+
+        """
+        group = self.get_group(group_name)
+        try:
+            if append:
+                logger.debug('Group({}) Appending {} to attribute {} '.format(group_name, value, attr_name))
+                group.attr_append_value(attr_name, value)
+            elif remove:
+                logger.debug('Group({}) Removing {} from  attribute {}'.format(group_name, value, attr_name))
+                group.attr_remove_value(attr_name, value)
+            else:
+                logger.debug('Group({}) Modifying attribute {} to {} '.format(group_name, attr_name, value))
+                group.set_attr(attr_name, value)
+        except KeyError:
+            return False
+        return True
+
     @Pyro.expose
     def clus_grp_attr(self, group_name):
         """Get group attribute values from the cluster.
@@ -694,55 +752,18 @@ class NodeSystem(AttributeObject):
         """
         return self.grp_attr(group_name)
 
-    def set_attr(self, attr, value):
-        """Set node attribute value.
+    def grp_attr(self, group_name):
+        """Return a list of attributes for a given group.
 
         Args:
-            attr (str): Attribute name.
-            value (str): Attribute value.
-
-        """
-        super(NodeSystem, self).set_attr(attr, value)
-        if attr == "ClusterName":
-            self.cluster_name = value
-        elif attr == "NodeName":
-            self.node_name = value
-
-    @Pyro.expose
-    def node_attr(self):
-        """Return a list of node attributes"""
-        return self.attr_list()
-
-    @Pyro.expose
-    def node_value(self, attr_name):
-        """Return node attribute.
-
-        Args:
-            attr_name (str): Attribute name.
+            group_name (str): Group name.
 
         Returns:
-            str: Node attribute value.
+            list: List of tuples with attribute name and value.
 
         """
-        return self.attr_value(attr_name)
-
-    @Pyro.expose
-    def node_modify(self, attr_name, value):
-        """Modify a node attribute.
-
-        Args:
-            attr_name (str): Attribute name.
-            value (str): Attribute value.
-
-        Returns:
-            bool: Stressfulness of attribute change.
-
-        """
-        try:
-            self.set_attr(attr_name, value)
-        except KeyError:
-            return False
-        return True
+        group = self.get_group(group_name)
+        return group.attr_list()
 
     def get_resource(self, resource_name):
         """Get resource object from resources list.
@@ -763,6 +784,21 @@ class NodeSystem(AttributeObject):
         else:
             raise ICSError('Resource {} does not exist'.format(resource_name))
 
+    @Pyro.expose
+    def clus_res_online(self, resource_name, system_name):
+        """Online a resource in the cluster.
+
+        Args:
+            resource_name (str): Resource name.
+            system_name (str): System name.
+
+        """
+        if self.attr_value('NodeName') == system_name:
+            # TODO: check if online on other node first
+            self.res_online(resource_name)
+        else:
+            self.remote_nodes[system_name].clus_res_online(resource_name, system_name)
+
     def res_online(self, resource_name):
         """Interface for bringing resource online.
 
@@ -779,6 +815,20 @@ class NodeSystem(AttributeObject):
         if resource.state is not ResourceStates.ONLINE:
             resource.change_state(ResourceStates.STARTING)
 
+    @Pyro.expose
+    def clus_res_offline(self, resource_name, system_name):
+        """Offline a resource in the cluster.
+        
+        Args:
+            resource_name (str): Resource name.
+            system_name (str): System name.
+
+        """
+        if system_name == self.node_name:
+            self.res_offline(resource_name)
+        else:
+            self.remote_nodes[system_name].clus_res_offline(resource_name, system_name)
+
     def res_offline(self, resource_name):
         """Interface for bringing resource offline.
 
@@ -794,6 +844,21 @@ class NodeSystem(AttributeObject):
             raise ICSError('Unable to offline resource, MonitoryOnly mode enabled')
         if resource.state is not ResourceStates.OFFLINE:
             resource.change_state(ResourceStates.STOPPING)
+
+    @Pyro.expose
+    def clus_res_add(self, resource_name, group_name, remote=False):
+        """Cluster interface for adding a resource.
+        
+        Args:
+            resource_name (str): Resource name.
+            group_name (str): Resource group name. 
+            remote (bool, opt): Local or remote execution. 
+
+        """
+        self.res_add(resource_name, group_name)
+        if not remote:
+            for node in self.remote_nodes:
+                self.remote_nodes[node].clus_res_add(resource_name, group_name, remote=True)
 
     def res_add(self, resource_name, group_name, init_state=ResourceStates.OFFLINE):
         """Interface for adding new resource.
@@ -824,6 +889,20 @@ class NodeSystem(AttributeObject):
 
         self.config_update = True
 
+    @Pyro.expose
+    def clus_res_delete(self, resource_name, remote=False):
+        """Cluster interface for deleting resources.
+        
+        Args:
+            resource_name (str): Resource name. 
+            remote (bool, opt): Local or remote execution.
+
+        """
+        self.res_delete(resource_name)
+        if not remote:
+            for node in self.remote_nodes:
+                self.remote_nodes[node].clus_res_delete(resource_name, remote=True)
+
     def res_delete(self, resource_name):
         """Interface for deleting existing resource.
 
@@ -847,6 +926,47 @@ class NodeSystem(AttributeObject):
         del self.resources[resource_name]
         self.config_update = True
         logger.info('Resource({}) resource deleted'.format(resource_name))
+
+    @Pyro.expose
+    def clus_res_state(self, resource_name):
+        """Return dictionary of resource states on all cluster nodes.
+
+        Args:
+            resource_name (str): Resource_name
+
+        Returns:
+            dict: Nodes with resource state
+
+        """
+        states = {
+            self.attr_value('NodeName'): self.res_state(resource_name)
+        }
+        for node in self.remote_nodes:
+            states[node] = self.remote_nodes[node].res_state(resource_name)
+
+        return states
+
+    @Pyro.expose
+    def clus_res_state_many(self, resource_list, include_node=False, remote=False):
+        """Cluster interface for setting multiple resource states.
+        
+        Args:
+            resource_list (list): List of resource names. 
+            include_node (bool, opt): Include node in states. 
+            remote (bool, opt): Local or remote execution. 
+
+        Returns:
+            list: Resource states.
+            
+        """
+        resource_states = []
+        resource_states += self.res_state_many(resource_list, include_node=include_node)
+        if not remote:
+            for node in self.remote_nodes:
+                resource_states += self.remote_nodes[node].clus_res_state_many(resource_list,
+                                                                               include_node=include_node,
+                                                                               remote=True)
+        return resource_states
 
     @Pyro.expose
     def res_state(self, resource_name):
@@ -891,6 +1011,21 @@ class NodeSystem(AttributeObject):
 
         return resource_states
 
+    @Pyro.expose
+    def clus_res_link(self, resource_name, resource_dependency, remote=False):
+        """Add a resource dependency on the cluster.
+        
+        Args:
+            resource_name (str): Resource name. 
+            resource_dependency (str) Resource dependency name.
+            remote (bool, opt): Local or remote execution.
+
+        """
+        self.res_link(resource_name, resource_dependency)
+        if not remote:
+            for node in self.remote_nodes:
+                self.remote_nodes[node].clus_res_link(resource_name, resource_dependency, remote=True)
+
     def res_link(self, resource_name, resource_dependency):
         """Interface to add a dependency to a resource.
 
@@ -910,6 +1045,21 @@ class NodeSystem(AttributeObject):
         parent_resource.add_child(resource)
         logger.info('Resource({}) created dependency on {}'.format(resource_name, resource_dependency))
         self.config_update = True
+
+    @Pyro.expose
+    def clus_res_unlink(self, resource_name, resource_dependency, remote=False):
+        """Remove a resource dependency on the cluster.
+        
+        Args:
+            resource_name (str): Resource name. 
+            resource_dependency (str): Resource dependency name. 
+            remote (bool, opt): Local or remote execution. 
+
+        """
+        self.res_unlink(resource_name, resource_dependency)
+        if not remote:
+            for node in self.remote_nodes:
+                self.remote_nodes[node].clus_res_unlink(resource_name, resource_dependency, remote=True)
 
     def res_unlink(self,  resource_name, resource_dependency):
         """Interface to remove a dependency from a resource.
@@ -931,6 +1081,19 @@ class NodeSystem(AttributeObject):
         parent_resource.remove_child(resource)
         logger.info('Resource({}) removed dependency on {}'.format(resource_name, resource_dependency))
         self.config_update = True
+
+    @Pyro.expose
+    def clus_res_dep(self, resource_args):
+        """Resource dependencies.
+
+        Args:
+            resource_args (list): List of resource names to retrieve dependencies.
+
+        Returns:
+            list: List of lists with group name, resource name and dependency name.
+
+        """
+        return self.res_dep(resource_args)
 
     def res_dep(self, resource_names):
         """Interface for getting resource dependencies.
@@ -962,6 +1125,20 @@ class NodeSystem(AttributeObject):
 
         return dep_list
 
+    @Pyro.expose
+    def clus_res_clear(self, resource_name, remote=False):
+        """CLuster interface for clearing resource fault.
+        
+        Args:
+            resource_name (str): Resource name. 
+            remote (bool, opt): Local or remote execution.
+
+        """
+        self.res_clear(resource_name)
+        if not remote:
+            for node in self.remote_nodes:
+                self.remote_nodes[node].clus_res_clear(resource_name, remote=True)
+
     def res_clear(self, resource_name):
         """Interface for clearing resource in a faulted state.
 
@@ -971,6 +1148,16 @@ class NodeSystem(AttributeObject):
         """
         resource = self.get_resource(resource_name)
         resource.clear()
+
+    @Pyro.expose
+    def clus_res_probe(self, resource_name):
+        """Cluster interface for probing resource.
+        
+        Args:
+            resource_name (str): Resource name.
+
+        """
+        self.res_probe(resource_name)
 
     def res_probe(self, resource_name):
         """Interface for manually triggering a poll.
@@ -982,6 +1169,16 @@ class NodeSystem(AttributeObject):
         resource = self.get_resource(resource_name)
         resource.probe()
 
+    @Pyro.expose
+    def clus_res_list(self):
+        """Resource list.
+        
+        Returns:
+            list: Cluster resource names.
+
+        """
+        return self.res_list()
+
     def res_list(self):
         """Interface for listing all resources.
 
@@ -990,6 +1187,20 @@ class NodeSystem(AttributeObject):
 
         """
         return list(self.resources.keys())
+
+    @Pyro.expose
+    def clus_res_value(self, resource_name, attr_name):
+        """Retrieve attribute value.
+        
+        Args:
+            resource_name (str): Resource name. 
+            attr_name (str): Attribute name. 
+
+        Returns:
+            str: Resource attribute value.
+
+        """
+        return self.res_value(resource_name, attr_name)
 
     def res_value(self, resource_name, attr_name):
         """Interface for getting attribute value for resource.
@@ -1004,6 +1215,22 @@ class NodeSystem(AttributeObject):
         """
         resource = self.get_resource(resource_name)
         return resource.attr_value(attr_name)
+
+    @Pyro.expose
+    def clus_res_modify(self, resource_name, attr_name, value, remote=False):
+        """Modify a resource attribute on the cluster.
+        
+        Args:
+            resource_name (str): Resource name. 
+            attr_name (str): Attribute name. 
+            value (str): New attribute value. 
+            remote (bool, opt): Local or remote execution.
+
+        """
+        self.res_modify(resource_name, attr_name, value)
+        if not remote:
+            for node in self.remote_nodes:
+                self.remote_nodes[node].clus_res_modify(resource_name, attr_name, value, remote=True)
 
     def res_modify(self, resource_name, attr_name, value):
         """Interface for modifying attribute for resource.
@@ -1024,6 +1251,19 @@ class NodeSystem(AttributeObject):
             return False
         return True
 
+    @Pyro.expose
+    def clus_res_attr(self, resource_name):
+        """Retrieve resource attributes.
+        
+        Args:
+            resource_name (str): Resource attribute name. 
+
+        Returns:
+            list: Resource attribute names. 
+
+        """
+        return self.res_attr(resource_name)
+
     def res_attr(self, resource_name):
         """Interface for getting resource attributes.
 
@@ -1036,246 +1276,6 @@ class NodeSystem(AttributeObject):
         """
         resource = self.get_resource(resource_name)
         return resource.attr_list()
-
-    def get_group(self, group_name):
-        """Get group object from groups list.
-
-        Args:
-            group_name (str): Name of group
-
-        Returns:
-            obj: Group object.
-
-        Raises:
-            ICSError: When group does not exist.
-
-        """
-        if group_name in self.groups.keys():
-            group = self.groups[group_name]
-            return group
-        else:
-            raise ICSError('Group {} does not exist'.format(group_name))
-
-    def grp_online(self, group_name):
-        """Interface for bringing a group online.
-
-        Args:
-            group_name (str): Group name.
-
-        """
-        logger.info('Group({}) bringing online'.format(group_name))
-        group = self.get_group(group_name)
-        group.start()
-
-    def grp_online_auto(self):
-        """Start all groups with the attribute AutoStart set to true."""
-        for group in self.groups.values():
-            if group.attr_value('AutoStart') == 'true':
-                group.start()
-
-    @Pyro.expose
-    def grp_offline(self, group_name):
-        """Interface for bringing a group offline.
-
-        Args:
-            group_name (str): Group name.
-
-        """
-        logger.info('Group({}) bringing offline'.format(group_name))
-        group = self.get_group(group_name)
-        group.stop()
-
-    @Pyro.expose
-    def grp_state(self, group_name):
-        """Interface for getting state of group.
-
-        Args:
-            group_name (str): Name of group.
-
-        Returns:
-            str: Group state.
-
-        """
-        group = self.get_group(group_name)
-        return group.state().upper()
-
-    def grp_add(self, group_name):
-        """Interface for adding a new group.
-
-        Args:
-            group_name (str): Group name.
-
-        Raises:
-            ICSError: When group already exist.
-            ICSError: When max group count has been reached.
-
-        """
-        logger.info('Adding new group {}'.format(group_name))
-        if group_name in self.grp_list():
-            raise ICSError('Group {} already exists'.format(group_name))
-        elif len(self.groups) >= int(self.attr_value('GroupLimit')):
-            raise ICSError('Max group count reached, unable to add new group')
-        else:
-            group = Group(group_name)
-            self.groups[group_name] = group
-
-        self.config_update = True
-
-    def grp_delete(self, group_name):
-        """Interface for deleting an existing group.
-
-        Args:
-            group_name (str): Group name.
-
-        """
-        logger.info('Deleting group {}'.format(group_name))
-        group = self.get_group(group_name)
-        if not group.members:
-            del self.groups[group_name]
-        else:
-            logger.error('Unable to delete group ({}), group still contains resources'.format(group_name))
-            pass  # delete object?
-
-        self.config_update = True
-
-    def grp_enable(self, group_name):
-        """Interface to enable a group.
-
-        Args:
-            group_name (str): Group name.
-
-        """
-        group = self.get_group(group_name)
-        group.set_attr('Enabled', 'true')
-
-    def grp_disable(self, group_name):
-        """Interface to disable a group.
-
-        Args:
-            group_name (str): Group name.
-
-        """
-        group = self.get_group(group_name)
-        group.set_attr('Enabled', 'false')
-
-    def grp_enable_resources(self, group_name):
-        """Interface to enable a group resources.
-
-        Args:
-            group_name (str): Group name.
-
-        """
-        group = self.get_group(group_name)
-        group.enable_resources()
-
-    def grp_disable_resources(self, group_name):
-        """Interface to disable a group resources.
-
-        Args:
-            group_name (str): Group name.
-
-        """
-        group = self.get_group(group_name)
-        group.disable_resources()
-
-    def grp_flush(self, group_name):
-        """Interface for flushing a group.
-
-        Args:
-            group_name (str): Group name.
-
-        """
-        group = self.get_group(group_name)
-        group.flush()
-
-    def grp_clear(self, group_name):
-        """Interface for clearing a group.
-
-        Args:
-            group_name (str): Group name.
-
-        """
-        group = self.get_group(group_name)
-        group.clear()
-
-    def grp_resources(self, group_name):
-        """Interface for getting members of a group.
-
-        Args:
-            group_name (str): Group name.
-
-        Returns:
-            list: Resource name list of given group.
-
-        """
-        group = self.get_group(group_name)
-        resource_names = []
-        for member in group.members:
-            resource_names.append(member.name)
-        return resource_names
-
-    def grp_list(self):
-        """Interface for listing all existing group names
-
-        Returns:
-            list: System group names.
-        """
-        return list(self.groups.keys())
-
-    def grp_value(self, group_name, attr_name):
-        """Return an attribute for a given group and attribute.
-
-        Args:
-            group_name (str): Group name.
-            attr_name (str): Attribute name.
-
-        Returns:
-            str: Group attribute value.
-        """
-        group = self.get_group(group_name)
-        return group.attr_value(attr_name)
-
-    def grp_modify(self, group_name, attr_name, value, append=False, remove=False):
-        """Modify an attribute for a given group.
-
-        Args:
-            group_name (str): Group name.
-            attr_name (str): Group attribute name.
-            value (str): Group attribute value.
-            append (bool, opt): Append item to attribute list.
-            remove (bool, opt): Remove item from attribute list.
-
-        Returns:
-            bool: Stressfulness of attribute modification.
-
-        """
-        group = self.get_group(group_name)
-        try:
-            if append:
-                logger.debug('Group({}) Appending {} to attribute {} '.format(group_name, value, attr_name))
-                group.attr_append_value(attr_name, value)
-            elif remove:
-                logger.debug('Group({}) Removing {} from  attribute {}'.format(group_name, value, attr_name))
-                group.attr_remove_value(attr_name, value)
-            else:
-                logger.debug('Group({}) Modifying attribute {} to {} '.format(group_name, attr_name, value))
-                group.set_attr(attr_name, value)
-        except KeyError:
-            return False
-        return True
-
-    def grp_attr(self, group_name):
-        """Return a list of attributes for a given group.
-
-        Args:
-            group_name (str): Group name.
-
-        Returns:
-            list: List of tuples with attribute name and value.
-
-        """
-        group = self.get_group(group_name)
-        return group.attr_list()
 
     @Pyro.expose
     def clus_load(self):
