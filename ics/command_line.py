@@ -162,51 +162,45 @@ def icsgrp():
     group.add_argument('-enableresources', nargs=1, metavar='<group>', help='enable all resources for a group')
     group.add_argument('-disableresources', nargs=1, metavar='<group>', help='disable all resources for a group')
     group.add_argument('-state', nargs='*', metavar='<group>', help='print current state of resource')
-    group.add_argument('-link', nargs=2, metavar=('<parent>', '<child>'),
-                       help='create dependency link between two resources')
-    group.add_argument('-unlink', nargs=2, metavar=('<parent>', '<child>'),
-                       help='remove dependency link between two resources')
     group.add_argument('-clear', nargs=2, metavar=('<group>', '<system>'), help='remove fault status')
-    group.add_argument('-flush', nargs=2, metavar=('<group>', '<system>'), help='flush resource')
+    group.add_argument('-flush', nargs=2, metavar=('<group>', '<system>'), help='flush group')
     group.add_argument('-resources', nargs=1, metavar='<group>', help='list all resources for a given group')
-    group.add_argument('-list', action='store_true', help='print list of all resources')
+    group.add_argument('-list', action='store_true', help='print list of all groups')
     group.add_argument('-attr', nargs=1, metavar='<group>', help='print group attributes')
-    group.add_argument('-value', nargs=2, metavar=('<group>', '<attr>'), help='print group  attribute value')
-    group.add_argument('-modify', nargs=argparse.REMAINDER, metavar=('<group>', '<attr>', '<value>'),
-                       help='modify resource attribute')
+    group.add_argument('-value', nargs=2, metavar=('<group>', '<attr>'), help='print group attribute value')
+    group.add_argument('-modify', nargs='*', metavar='<group> <attr> <value>',
+                       help='modify group attribute')
     group.add_argument('-wait', nargs=3, metavar=('<group>', '<state>', '<timeout>'),
-                       help='wait for resource to change state')
+                       help='wait for group to change state')
 
-    if "-sys" in sys.argv:
-        parser.add_argument('-sys', nargs=1)
-
-    if "-append" in sys.argv:
-        parser.add_argument('-append', nargs=1)
-
-    if "-remove" in sys.argv:
-        parser.add_argument('-remove', nargs=1)
-
-    args = parser.parse_args()
+    first_args = parser.parse_known_args()
+    args = first_args[0]
 
     if len(sys.argv) <= 1:
         parser.print_help()
         sys.exit()
+
+    secondary_parser = argparse.ArgumentParser()
+    secondary_parser.add_argument('-sys', nargs=1)
+    secondary_parser.add_argument('-append', nargs=1)
+    secondary_parser.add_argument('-remove', nargs=1)
+    secondary_args = secondary_parser.parse_args(first_args[1])
 
     cluster = engine_conn()
     comamnd_log(cluster, 'icsgrp')
 
     if args.online is not None:
         group_name = args.online[0]
-        if hasattr(args, 'sys'):
-            system_name = args.sys[0]
+        if secondary_args.sys is not None:
+            system_name = secondary_args.sys
             remote_execute(cluster.clus_grp_online, group_name, node=system_name)
         else:
             remote_execute(cluster.clus_grp_online, group_name)
 
     elif args.offline is not None:
         group_name = args.offline[0]
-        if hasattr(args, 'sys'):
-            system_name = args.sys[0]
+        if secondary_args.sys is not None:
+            system_name = secondary_args.sys[0]
             remote_execute(cluster.clus_grp_offline, group_name, node=system_name)
         else:
             remote_execute(cluster.clus_grp_offline, group_name)
@@ -285,11 +279,11 @@ def icsgrp():
         if len(args.modify) == 2:
             group_name = args.modify[0]
             attr = args.modify[1]
-            if hasattr(args, 'append'):
-                value = args.append[0]
+            if secondary_args.append is not None:
+                value = secondary_args.append[0]
                 remote_execute(cluster.clus_grp_modify, group_name, attr, value, append=True)
-            elif hasattr(args, 'remove'):
-                value = args.remove[0]
+            elif secondary_args.remove is not None:
+                value = secondary_args.remove[0]
                 remote_execute(cluster.clus_grp_modify, group_name, attr, value, remove=True)
             else:
                 print('error: argument -modify: expected use of -append or -remove with 2 arguments')
@@ -344,7 +338,7 @@ def icsres():
     group.add_argument('-list', action='store_true', help='print list of all resources')
     group.add_argument('-attr', nargs=1, metavar='<res>', help='print resource attributes')
     group.add_argument('-value', nargs=2, metavar=('<res>', '<attr>'), help='print resource  attribute value')
-    group.add_argument('-modify', nargs=argparse.REMAINDER, metavar=('<res>', '<attr>', '<value>'),
+    group.add_argument('-modify', nargs=argparse.REMAINDER, metavar='<res> <attr> <value>',
                        help='modify resource attribute')
     group.add_argument('-wait', nargs=3, metavar=('<res>', '<state>', '<timeout>'),
                        help='wait for resource to change state')

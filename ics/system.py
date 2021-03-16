@@ -381,6 +381,33 @@ class NodeSystem(AttributeObject):
         """
         return self.res_attr(resource_name)
 
+    def group_online_select(self, group_name):
+        """Select an online node for a given group biased on current load. If all node loads are even a random node
+        is selected. Otherwise the node with the lowest load will get selected.
+
+        Args:
+            group_name (str): Group name.
+
+        Returns:
+            str: Selected node name.
+
+        """
+        current_load = self.grp_clus_load(group_name)
+        logger.debug('Valid group node loads: ' + str(current_load))
+        if len(current_load.values()) == 0:
+            logger.info('No valid system systems set for group {}'.format(group_name))
+            raise ICSError('No valid system systems set for group {}'.format(group_name))
+        elif len(set(current_load.values())) == 1:
+            logger.debug("Found even load on all nodes")
+            node_select = choice(list(current_load.keys()))
+            logger.debug('Randomly choosing node ' + str(node_select))
+        else:
+            logger.debug('Selecting node with minimum load')
+            node_select = min(current_load.items(), key=operator.itemgetter(1))[0]
+            logger.debug('Found minimum load node: ' + str(node_select))
+
+        return node_select
+
     @Pyro.expose
     def clus_grp_online(self, group_name, node=None):
         """Online group for a given system node.
@@ -391,18 +418,7 @@ class NodeSystem(AttributeObject):
 
         """
         if node is None:
-            current_load = self.grp_clus_load(group_name)
-            logger.debug('Valid group node loads: ' + str(current_load))
-            if len(current_load.values()) == 0:
-                logger.info('No valid system systems set for group {}'.format(group_name))
-                raise ICSError('No valid system systems set for group {}'.format(group_name))
-            elif len(set(current_load.values())) == 1:
-                logger.debug("Found even load on all nodes")
-                online_node = choice(list(current_load.keys()))
-                logger.debug('Randomly choosing node ' + str(online_node))
-            else:
-                online_node = min(current_load.items(), key=operator.itemgetter(1))[0]
-                logger.debug('Found minimum load node: ' + str(online_node))
+            online_node = self.group_online_select(group_name)
         else:
             if node not in self.grp_value(group_name, 'SystemList'):
                 logger.info('Invalid node for {}, node {} not in system list'.format(group_name, node))
