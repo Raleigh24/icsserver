@@ -15,11 +15,19 @@ class TestNodeSystem(unittest.TestCase):
         self.system = NodeSystem()
 
     def setup_simple_group(self):
-        resource_list = ['proc_a1', 'proc_a2', 'proc_a3']
-        group_name = 'group_a'
-        self.system.grp_add(group_name)
-        for resource_name in resource_list:
-            self.system.res_add(resource_name, group_name)
+
+        groups = {'group-a':
+                      ['proc-a1', 'proc-a2', 'proc-a3'],
+                  'group-b':
+                      ['proc-b1', 'proc-b2', 'proc-b3'],
+                  'group-c':
+                      ['proc-c1', 'proc-c2', 'proc-c3'],
+                  }
+
+        for group_name, resources in groups.items():
+            self.system.grp_add(group_name)
+            for resource_name in resources:
+                self.system.res_add(resource_name, group_name)
 
     @unittest.skip('Need to setup server first.')
     def test_ping(self):
@@ -205,12 +213,12 @@ class TestNodeSystem(unittest.TestCase):
 
     def test_get_resource(self):
         self.setup_simple_group()
-        resource = self.system.get_resource('proc_a1')
+        resource = self.system.get_resource('proc-a1')
         self.assertIsInstance(resource, Resource)
-        self.assertEqual(resource.name, 'proc_a1')
+        self.assertEqual(resource.name, 'proc-a1')
 
     def test_get_resource_invalid(self):
-        resource_name = 'proc_a99'
+        resource_name = 'proc-a99'
         with self.assertRaises(ics.errors.ICSError):
             self.system.get_resource(resource_name)
 
@@ -220,17 +228,17 @@ class TestNodeSystem(unittest.TestCase):
 
     def test_res_online_monitor_only(self):
         self.setup_simple_group()
-        self.system.res_modify('proc_a1', 'MonitorOnly', 'true')
+        self.system.res_modify('proc-a1', 'MonitorOnly', 'true')
         with self.assertRaises(ics.errors.ICSError):
-            self.system.res_online('proc_a1')
+            self.system.res_online('proc-a1')
 
     @unittest.skip('Need to setup server first.')
     def test_res_offline(self):
         self.fail()
 
     def test_res_add(self):
-        resource_name = 'proc_a1'
-        group_name = 'group_a'
+        resource_name = 'proc-a1'
+        group_name = 'group-a'
 
         # Test when group does not exist yet
         with self.assertRaises(ics.errors.ICSError):
@@ -246,8 +254,8 @@ class TestNodeSystem(unittest.TestCase):
 
     def test_res_delete(self):
         self.setup_simple_group()
-        resource_name = 'proc_a1'
-        group_name = 'group_a'
+        resource_name = 'proc-a1'
+        group_name = 'group-a'
         self.system.res_delete(resource_name)
 
         self.assertNotIn(resource_name, self.system.resources)
@@ -259,21 +267,21 @@ class TestNodeSystem(unittest.TestCase):
     def test_res_delete_invalid(self):
         self.setup_simple_group()
         with self.assertRaises(ics.errors.ICSError):
-            self.system.res_delete('proc_a99')
+            self.system.res_delete('proc-a99')
 
     def test_res_state(self):
-        resource_name = 'proc_a1'
-        group_name = 'group_a'
+        resource_name = 'proc-a1'
+        group_name = 'group-a'
         self.system.grp_add(group_name)
         self.system.res_add(resource_name, group_name, init_state=ics.states.ResourceStates.ONLINE)
         self.assertEqual(self.system.res_state(resource_name), 'ONLINE')
 
     def test_res_state_many(self):
-        resource_list = ['proc_a1', 'proc_a2']
-        group_name = 'group_a'
+        resource_list = ['proc-a1', 'proc-a2']
+        group_name = 'group-a'
         node_name = self.system.attr_value('NodeName')
-        resource_states = [['proc_a1', 'OFFLINE'], ['proc_a2', 'OFFLINE']]
-        resource_states_node = [['proc_a1', node_name, 'OFFLINE'], ['proc_a2', node_name, 'OFFLINE']]
+        resource_states = [['proc-a1', 'OFFLINE'], ['proc-a2', 'OFFLINE']]
+        resource_states_node = [['proc-a1', node_name, 'OFFLINE'], ['proc-a2', node_name, 'OFFLINE']]
         self.system.grp_add(group_name)
         for resource_name in resource_list:
             self.system.res_add(resource_name, group_name, init_state=ics.states.ResourceStates.OFFLINE)
@@ -283,38 +291,38 @@ class TestNodeSystem(unittest.TestCase):
 
     def test_res_link(self):
         self.setup_simple_group()
-        self.system.res_link('proc_a2', 'proc_a1')
-        self.system.res_link('proc_a3', 'proc_a1')
+        self.system.res_link('proc-a2', 'proc-a1')
+        self.system.res_link('proc-a3', 'proc-a1')
 
-        resource = self.system.get_resource('proc_a2')
-        self.assertEqual(resource.dependencies(), ['proc_a1'])
-        resource = self.system.get_resource('proc_a3')
-        self.assertEqual(resource.dependencies(), ['proc_a1'])
+        resource = self.system.get_resource('proc-a2')
+        self.assertEqual(resource.dependencies(), ['proc-a1'])
+        resource = self.system.get_resource('proc-a3')
+        self.assertEqual(resource.dependencies(), ['proc-a1'])
 
     def test_res_unlink(self):
         self.setup_simple_group()
-        self.system.res_link('proc_a2', 'proc_a1')
-        self.system.res_link('proc_a3', 'proc_a1')
+        self.system.res_link('proc-a2', 'proc-a1')
+        self.system.res_link('proc-a3', 'proc-a1')
 
-        self.system.res_unlink('proc_a2', 'proc_a1')
-        resource = self.system.get_resource('proc_a2')
+        self.system.res_unlink('proc-a2', 'proc-a1')
+        resource = self.system.get_resource('proc-a2')
         self.assertEqual(resource.dependencies(), [])
-        resource = self.system.get_resource('proc_a3')
-        self.assertEqual(resource.dependencies(), ['proc_a1'])
+        resource = self.system.get_resource('proc-a3')
+        self.assertEqual(resource.dependencies(), ['proc-a1'])
 
     def test_res_dep(self):
         self.setup_simple_group()
-        self.system.res_link('proc_a2', 'proc_a1')
-        self.system.res_link('proc_a3', 'proc_a1')
-        dep_list = [['group_a', 'proc_a1', 'proc_a2'], ['group_a', 'proc_a1', 'proc_a3']]
-        self.assertEqual(self.system.res_dep(['proc_a1']), dep_list)
+        self.system.res_link('proc-a2', 'proc-a1')
+        self.system.res_link('proc-a3', 'proc-a1')
+        dep_list = [['group-a', 'proc-a1', 'proc-a2'], ['group-a', 'proc-a1', 'proc-a3']]
+        self.assertEqual(self.system.res_dep(['proc-a1']), dep_list)
 
     def test_res_dep_many(self):
         self.setup_simple_group()
-        self.system.res_link('proc_a2', 'proc_a1')
-        self.system.res_link('proc_a3', 'proc_a1')
-        dep_list = [['group_a', 'proc_a1', 'proc_a2'], ['group_a', 'proc_a1', 'proc_a3']]
-        self.assertEqual(self.system.res_dep(['proc_a1']), dep_list)
+        self.system.res_link('proc-a2', 'proc-a1')
+        self.system.res_link('proc-a3', 'proc-a1')
+        dep_list = [['group-a', 'proc-a1', 'proc-a2'], ['group-a', 'proc-a1', 'proc-a3']]
+        self.assertEqual(self.system.res_dep(['proc-a1']), dep_list)
 
     @unittest.skip('Need to setup server first.')
     def test_res_clear(self):
@@ -325,33 +333,43 @@ class TestNodeSystem(unittest.TestCase):
         self.fail()
 
     def test_res_list(self):
-        resource_list = ['proc_a1', 'proc_a2', 'proc_a3']
-        self.assertEqual(self.system.res_list(), [])
+        resource_list = ['proc-a1', 'proc-a2', 'proc-a3',
+                         'proc-b1', 'proc-b2', 'proc-b3',
+                         'proc-c1', 'proc-c2', 'proc-c3']
+        self.assertEqual([], self.system.res_list())
         self.setup_simple_group()
-        self.assertEqual(self.system.res_list(), resource_list)
+        self.assertEqual(resource_list, self.system.res_list())
 
     def test_res_value(self):
         self.setup_simple_group()
-        self.assertEqual(self.system.res_value('proc_a1', 'Enabled'), 'false')
+        self.assertEqual(self.system.res_value('proc-a1', 'Enabled'), 'false')
 
     def test_res_modify(self):
         self.setup_simple_group()
-        self.system.res_modify('proc_a1', 'Enabled', 'true')
-        self.assertEqual(self.system.res_value('proc_a1', 'Enabled'), 'true')
+        self.system.res_modify('proc-a1', 'Enabled', 'true')
+        self.assertEqual(self.system.res_value('proc-a1', 'Enabled'), 'true')
 
     def test_res_attr(self):
         self.setup_simple_group()
-        self.assertIsInstance(self.system.res_attr('proc_a1'), list)
+        self.assertIsInstance(self.system.res_attr('proc-a1'), list)
 
     def test_get_group(self):
         self.setup_simple_group()
-        group = self.system.get_group('group_a')
+        group = self.system.get_group('group-a')
         self.assertIsInstance(group, Group)
-        self.assertEqual(group.name, 'group_a')
+        self.assertEqual(group.name, 'group-a')
 
     def test_get_group_invalid(self):
         with self.assertRaises(ics.errors.ICSError):
-            self.system.get_group('group_a')
+            self.system.get_group('group-a')
+
+    def test_valid_group_node(self):
+        self.setup_simple_group()
+        self.system.grp_modify('group-a', 'SystemList', 'node-a', append=True)
+        self.system.grp_modify('group-a', 'SystemList', 'node-b', append=True)
+        self.assertTrue(self.system.valid_online_group_node('group-a', 'node-a'))
+        self.assertTrue(self.system.valid_online_group_node('group-a', 'node-b'))
+        self.assertFalse(self.system.valid_online_group_node('group-a', 'node-c'))
 
     @unittest.skip('Need to setup server first.')
     def test_grp_online(self):
@@ -370,7 +388,7 @@ class TestNodeSystem(unittest.TestCase):
         self.fail()
 
     def test_grp_add(self):
-        group_name = 'group_a'
+        group_name = 'group-a'
         self.system.grp_add(group_name)
         self.assertIsInstance(self.system.groups[group_name], Group)
 
@@ -380,30 +398,30 @@ class TestNodeSystem(unittest.TestCase):
 
     def test_grp_delete(self):
         self.setup_simple_group()
-        self.system.res_delete('proc_a1')  # Needs to be removed before group can be deleted
-        self.system.grp_delete('group_a')
-        self.assertNotIn('group_a', self.system.resources)
+        self.system.res_delete('proc-a1')  # Needs to be removed before group can be deleted
+        self.system.grp_delete('group-a')
+        self.assertNotIn('group-a', self.system.resources)
 
     def test_grp_enable(self):
         self.setup_simple_group()
-        self.system.grp_enable('group_a')
-        self.assertEqual(self.system.grp_value('group_a', 'Enabled'), 'true')
+        self.system.grp_enable('group-a')
+        self.assertEqual(self.system.grp_value('group-a', 'Enabled'), 'true')
 
     def test_grp_disable(self):
         self.setup_simple_group()
-        self.system.grp_disable('group_a')
-        self.assertEqual(self.system.grp_value('group_a', 'Enabled'), 'false')
+        self.system.grp_disable('group-a')
+        self.assertEqual(self.system.grp_value('group-a', 'Enabled'), 'false')
 
     def test_grp_enable_resources(self):
         self.setup_simple_group()
-        self.system.grp_enable_resources('group_a')
-        for resource_name in self.system.grp_resources('group_a'):
+        self.system.grp_enable_resources('group-a')
+        for resource_name in self.system.grp_resources('group-a'):
             self.assertEqual(self.system.res_value(resource_name, 'Enabled'), 'true')
 
     def test_grp_disable_resources(self):
         self.setup_simple_group()
-        self.system.grp_disable_resources('group_a')
-        for resource_name in self.system.grp_resources('group_a'):
+        self.system.grp_disable_resources('group-a')
+        for resource_name in self.system.grp_resources('group-a'):
             self.assertEqual(self.system.res_value(resource_name, 'Enabled'), 'false')
 
     @unittest.skip('Need to setup server first.')
@@ -416,31 +434,31 @@ class TestNodeSystem(unittest.TestCase):
 
     def test_grp_resources(self):
         self.setup_simple_group()
-        self.assertEqual(self.system.grp_resources('group_a'), ['proc_a1', 'proc_a2', 'proc_a3'])
+        self.assertEqual(self.system.grp_resources('group-a'), ['proc-a1', 'proc-a2', 'proc-a3'])
 
     def test_grp_list(self):
         self.setup_simple_group()
-        self.assertEqual(self.system.grp_list(), ['group_a'])
+        self.assertEqual(['group-a', 'group-b', 'group-c'], self.system.grp_list())
 
     def test_grp_value(self):
         self.setup_simple_group()
-        self.assertEqual(self.system.grp_value('group_a', 'Enabled'), 'false')
+        self.assertEqual(self.system.grp_value('group-a', 'Enabled'), 'false')
 
     def test_grp_modify(self):
         self.setup_simple_group()
-        self.system.grp_modify('group_a', 'Enabled', 'true')
-        self.assertEqual(self.system.grp_value('group_a', 'Enabled'), 'true')
+        self.system.grp_modify('group-a', 'Enabled', 'true')
+        self.assertEqual(self.system.grp_value('group-a', 'Enabled'), 'true')
 
     def test_grp_attr(self):
         self.setup_simple_group()
-        self.assertIsInstance(self.system.grp_attr('group_a'), list)
+        self.assertIsInstance(self.system.grp_attr('group-a'), list)
 
     def test_load(self):
         self.setup_simple_group()
         self.assertEqual(0, self.system.load())
-        resource = self.system.get_resource('proc_a1')
+        resource = self.system.get_resource('proc-a1')
         resource.state = ics.states.ResourceStates.ONLINE
-        resource = self.system.get_resource('proc_a2')
+        resource = self.system.get_resource('proc-a2')
         resource.state = ics.states.ResourceStates.ONLINE
         self.assertEqual(3, self.system.load())
 

@@ -222,6 +222,25 @@ class NodeSystem(AttributeObject):
 
             time.sleep(1)
 
+    def get_group(self, group_name):
+        """Get group object from groups list.
+
+        Args:
+            group_name (str): Name of group
+
+        Returns:
+            obj: Group object.
+
+        Raises:
+            ICSError: When group does not exist.
+
+        """
+        if group_name in self.groups.keys():
+            group = self.groups[group_name]
+            return group
+        else:
+            raise ICSError('Group {} does not exist'.format(group_name))
+
     def group_online_select(self, group_name):
         """Select an online node for a given group biased on current load. If all node loads are even a random node
         is selected. Otherwise the node with the lowest load will get selected.
@@ -249,24 +268,44 @@ class NodeSystem(AttributeObject):
 
         return node_select
 
-    def get_group(self, group_name):
-        """Get group object from groups list.
+    def grp_online_status(self, group_name):
+        """Determine if a group is online on any node in the cluster.
 
         Args:
-            group_name (str): Name of group
+            group_name (str): Group name.
 
         Returns:
-            obj: Group object.
-
-        Raises:
-            ICSError: When group does not exist.
+            bool: True if there is a node online.
 
         """
-        if group_name in self.groups.keys():
-            group = self.groups[group_name]
-            return group
+        logger.debug('Looking for other online resources for group ' + str(group_name))
+        group_remote_states = self.clus_grp_state_all(group_names=[group_name], include_local=False)
+        logger.debug('Found these states on remote nodes: ' + str(group_remote_states))
+        for group_name_state, remote_node, remote_state in group_remote_states:
+            if remote_state in ['ONLINE', 'PARTIAL', 'UNKNOWN']:
+                logger.info('Unable to bring group online, group is online on node ' + str(remote_node))
+                return False
         else:
-            raise ICSError('Group {} does not exist'.format(group_name))
+            logger.debug('No other online groups found')
+            return True
+
+    def valid_online_group_node(self, group_name, node):
+        """Verify that given node is a valid node for given group by checking SystemList attribute.
+
+        Args:
+            group_name (str): Group name.
+            node (str): Node name.
+
+        Returns:
+            bool: True f node is valid.
+
+        """
+        system_list = self.grp_value(group_name, 'SystemList')
+        logger.debug('Valid nodes for group {} {}'.format(group_name, str(system_list)))
+        if node in system_list:
+            return True
+        else:
+            return False
 
     @Pyro.expose
     def clus_grp_online(self, group_name, node=None):
@@ -277,35 +316,45 @@ class NodeSystem(AttributeObject):
             node (str, opt): Node name of where to online the group.
 
         """
-        if node is None:
-            online_node = self.group_online_select(group_name)
-        else:
-            if node not in self.grp_value(group_name, 'SystemList'):
-                logger.info('Invalid node for {}, node {} not in system list'.format(group_name, node))
-                raise ICSError('Invalid node for {}, node {} not in system list'.format(group_name, node))
-            else:
-                online_node = node
-
-        logger.debug('Attempting online group {} on node {} '.format(group_name, online_node))
-
-        if self.attr_value('NodeName') == online_node:
-            group = self.get_group(group_name)
-            if group.attr_value('Parallel') == 'false':
-                logger.debug('Looking for other online resources for group ' + str(group_name))
-                group_remote_states = self.clus_grp_state_all(group_names=[group_name], include_local=False)
-                logger.debug('Found these states on remote nodes: ' + str(group_remote_states))
-                for group_name_state, remote_node, remote_state in group_remote_states:
-                    if remote_state in ['ONLINE', 'PARTIAL', 'UNKNOWN']:
-                        logger.info('Unable to bring group online, group is online on node ' + str(remote_node))
-                        break
+        if self.grp_value(group_name, 'Parallel') == 'false':
+            if node is not None:
+                if not self.valid_online_group_node(group_name, node):
+                    raise ICSError('Invalid node for {}, node {} not in system list'.format(group_name, node))
+                elif not self.grp_online_status(group_name):
+                    raise ICSError('Group {} is already online.'.format(group_name))
                 else:
-                    logger.debug('No other online groups found')
-                    self.grp_online(group_name)
+                    if self.attr_value('NodeName') == node:
+                        self.grp_online(group_name)
+                    else:
+                        self.remote_nodes[node].grp_online(group_name)
             else:
-                self.grp_online(group_name)
-        else:
-            self.remote_nodes[online_node].clus_grp_online(group_name, online_node)
+                if not self.grp_online_status(group_name):
+                    raise ICSError('Group {} is already online.'.format(group_name))
+                else:
+                    online_node = self.group_online_select(group_name)
+                    logger.debug('Attempting online group {} on node {} '.format(group_name, online_node))
+                    if self.attr_value('NodeName') == online_node:
+                        self.grp_online(group_name)
+                    else:
+                        self.remote_nodes[online_node].grp_online(group_name)
 
+        elif self.grp_value(group_name, 'Parallel') == 'true':
+            if node is not None:
+                if not self.valid_online_group_node(group_name, node):
+                    raise ICSError('Invalid node for {}, node {} not in SystemList'.format(group_name, node))
+                else:
+                    if self.attr_value('NodeName') == node:
+                        self.grp_online(group_name)
+                    else:
+                        self.remote_nodes[node].grp_online(group_name)
+            else:
+                for valid_node in self.grp_value(group_name, 'SystemList'):
+                    if self.attr_value('NodeName') == valid_node:
+                        self.grp_online(group_name)
+                    else:
+                        self.remote_nodes[valid_node].grp_online(group_name)
+
+    @Pyro.expose
     def grp_online(self, group_name):
         """Interface for bringing a group online.
 
