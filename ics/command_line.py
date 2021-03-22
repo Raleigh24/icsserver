@@ -208,7 +208,7 @@ def icsgrp():
     if args.online is not None:
         group_name = args.online[0]
         if secondary_args.sys is not None:
-            system_name = secondary_args.sys
+            system_name = secondary_args.sys[0]
             remote_execute(cluster.clus_grp_online, group_name, node=system_name)
         else:
             remote_execute(cluster.clus_grp_online, group_name)
