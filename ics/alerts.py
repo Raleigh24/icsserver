@@ -14,6 +14,7 @@ from ics import mail
 from ics.environment import HOSTNAME, ICS_CLUSTER_NAME, ICS_ALERT_PORT
 from ics.errors import ICSError
 from ics.utils import alert_log_name
+from ics.utils import engine_conn
 
 logger = logging.getLogger(__name__)
 
@@ -226,7 +227,6 @@ class AlertHandler:
     def __init__(self, cluster_name="", node_name=""):
         self.alert_queue = queue.Queue()
         self.alert_level = NOTSET
-        self.recipients = []
         self.html_template = load_html_template(alert_html_template_file)
 
     def get_level(self):
@@ -255,42 +255,15 @@ class AlertHandler:
             raise ICSError('Invalid alert level')
         logger.info("Alert level changed from {} to {}".format(previous_level, get_level_name(self.alert_level)))
 
-    @Pyro.expose
-    def add_recipient(self, recipient):
-        """"Add alert mail recipient.
-
-        Args:
-            recipient (str): Recipients email address.
-
-        """
-        logger.info('Adding mail recipient {}'.format(recipient))
-        self.recipients.append(recipient)
-
-    @Pyro.expose
-    def remove_recipient(self, recipient):
-        """Remove alert mail recipient.
-
-        Args:
-            recipient (str): Recipients email address.
-
-        Raises:
-            ICSError: When recipients email does not exist.
-
-        """
-        logger.info('Removing mail recipient {}'.format(recipient))
+    def recipients(self):
+        cluster = engine_conn()
         try:
-            self.recipients.remove(recipient)
-        except ValueError:
-            raise ICSError('Recipient does not exist')
+            email_addressses = cluster.node_value('AlertRecipients')
+        except Pyro.errors.CommunicationError:
+            logger.error("Unable to connect to ICS engine to retrieve alert recipients")
+            email_addressses = []
 
-    def set_recipients(self, recipients):
-        """Set the list of recipients.
-
-        Args:
-            recipients (list): List of recipients email addresses.
-
-        """
-        self.recipients = recipients
+        return email_addressses
 
     @Pyro.expose
     def add_alert(self, alert_dict):
@@ -317,7 +290,7 @@ class AlertHandler:
         if not self.recipients:
             logger.warning('Alert recipient list is empty, no alerts sent')
 
-        for recipient in self.recipients:
+        for recipient in self.recipients():
             logger.info('Sending alert to {}'.format(recipient))
             sender = 'ics@' + HOSTNAME
             subject = 'ICS {} Alert - {}'.format('Warning', alert.resource)
