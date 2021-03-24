@@ -189,8 +189,8 @@ def icsgrp():
     group.add_argument('-wait', nargs=3, metavar=('<group>', '<state>', '<timeout>'),
                        help='wait for group to change state')
 
-    first_args = parser.parse_known_args()
-    args = first_args[0]
+    primary_args = parser.parse_known_args()
+    args = primary_args[0]
 
     if len(sys.argv) <= 1:
         parser.print_help()
@@ -200,7 +200,7 @@ def icsgrp():
     secondary_parser.add_argument('-sys', nargs=1)
     secondary_parser.add_argument('-append', nargs=1)
     secondary_parser.add_argument('-remove', nargs=1)
-    secondary_args = secondary_parser.parse_args(first_args[1])
+    secondary_args = secondary_parser.parse_args(primary_args[1])
 
     cluster = engine_conn()
     comamnd_log(cluster, 'icsgrp')
@@ -339,8 +339,8 @@ def icsres():
     description_text = 'Manage ICS resources'
     parser = argparse.ArgumentParser(description=description_text, epilog=epilog_text, allow_abbrev=False)
     group = parser.add_mutually_exclusive_group()
-    group.add_argument('-online', nargs=2, metavar=('<res>', '<system>'), help='bring resource online')
-    group.add_argument('-offline', nargs=2, metavar=('<res>', '<system>'), help='bring resource offline')
+    group.add_argument('-online', nargs=1, metavar='<res> -sys <system>', help='bring resource online')
+    group.add_argument('-offline', nargs=1, metavar='<res> -sys <system>', help='bring resource offline')
     group.add_argument('-add', nargs=2, metavar=('<res>', '<group>'), help='add new resource')
     group.add_argument('-delete', nargs=1, metavar='<res>', help='delete existing resource')
     group.add_argument('-state', nargs='*', metavar='<res>', help='print current state of resource')
@@ -359,24 +359,39 @@ def icsres():
     group.add_argument('-wait', nargs=3, metavar=('<res>', '<state>', '<timeout>'),
                        help='wait for resource to change state')
 
-    args = parser.parse_args()
+    primary_args = parser.parse_known_args()
+    args = primary_args[0]
 
     if len(sys.argv) <= 1:
         parser.print_help()
         sys.exit()
+
+    secondary_parser = argparse.ArgumentParser()
+    secondary_parser.add_argument('-sys', nargs=1)
+    secondary_parser.add_argument('-append', nargs=1)
+    secondary_parser.add_argument('-remove', nargs=1)
+    secondary_args = secondary_parser.parse_args(primary_args[1])
 
     cluster = engine_conn()
     comamnd_log(cluster, 'icsres')
 
     if args.online is not None:
         resource_name = args.online[0]
-        system_name = args.online[1]
-        remote_execute(cluster.clus_res_online, resource_name, system_name)
+        if secondary_args.sys is not None:
+            system_name = secondary_args.sys[0]
+            remote_execute(cluster.clus_res_online, resource_name, system_name)
+        else:
+            print('ERROR: system must be specified.')
+            sys.exit(1)
 
     elif args.offline is not None:
         resource_name = args.offline[0]
-        system_name = args.offline[1]
-        remote_execute(cluster.clus_res_offline, resource_name, system_name)
+        if secondary_args.sys is not None:
+            system_name = secondary_args.sys[0]
+            remote_execute(cluster.clus_res_offline, resource_name, system_name)
+        else:
+            print('ERROR: system must be specified.')
+            sys.exit(1)
 
     elif args.add is not None:
         resource_name = args.add[0]

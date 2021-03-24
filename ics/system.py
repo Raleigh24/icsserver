@@ -844,19 +844,19 @@ class NodeSystem(AttributeObject):
             raise ICSError('Resource {} does not exist'.format(resource_name))
 
     @Pyro.expose
-    def clus_res_online(self, resource_name, system_name):
+    def clus_res_online(self, resource_name, node):
         """Online a resource in the cluster.
 
         Args:
             resource_name (str): Resource name.
-            system_name (str): System name.
+            node (str): System name.
 
         """
-        if self.attr_value('NodeName') == system_name:
-            # TODO: check if online on other node first
+        # TODO: check if online on other node first
+        if self.attr_value('NodeName') == node:
             self.res_online(resource_name)
         else:
-            self.remote_nodes[system_name].clus_res_online(resource_name, system_name)
+            self.remote_nodes[node].clus_res_online(resource_name, node)
 
     def res_online(self, resource_name):
         """Interface for bringing resource online.
