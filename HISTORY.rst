@@ -9,7 +9,7 @@ Release History
 
 **New Features**
 
-- Added ability to allow the system to decide which node to start a service group biased on a user defined system load
+- Added ability to allow the system to decide which node to start a service group based on a user defined system load
 - Added Load attribute to resources to allow the user to specify the amount of load a resource will put on a system
 - Added SystemList attribute to service groups to specify which nodes a service group can become online
 - Added icsdump command line tool to dump system data for external use
@@ -18,6 +18,7 @@ Release History
 **Improvements**
 
 - Added better support for modifying list attributes
+- Updated -wait arguments for icsgrp and icsres to support clustering conditions
 
 **Miscellaneous**
 
