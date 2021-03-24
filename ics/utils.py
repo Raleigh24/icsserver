@@ -6,7 +6,12 @@ import subprocess
 from datetime import datetime
 from socket import gethostname
 
+import Pyro4 as Pyro
+
 from ics.environment import ICS_ALERT_LOG
+from ics.environment import ICS_ALERT_PORT
+from ics.environment import ICS_DAEMON_PORT
+from ics.environment import ICS_ENGINE_PORT
 from ics.environment import ICS_RES_LOG
 from ics.environment import ICS_VAR
 from ics.errors import ICSError
@@ -205,3 +210,18 @@ def resource_log_name():
 def alert_log_name():
     """Alert log file name."""
     return ICS_ALERT_LOG + '.' + datetime.now().strftime('%Y-%m-%d_%H')
+
+
+def daemon_conn():
+    uri = 'PYRO:sub_server_control@' + gethostname() + ':' + str(ICS_DAEMON_PORT)
+    return Pyro.Proxy(uri)
+
+
+def engine_conn():
+    uri = 'PYRO:system@' + gethostname() + ':' + str(ICS_ENGINE_PORT)
+    return Pyro.Proxy(uri)
+
+
+def alert_conn():
+    uri = 'PYRO:alert_handler@' + gethostname() + ':' + str(ICS_ALERT_PORT)
+    return Pyro.Proxy(uri)
