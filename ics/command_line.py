@@ -93,9 +93,9 @@ def icssys():
     group.add_argument('-loglevel', nargs=1, metavar='<level>', help='Set system log level')
     group.add_argument('-list', action='store_true', help='print list of all nodes')
     group.add_argument('-attr', action='store_true', help='list node attributes')
-    group.add_argument('-value', nargs=1, metavar='<attr>', help='print resource  attribute value')
-    group.add_argument('-modify', nargs='*', metavar=('<res>', '<attr>', '<value>'),
-                       help='modify resource attribute')
+    group.add_argument('-value', nargs=1, metavar='<attr>', help='print system attribute value')
+    group.add_argument('-modify', nargs='*', metavar='<attr> <value>',
+                       help='modify system attribute')
     group.add_argument('-version', action='store_true', help='print ICS version')
     first_args = parser.parse_known_args()
     args = first_args[0]
