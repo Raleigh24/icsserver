@@ -186,7 +186,7 @@ def icsgrp():
     group.add_argument('-value', nargs=2, metavar=('<group>', '<attr>'), help='print group attribute value')
     group.add_argument('-modify', nargs='*', metavar='<group> <attr> <value>',
                        help='modify group attribute')
-    group.add_argument('-wait', nargs=3, metavar=('<group>', '<state>', '<timeout>'),
+    group.add_argument('-wait', nargs=2, metavar=('<group>', '<state> [ -timeout <timeout> ] [ -sys <sys> | -all ]'),
                        help='wait for group to change state')
 
     primary_args = parser.parse_known_args()
@@ -198,8 +198,10 @@ def icsgrp():
 
     secondary_parser = argparse.ArgumentParser()
     secondary_parser.add_argument('-sys', nargs=1)
+    secondary_parser.add_argument('-all', action='store_true')
     secondary_parser.add_argument('-append', nargs=1)
     secondary_parser.add_argument('-remove', nargs=1)
+    secondary_parser.add_argument('-timeout', nargs=1)
     secondary_args = secondary_parser.parse_args(primary_args[1])
 
     cluster = engine_conn()
@@ -316,18 +318,39 @@ def icsgrp():
             sys.exit(1)
 
     elif args.wait is not None:
-        group_name, state_name, timeout = args.wait
-        try:
-            timer = int(timeout)
-        except ValueError:
-            print('ERROR: Timeout parameter not in correct format')
-            sys.exit(1)
+        group_name, state_name = args.wait
+
+        if secondary_args.sys is None:
+            node = None
+        else:
+            node = secondary_args.sys[0]
+
+        if secondary_args.timeout is not None:
+            try:
+                timer = int(secondary_args.timeout[0])
+            except ValueError:
+                print('ERROR: Timeout parameter invalid.')
+                sys.exit(1)
+        else:
+            timer = -1  # Negative timer means no countdown
 
         while timer != 0:
-            if remote_execute(cluster.clus_grp_state, [group_name])[0][0] == state_name:
-                sys.exit(0)  # Exit with return code 0 when state value matches
+            group_states = remote_execute(cluster.clus_grp_state, group_name)
+
+            if node is not None:
+                if group_states[node] == state_name:
+                    sys.exit(0)
+            elif secondary_args.all:
+                states = group_states.values()
+                if list(set(states)) == [state_name]:
+                    sys.exit(0)
+            else:
+                if state_name in group_states.values():
+                    sys.exit(0)
+
             time.sleep(1)
             timer -= 1
+
         sys.exit(1)  # Exit with return code 1 when timeout is reached
 
     else:
@@ -356,7 +379,7 @@ def icsres():
     group.add_argument('-value', nargs=2, metavar=('<res>', '<attr>'), help='print resource  attribute value')
     group.add_argument('-modify', nargs=argparse.REMAINDER, metavar='<res> <attr> <value>',
                        help='modify resource attribute')
-    group.add_argument('-wait', nargs=3, metavar=('<res>', '<state>', '<timeout>'),
+    group.add_argument('-wait', nargs=2, metavar=('<res>', '<state> [ -timeout <timeout> ] [ -sys <sys> | -all ]'),
                        help='wait for resource to change state')
 
     primary_args = parser.parse_known_args()
@@ -368,8 +391,10 @@ def icsres():
 
     secondary_parser = argparse.ArgumentParser()
     secondary_parser.add_argument('-sys', nargs=1)
+    secondary_parser.add_argument('-all', action='store_true')
     secondary_parser.add_argument('-append', nargs=1)
     secondary_parser.add_argument('-remove', nargs=1)
+    secondary_parser.add_argument('-timeout', nargs=1)
     secondary_args = secondary_parser.parse_args(primary_args[1])
 
     cluster = engine_conn()
@@ -465,19 +490,39 @@ def icsres():
         remote_execute(cluster.clus_res_modify, resource_name, attr, value)
 
     elif args.wait is not None:
-        resource_name, state_name, timeout = args.wait
+        resource_name, state_name = args.wait
 
-        try:
-            timer = int(timeout)
-        except ValueError:
-            print('ERROR: Timeout parameter not in correct format')
-            sys.exit(1)
+        if secondary_args.sys is None:
+            node = None
+        else:
+            node = secondary_args.sys[0]
+
+        if secondary_args.timeout is not None:
+            try:
+                timer = int(secondary_args.timeout[0])
+            except ValueError:
+                print('ERROR: Timeout parameter invalid.')
+                sys.exit(1)
+        else:
+            timer = -1  # Negative timer means no countdown
 
         while timer != 0:
-            if remote_execute(cluster.clus_res_state, [resource_name])[0][0] == state_name:
-                sys.exit(0)  # Exit with return code 0 when state value matches
+            resource_states = remote_execute(cluster.clus_res_state, resource_name)
+
+            if node is not None:
+                if resource_states[node] == state_name:
+                    sys.exit(0)
+            elif secondary_args.all:
+                states = resource_states.values()
+                if list(set(states)) == [state_name]:
+                    sys.exit(0)
+            else:
+                if state_name in resource_states.values():
+                    sys.exit(0)
+
             time.sleep(1)
             timer -= 1
+
         sys.exit(1)  # Exit with return code 1 when timeout is reached
 
     else:
