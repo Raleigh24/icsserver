@@ -20,6 +20,10 @@ Release History
 - Added better support for modifying list attributes
 - Updated -wait arguments for icsgrp and icsres to support clustering conditions
 
+**Bugfixes**
+- Fixed issue with using and saving alert recipients
+- Fixed issue with catching exceptions when unable to connect to server with command line tools
+
 **Miscellaneous**
 
 - Removed NodeName attribute as a user editable attribute
