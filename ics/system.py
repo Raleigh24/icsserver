@@ -1637,13 +1637,13 @@ class NodeSystem(AttributeObject):
 
     def run(self):
         """Run system."""
-        pass
-        # while True:
-        #     for thread in self.threads:
-        #         if not thread.is_alive():
-        #             logger.critical('Thread {} no longer running'.format(thread.name))
-        #             #TODO: send alert that thread is no longer running
-        #     time.sleep(5)
+        while True:
+            for thread in self.threads:
+                if not thread.is_alive():
+                    message = 'Thread {} no longer running'.format(thread.name)
+                    # TODO: Send alert
+                    logger.critical(message)
+            time.sleep(10)
 
     def shutdown(self):
         """Shutdown systemm."""

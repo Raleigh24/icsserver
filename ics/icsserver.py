@@ -65,8 +65,7 @@ signal.signal(signal.SIGINT, signal_handler)
 signal.signal(signal.SIGTERM, signal_handler)
 
 system.startup()
-#system.cluster_connect()
-#system.run()  # Run forever
+system.run()  # Run forever
 
 logger.info("Starting Pyro on port " + str(ICS_ENGINE_PORT))
 
