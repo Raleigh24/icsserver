@@ -14,6 +14,7 @@ Release History
 - Added SystemList attribute to service groups to specify which nodes a service group can become online
 - Added icsdump command line tool to dump system data for external use
 - Added user executed commands to logs
+- Added ability to show all nodes status in the cluster with icssys -state
 
 **Improvements**
 
