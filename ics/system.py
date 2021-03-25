@@ -10,7 +10,6 @@ from shutil import copyfile
 
 import Pyro4 as Pyro
 
-from ics.alerts import AlertHandler
 from ics.attributes import AttributeObject, system_attributes
 from ics.environment import ICS_CONF
 from ics.environment import ICS_CONF_FILE
@@ -33,7 +32,6 @@ class NodeSystem(AttributeObject):
         resources (dict): Dictionary or resource objects.
         groups (dict): Dictionary of group objects.
         threads (list): List of started thread references.
-        alert_handler (obj): Alert handler object.
         remote_nodes (dict): Dictionary or remote node Pyro connections.
         poll_enabled (bool): Flag signifying when polling is enabled.
         config_update (bool): Flag signifying when there is an update to save in the config.
@@ -48,7 +46,6 @@ class NodeSystem(AttributeObject):
         self.resources = {}
         self.groups = {}
         self.threads = []
-        self.alert_handler = AlertHandler(cluster_name=self.cluster_name, node_name=self.node_name)
         self.remote_nodes = {}  # Remote systems
         self.poll_enabled = False
         self.config_update = False
@@ -1452,12 +1449,12 @@ class NodeSystem(AttributeObject):
 
     def start_threads(self):
         """Start subsystem threads."""
-        # Start alert handler thread
-        logger.info('Starting alert handler...')
-        thread_alert_handler = threading.Thread(name='alert handler', target=self.alert_handler.run)
-        thread_alert_handler.daemon = True
-        thread_alert_handler.start()
-        self.threads.append(thread_alert_handler)
+        # # Start alert handler thread
+        # logger.info('Starting alert handler...')
+        # thread_alert_handler = threading.Thread(name='alert handler', target=self.alert_handler.run)
+        # thread_alert_handler.daemon = True
+        # thread_alert_handler.start()
+        # self.threads.append(thread_alert_handler)
 
         # Start config backup
         logger.info('Starting auto backups...')
@@ -1529,9 +1526,6 @@ class NodeSystem(AttributeObject):
         """Return system configuration data in dictionary format"""
         config_data = {
             'system': {'attributes': self.modified_attributes()},
-            'alerts': {'attributes': {
-                'AlertLevel': self.alert_handler.get_level(), 'AlertRecipients': self.alert_handler.recipients},
-            },
             'groups': {},
             'resources': {}
         }
@@ -1557,12 +1551,6 @@ class NodeSystem(AttributeObject):
             system_data = data['system']
             for attr_name in system_data['attributes']:
                 self.set_attr(attr_name, system_data['attributes'][attr_name])
-
-            # Set alert attributes from config
-            alert_data = data['alerts']
-            self.alert_handler.set_level(alert_data['attributes']['AlertLevel'])
-            for recipient in alert_data['attributes']['AlertRecipients']:
-                self.alert_handler.add_recipient(recipient)
 
             # Create groups from config
             group_data = data['groups']
