@@ -1,6 +1,5 @@
 import logging
 import os
-import socket
 from datetime import datetime
 
 try:
@@ -11,10 +10,10 @@ except ImportError:
 import Pyro4 as Pyro
 
 from ics import mail
-from ics.environment import HOSTNAME, ICS_CLUSTER_NAME, ICS_ALERT_PORT
-from ics.errors import ICSError
+from ics.environment import HOSTNAME, ICS_CLUSTER_NAME
 from ics.utils import alert_log_name
 from ics.utils import engine_conn
+from ics.utils import alert_conn
 
 logger = logging.getLogger(__name__)
 
@@ -156,11 +155,15 @@ class Alert:
 
 
 class AlertClient:
-    """Alert interface for creating alerts."""
+    """Alert interface for creating alerts.
+
+    Attributes:
+        self.alert_server_conn(obj): Alert server pyro connection.
+
+    """
 
     def __init__(self):
-        self.alert_server_uri = 'PYRO:alert_handler@' + socket.gethostname() + ':' + str(ICS_ALERT_PORT)
-        self.alert_server = Pyro.Proxy(self.alert_server_uri)
+        self.alert_server_conn = alert_conn()
 
     def critical(self, resource, msg):
         """Send alert with critical level.
@@ -218,52 +221,54 @@ class AlertClient:
             alert (obj): Alert object.
 
         """
-        self.alert_server.add_alert(alert.asdict())
+        self.alert_server_conn.add_alert(alert.asdict())
 
 
 class AlertHandler:
-    """Handle alerts in queue."""
+    """Handle alerts in queue.
 
-    def __init__(self, cluster_name="", node_name=""):
+    Attributes:
+        alert_queue(obj): Alert object queue
+        alert_level(int): Alert level in integer format.
+        html_template(str): Alert email html template text
+        engine_conn(obj): Engine server pyro connection
+
+    """
+
+    def __init__(self):
         self.alert_queue = queue.Queue()
         self.alert_level = NOTSET
         self.html_template = load_html_template(alert_html_template_file)
+        self.engine_conn = engine_conn()
 
-    def get_level(self):
-        """Get alert level threshold of handler.
-
-        Returns:
-            int: Alert level.
-
-        """
-        return get_level_name(self.alert_level)
-
-    def set_level(self, level):
-        """Set alert level threshold of handler.
-
-        Args:
-            level (int): Alert Level.
-
-        Raises:
-            ICSError: When invalid alert level given.
-
-        """
-        previous_level = self.alert_level
+    def update_alert_level(self):
+        """Get alert level threshold of handler."""
         try:
-            self.alert_level = get_level_name(level)
-        except KeyError:
-            raise ICSError('Invalid alert level')
-        logger.info("Alert level changed from {} to {}".format(previous_level, get_level_name(self.alert_level)))
+            new_alert_level = self.engine_conn.node_value('AlertLevel')
+            logger.debug('Updated alert level from engine: ' + str(new_alert_level))
+            new_alert_level_int = get_level_name(new_alert_level)
+            if new_alert_level_int != self.alert_level:
+                logger.info('Alert level changed from {} to {}'.format(get_level_name(self.alert_level),
+                                                                       get_level_name(new_alert_level_int)))
+            self.alert_level = new_alert_level_int
+        except KeyError as err:
+            logger.error('Alert level received from engine is invalid: ' + str(err))
+        except Pyro.errors.CommunicationError:
+            logger.error("Unable to connect to ICS engine to retrieve alert level")
 
     def recipients(self):
-        cluster = engine_conn()
+        """Get Alert recipients email addressees.
+
+        Returns:
+            list: Alert recipients email addressees.
+        """
         try:
-            email_addressses = cluster.node_value('AlertRecipients')
+            emails = self.engine_conn.node_value('AlertRecipients')
         except Pyro.errors.CommunicationError:
             logger.error("Unable to connect to ICS engine to retrieve alert recipients")
-            email_addressses = []
+            emails = []
 
-        return email_addressses
+        return emails
 
     @Pyro.expose
     def add_alert(self, alert_dict):
@@ -287,25 +292,29 @@ class AlertHandler:
             template (str): HTML template.
 
         """
-        if not self.recipients:
+        recipients = self.recipients()
+        logger.debug('Recipient list: ' + str(recipients))
+        if not recipients:
             logger.warning('Alert recipient list is empty, no alerts sent')
-
-        for recipient in self.recipients():
-            logger.info('Sending alert to {}'.format(recipient))
-            sender = 'ics@' + HOSTNAME
-            subject = 'ICS {} Alert - {}'.format('Warning', alert.resource)
-            body = alert.html(template)
-            try:
-                mail.send_html(recipient, sender, subject, body)
-            except ConnectionRefusedError as err:
-                logger.error('Unable to send mail: {}'.format(err))
-            except Exception as err:
-                logger.exception('Unknown exception occurred: ' + str(err))
+        else:
+            for recipient in recipients:
+                logger.info('Sending alert to {}'.format(recipient))
+                sender = 'ics@' + HOSTNAME
+                subject = 'ICS {} Alert - {}'.format('Warning', alert.resource)
+                body = alert.html(template)
+                try:
+                    mail.send_html(recipient, sender, subject, body)
+                except ConnectionRefusedError as err:
+                    logger.error('Unable to send mail: {}'.format(err))
+                except Exception as err:
+                    logger.exception('Unknown exception occurred: ' + str(err))
 
     def run(self):
         """Continuously read and execute alerts from alert queue."""
         while True:
             alert = self.alert_queue.get()  # Blocking until new alert available.
+            self.update_alert_level()
+            logger.debug('Alert level: ' + str(self.alert_level))
             if alert.level >= self.alert_level:
                 log_alert(alert)
                 try:
