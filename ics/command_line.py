@@ -251,8 +251,12 @@ def command_icsgrp():
             print_table(results)
         elif len(group_list) == 1:
             group_name = group_list[0]
-            group_state = cluster.clus_grp_state(group_name)
-            print(group_state)
+            group_states = cluster.clus_grp_state(group_name)
+            table = []
+            for state in group_states.items():
+                table.append((group_name,) + state)
+
+            print_table(table)
         else:
             results = cluster.clus_grp_state_all(group_names=group_list)
             print_table(results)
@@ -428,9 +432,12 @@ def command_icsres():
         resource_list = args.state
         if len(resource_list) == 1:
             resource_name = resource_list[0]
-            resource_state = cluster.clus_res_state(resource_name)
-            print(resource_state)
-            #results = [[resource_name, resource_state]]
+            resource_states = cluster.clus_res_state(resource_name)
+            table = []
+            for state in resource_states.items():
+                table.append((resource_name,) + state)
+
+            print_table(table)
         else:
             results = cluster.clus_res_state_many(resource_list, include_node=True)
             print_table(results)
