@@ -4,7 +4,7 @@ Release History
 ---------------
 
 
-2.1.0 (In Development)
+2.1.0 (2021-03-25)
 ++++++++++++++++++++++
 
 **New Features**
