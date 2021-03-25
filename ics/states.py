@@ -15,6 +15,12 @@ class GroupStates:
     UNKNOWN = 'unknown'
 
 
+class NodeStates:
+    ONLINE = 'online'
+    OFFLINE = 'offline'
+    CRITICAL = 'critical'
+
+
 ONLINE_STATES = (
     ResourceStates.STARTING,
     ResourceStates.ONLINE,

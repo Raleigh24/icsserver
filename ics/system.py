@@ -17,7 +17,7 @@ from ics.environment import ICS_ENGINE_PORT
 from ics.errors import ICSError
 from ics.events import event_handler
 from ics.resource import Resource, Group
-from ics.states import ResourceStates, TRANSITION_STATES, ONLINE_STATES
+from ics.states import NodeStates, ResourceStates, TRANSITION_STATES, ONLINE_STATES
 from ics.utils import read_config, write_config, hostname
 
 logger = logging.getLogger(__name__)
@@ -111,6 +111,38 @@ class NodeSystem(AttributeObject):
             self.cluster_name = value
         elif attr == "NodeName":
             self.node_name = value
+
+    @Pyro.expose
+    def clus_node_state(self):
+        """Generate dictionary of node states on all cluster nodes.
+
+        Returns:
+            dict: Node with node state.
+
+        """
+        states = {self.attr_value('NodeName'): self.node_state()}
+        for node in self.remote_nodes:
+            logger.debug('Attempting connection to ' + str(node))
+            try:
+                states[node] = self.remote_nodes[node].node_state()
+            except Exception:
+                logger.debug('Unable to connect to ' + str(node))
+                states[node] = NodeStates.OFFLINE.upper()
+
+        return states
+
+    @Pyro.expose
+    def node_state(self):
+        """Determine node status.
+
+        Returns:
+            obj: Node status.
+        """
+        for thread in self.threads:
+            if not thread.is_alive():
+                return NodeStates.CRITICAL.upper()
+
+        return NodeStates.ONLINE.upper()
 
     @Pyro.expose
     def node_value(self, attr_name):
@@ -401,19 +433,16 @@ class NodeSystem(AttributeObject):
 
     @Pyro.expose
     def clus_grp_state(self, group_name):
-        """Get a state of a group for the current node.
+        """Generate dictionary of group states on all cluster nodes.
 
         Args:
             group_name (str): Group name to get state.
 
         Returns:
-            str: Group state.
+            dict: Node with group state.
 
         """
-        states = {
-            self.attr_value('NodeName'): self.grp_state(group_name)
-        }
-
+        states = {self.attr_value('NodeName'): self.grp_state(group_name)}
         for node in self.remote_nodes:
             states[node] = self.remote_nodes[node].grp_state(group_name)
 
@@ -985,18 +1014,16 @@ class NodeSystem(AttributeObject):
 
     @Pyro.expose
     def clus_res_state(self, resource_name):
-        """Return dictionary of resource states on all cluster nodes.
+        """Generate dictionary of resource states on all cluster nodes.
 
         Args:
-            resource_name (str): Resource_name
+            resource_name (str): Resource_name.
 
         Returns:
-            dict: Nodes with resource state
+            dict: Nodes with resource state.
 
         """
-        states = {
-            self.attr_value('NodeName'): self.res_state(resource_name)
-        }
+        states = {self.attr_value('NodeName'): self.res_state(resource_name)}
         for node in self.remote_nodes:
             states[node] = self.remote_nodes[node].res_state(resource_name)
 
@@ -1447,28 +1474,13 @@ class NodeSystem(AttributeObject):
         thread_poll_updater.start()
         self.threads.append(thread_poll_updater)
 
-    def start_threads(self):
-        """Start subsystem threads."""
-        # # Start alert handler thread
-        # logger.info('Starting alert handler...')
-        # thread_alert_handler = threading.Thread(name='alert handler', target=self.alert_handler.run)
-        # thread_alert_handler.daemon = True
-        # thread_alert_handler.start()
-        # self.threads.append(thread_alert_handler)
-
-        # Start config backup
+    def start_config_backup(self):
+        """Start config backup"""
         logger.info('Starting auto backups...')
         thread_config_backup = threading.Thread(name='backup config', target=self.backup_config)
         thread_config_backup.daemon = True
         thread_config_backup.start()
         self.threads.append(thread_config_backup)
-
-        # Start heartbeat thread
-        # logger.info('Starting heartbeat thread...')
-        # thread_heartbeat = threading.Thread(name='heartbeat', target=self.heartbeat)
-        # thread_heartbeat.daemon = True
-        # thread_heartbeat.start()
-        # self.threads.append(thread_heartbeat)
 
     @Pyro.expose
     def dump(self):
@@ -1510,7 +1522,10 @@ class NodeSystem(AttributeObject):
         """
         self.log_command(message)
         for node in self.remote_nodes:
-            self.remote_nodes[node].log_command(message)
+            try:
+                self.remote_nodes[node].log_command(message)
+            except Pyro.errors.CommunicationError:
+                pass
 
     @Pyro.expose
     def log_command(self, message):
@@ -1612,8 +1627,8 @@ class NodeSystem(AttributeObject):
         if data:
             try:
                 self.load_config(data)
-            except Exception as e:
-                logger.critical('Error reading config data: {}'.format(str(e)))
+            except Exception as err:
+                logger.critical('Error reading config data: {}'.format(str(err)))
                 sys.exit(1)  # TODO: better system handling
         else:
             logger.info('No configuration data found')
@@ -1630,7 +1645,7 @@ class NodeSystem(AttributeObject):
         self.start_poll_updater()
         self.startup_poll()
         self.poll_enabled = True
-        self.start_threads()
+        self.start_config_backup()
         self.grp_online_auto()
 
         logger.info('Server startup complete')

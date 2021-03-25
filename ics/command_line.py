@@ -78,6 +78,7 @@ def command_icssys():
     group = parser.add_mutually_exclusive_group()
     group.add_argument('-add', nargs=1, help='add a node to cluster')
     group.add_argument('-delete', nargs=1, help='delete a node from the cluster')
+    group.add_argument('-state', action='store_true', help='show node states')
     group.add_argument('-loglevel', nargs=1, metavar='<level>', help='Set system log level')
     group.add_argument('-list', action='store_true', help='print list of all nodes')
     group.add_argument('-attr', action='store_true', help='list node attributes')
@@ -105,6 +106,14 @@ def command_icssys():
 
     elif args.delete is not None:
         cluster.delete_node(args.delete[0])
+
+    elif args.state:
+        result = cluster.clus_node_state()
+        table = []
+        for state in result.items():
+            table.append(state)
+
+        print_table(table)
 
     elif args.loglevel is not None:
         cluster.set_log_level(args.loglevel[0])
