@@ -24,6 +24,7 @@ Release History
 **Bugfixes**
 - Fixed issue with using and saving alert recipients
 - Fixed issue with catching exceptions when unable to connect to server with command line tools
+- Fixed issue where icsgrp -state <group> and icsres -state <res> output a dictionary instead of a table
 
 **Miscellaneous**
 
