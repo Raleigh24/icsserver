@@ -432,19 +432,30 @@ class NodeSystem(AttributeObject):
         group.stop()
 
     @Pyro.expose
-    def clus_grp_state(self, group_name):
+    def clus_grp_state(self, group_name, valid_nodes=False):
         """Generate dictionary of group states on all cluster nodes.
 
         Args:
             group_name (str): Group name to get state.
+            valid_nodes(bool, opt): Get only group node states in SystemList attribute.
 
         Returns:
             dict: Node with group state.
 
         """
-        states = {self.attr_value('NodeName'): self.grp_state(group_name)}
+        all_states = {self.attr_value('NodeName'): self.grp_state(group_name)}
         for node in self.remote_nodes:
-            states[node] = self.remote_nodes[node].grp_state(group_name)
+            all_states[node] = self.remote_nodes[node].grp_state(group_name)
+
+        if valid_nodes:
+            group_nodes = self.grp_value(group_name, 'SystemList')
+            group_states = {}
+            for node in all_states:
+                if node in group_nodes:
+                    group_states[node] = all_states[node]
+            states = group_states
+        else:
+            states = all_states
 
         return states
 

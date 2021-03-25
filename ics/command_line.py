@@ -336,7 +336,7 @@ def command_icsgrp():
             timer = -1  # Negative timer means no countdown
 
         while timer != 0:
-            group_states = cluster.clus_grp_state(group_name)
+            group_states = cluster.clus_grp_state(group_name, valid_nodes=True)
 
             if node is not None:
                 if group_states[node] == state_name:
