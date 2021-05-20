@@ -308,11 +308,11 @@ class NodeSystem(AttributeObject):
 
         """
         logger.debug('Looking for other online resources for group ' + str(group_name))
-        group_remote_states = self.clus_grp_state_all(group_names=[group_name], include_local=False)
-        logger.debug('Found these states on remote nodes: ' + str(group_remote_states))
-        for group_name_state, remote_node, remote_state in group_remote_states:
-            if remote_state in ['ONLINE', 'PARTIAL', 'UNKNOWN']:
-                logger.info('Unable to bring group online, group is online on node ' + str(remote_node))
+        group_states = self.clus_grp_state_all(group_names=[group_name])
+        logger.debug('Found these states on remote nodes: ' + str(group_states))
+        for group_name_state, node, state in group_states:
+            if state in ['ONLINE', 'PARTIAL', 'UNKNOWN']:
+                logger.info('Unable to bring group online, group is online on node ' + str(node))
                 return False
         else:
             logger.debug('No other online groups found')
