@@ -275,7 +275,7 @@ group_attributes = {
         "description": "Indicates weather a service group is automatically started when system starts"
     },
     "IgnoreDisabled": {
-        "default": "false",
+        "default": "true",
         "type": "boolean",
         "description": ""
     },
