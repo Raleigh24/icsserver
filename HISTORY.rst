@@ -10,6 +10,10 @@ Release History
 
 - Fixed issue where service group is able to come online when Parallel attribute is false
 
+**Miscellaneous**
+
+- Changed IgnoreDisabled default value to true
+
 2.1.0 (2021-03-25)
 ++++++++++++++++++
 
