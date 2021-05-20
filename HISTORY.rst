@@ -3,9 +3,15 @@
 Release History
 ---------------
 
+2.1.1 (????-??-??)
+++++++++++++++++++
+
+**Bugfixes**
+
+- Fixed issue where service group is able to come online when Parallel attribute is false
 
 2.1.0 (2021-03-25)
-++++++++++++++++++++++
+++++++++++++++++++
 
 **New Features**
 
