@@ -1474,10 +1474,34 @@ class NodeSystem(AttributeObject):
 
         logger.info('Startup polling complete')
 
+    def poll_updater_wrapper(self):
+        while True:
+            try:
+                self.poll_updater()
+            except Exception:
+                logger.exception('Exception occurred in the poll updater, will be restarted in 10 seconds.')
+                time.sleep(10)
+
+    def event_handler_wrapper(self):
+        while True:
+            try:
+                event_handler()
+            except Exception:
+                logger.exception('Exception occurred in event handler, will be restarted in 10 seconds.')
+                time.sleep(10)
+
+    def backup_config_wrapper(self):
+        while True:
+            try:
+                self.backup_config()
+            except Exception:
+                logger.exception('Exception occurred in backup config handler, will be restarted in 10 seconds.')
+                time.sleep(10)
+
     def start_event_handler(self):
         """Start event handler thread"""
         logger.info('Starting event handler...')
-        thread_event_handler = threading.Thread(name='event handler', target=event_handler)
+        thread_event_handler = threading.Thread(name='event handler', target=self.event_handler_wrapper)
         thread_event_handler.daemon = True
         thread_event_handler.start()
         self.threads.append(thread_event_handler)
@@ -1485,7 +1509,7 @@ class NodeSystem(AttributeObject):
     def start_poll_updater(self):
         """Start poll updater thread"""
         logger.info('Starting poll updater...')
-        thread_poll_updater = threading.Thread(name='poll updater', target=self.poll_updater)
+        thread_poll_updater = threading.Thread(name='poll updater', target=self.poll_updater_wrapper)
         thread_poll_updater.daemon = True
         thread_poll_updater.start()
         self.threads.append(thread_poll_updater)
@@ -1493,7 +1517,7 @@ class NodeSystem(AttributeObject):
     def start_config_backup(self):
         """Start config backup"""
         logger.info('Starting auto backups...')
-        thread_config_backup = threading.Thread(name='backup config', target=self.backup_config)
+        thread_config_backup = threading.Thread(name='backup config', target=self.backup_config_wrapper)
         thread_config_backup.daemon = True
         thread_config_backup.start()
         self.threads.append(thread_config_backup)
