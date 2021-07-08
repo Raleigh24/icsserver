@@ -3,6 +3,18 @@
 Release History
 ---------------
 
+2.1.2 (2021-07-07)
+++++++++++++++++++
+
+**Improvements**
+
+- Added improved exception handling to prevent threads from stopping
+
+**Bugfixes**
+
+- Fixed issue where ICS server unable to startup when a resource is disabled.
+- Fixed issue when starting a group with resources with no dependencies showed the group state as UNKNOWN instead of PARTIAL
+
 2.1.1 (2021-05-20)
 ++++++++++++++++++
 
