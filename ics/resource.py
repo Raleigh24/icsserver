@@ -313,8 +313,11 @@ class Resource(AttributeObject):
 
     def probe(self):
         """Generate a resource poll."""
-        self.poll_running = True
-        events.trigger_event(events.PollRunEvent(self))
+        if self.attr_value('Enabled') == 'false':
+            logger.info('Resource({}) Unable to probe, resource is not enabled.'.format(self.name))
+        else:
+            self.poll_running = True
+            events.trigger_event(events.PollRunEvent(self))
 
     def start(self):
         """Run command to start resource."""
