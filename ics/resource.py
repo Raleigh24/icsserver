@@ -395,6 +395,10 @@ class Group(AttributeObject):
                 return GroupStates.ONLINE
             elif states[0] == ResourceStates.OFFLINE:
                 return GroupStates.OFFLINE
+            elif states[0] == ResourceStates.STARTING:
+                return GroupStates.PARTIAL
+            elif states[0] == ResourceStates.STOPPING:
+                return GroupStates.PARTIAL
             elif states[0] == ResourceStates.FAULTED:
                 return GroupStates.FAULTED
             elif states[0] == ResourceStates.UNKNOWN:
