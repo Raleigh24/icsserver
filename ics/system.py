@@ -1464,8 +1464,13 @@ class NodeSystem(AttributeObject):
                     time.sleep(0.1)
 
         # Wait for all polls to finish
-        while self.poll_count() != 0:
-            time.sleep(1)
+        while True:
+            count = self.poll_count()
+            if count != 0:
+                logger.info('Remaining resources to finish poll {}/{}'.format(count, resource_count))
+                time.sleep(1)
+            else:
+                break
 
         logger.info('Startup polling complete')
 
